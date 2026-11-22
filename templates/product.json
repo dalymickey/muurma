@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "main": {
@@ -36,10 +45,17 @@
             "show_gift_card_recipient": true
           }
         },
+        "timing": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Made and dispatched in 3–5 business days. Delivered in 3–7 days in Australia, 7–14 days worldwide.</p>",
+            "style": "small"
+          }
+        },
         "trust": {
           "type": "trust",
           "settings": {
-            "label_1": "Made to order",
+            "label_1": "Small runs",
             "icon_1": "box",
             "label_2": "Shipped worldwide",
             "icon_2": "truck",
@@ -57,6 +73,8 @@
         "delivery": {
           "type": "shipping",
           "settings": {
+            "heading": "Shipping and delivery",
+            "text": "<p>Made and dispatched in 3–5 business days. Delivered in 3–7 days in Australia, 7–14 days worldwide.</p>",
             "show_policy": true,
             "open": false
           }
@@ -77,6 +95,7 @@
         "variant_picker",
         "quantity",
         "buy_buttons",
+        "timing",
         "trust",
         "details",
         "delivery",

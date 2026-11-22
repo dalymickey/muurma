@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "hero": {
@@ -7,14 +16,14 @@
         "study": "Study 001",
         "heading": "The Break",
         "heading_tag": "h1",
-        "subheading": "A breaking wave, held in contour. Made to order on the east coast.",
+        "subheading": "A breaking wave, held in contour. Made on the east coast.",
       "button_label": "Shop Study 001",
       "button_link": "/collections/all",
       "button_style": "primary",
       "button_label_2": "How we make it",
       "button_link_2": "/pages/story",
       "button_style_2": "ghost",
-        "fine": "Made to order. Zero dead stock. Shipped worldwide.",
+        "fine": "Small runs. Zero dead stock. Shipped worldwide.",
         "demo_image": "mu-hero-back.jpg",
         "overlay_color": "#2b2c2b",
         "overlay_opacity": 80,
@@ -44,9 +53,10 @@
         "image_side": "right",
         "demo_image": "mu-hero-front.jpg",
         "eyebrow": "How we make it",
-        "heading": "Printed when you order it.",
-        "text": "<p>Each piece is made to order on the east coast. No racks of leftover stock, no colour that wasn't asked for. A new study drops every Thursday and ships worldwide.</p>",
-        "cta_label": "The story"
+        "heading": "Made for you. Not for a warehouse.",
+        "text": "<p>Each Study is made in small runs on the east coast — for you, not for a warehouse. No dead stock, and a new one every Thursday.</p>",
+        "cta_label": "The story",
+        "cta_link": "/pages/story"
       }
     },
     "collections": {
@@ -132,8 +142,8 @@
       "type": "mu-rich-text",
       "settings": {
         "color_scheme": "scheme-5",
-        "heading": "Made to order. Shipped worldwide.",
-        "text": "<p>MUURMA is an independent print-on-demand surf label from Australia's east coast. Zero dead stock. A new design every Thursday.</p>"
+        "heading": "Small runs. Shipped worldwide.",
+        "text": "<p>MUURMA is an independent surf label from Australia's east coast. Small runs, zero dead stock, a new Study every Thursday.</p>"
       }
     }
   },

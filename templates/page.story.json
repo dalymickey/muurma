@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "main": {
@@ -14,7 +23,7 @@
         "demo_image": "mu-hero-front.jpg",
         "eyebrow": "East coast",
         "heading": "Held in contour.",
-        "text": "<p>MUURMA prints each piece when you order it. The drawings come from the coastline we live on, and the garments leave Australia for wherever you are.</p>"
+        "text": "<p>The drawings come from the coastline we live on. Each Study is made in small runs, and the garments leave Australia for wherever you are.</p>"
       }
     },
     "rich": {
@@ -22,7 +31,7 @@
       "settings": {
         "color_scheme": "scheme-1",
         "heading": "Zero dead stock.",
-        "text": "<p>Nothing is made ahead. A new study goes up every Thursday, is printed to order, and ships worldwide.</p>"
+        "text": "<p>Nothing sits waiting in a warehouse. A new Study goes up every Thursday, in a small run, and ships worldwide.</p>"
       }
     }
   },
