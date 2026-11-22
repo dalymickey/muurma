@@ -128,10 +128,19 @@
       (() => {
         const el = document.currentScript.previousElementSibling, t = el.firstElementChild;
         const fit = () => {
-          el.style.fontSize = '';
-          const w = t.getBoundingClientRect().width, max = el.clientWidth;
-          if (!w || !max) return;
-          el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * max / w * 0.995) + 'px';
+          const vw = document.documentElement.clientWidth || window.innerWidth;
+          const max = Math.min(el.clientWidth, vw);
+          if (!max || !t) return;
+          const probe = document.createElement('span');
+          const cs = getComputedStyle(el);
+          probe.textContent = t.textContent;
+          probe.setAttribute('aria-hidden', 'true');
+          probe.style.cssText = 'position:absolute;left:-9999px;top:0;white-space:nowrap;font-family:' + cs.fontFamily + ';font-weight:' + cs.fontWeight + ';font-size:100px;letter-spacing:' + cs.letterSpacing + ';text-transform:uppercase;visibility:hidden;pointer-events:none;';
+          document.body.appendChild(probe);
+          const w = probe.getBoundingClientRect().width;
+          probe.remove();
+          if (!w) return;
+          el.style.fontSize = (100 * max / w * 0.94) + 'px';
         };
         let raf;
         const queue = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fit); };

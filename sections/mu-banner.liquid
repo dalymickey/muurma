@@ -45,15 +45,46 @@
   if s.grain_image != blank
     assign grain_url = s.grain_image | image_url: width: 512
   endif
+  assign hero_size = s.height | default: 'screen'
+  if hero_size == blank
+    assign hero_size = 'screen'
+  endif
+  assign hero_h = 'clamp(420px, 62svh, 680px)'
+  case hero_size
+    when 'small'
+      assign hero_h = 'clamp(280px, 42svh, 460px)'
+    when 'medium'
+      assign hero_h = 'clamp(380px, 58svh, 620px)'
+    when 'large'
+      assign hero_h = 'clamp(480px, 74svh, 820px)'
+    when 'screen'
+      assign hero_h = 'max(100svh, min(62.5vw, 900px))'
+  endcase
+  assign hero_size_m = s.height_mobile | default: 'screen'
+  if hero_size_m == blank or hero_size_m == 'same'
+    assign hero_h_m = hero_h
+  else
+    assign hero_h_m = hero_h
+    case hero_size_m
+      when 'small'
+        assign hero_h_m = 'clamp(240px, 48svh, 420px)'
+      when 'medium'
+        assign hero_h_m = 'clamp(320px, 60svh, 520px)'
+      when 'large'
+        assign hero_h_m = 'clamp(400px, 74svh, 640px)'
+      when 'screen'
+        assign hero_h_m = '100svh'
+    endcase
+  endif
 -%}
 {%- if s.video != blank -%}<script src="{{ 'mu-video.js' | asset_url }}" defer></script>{%- endif -%}
 {%- if section.index == 1 -%}
   <style>:root { --mu-hero-fg: {{ settings.color_schemes[s.color_scheme].settings.text }}; }</style>
 {%- endif -%}
 <div
-  class="mu-sec mu-banner mu-bleed mu-banner--{{ s.height }} mu-banner--m-{{ s.height_mobile }} mu-banner--at-{{ s.content_position }} mu-banner--align-{{ s.text_align }} color-{{ s.color_scheme }}"
+  class="mu-sec mu-banner mu-bleed mu-banner--{{ hero_size }} mu-banner--m-{{ hero_size_m }} mu-banner--at-{{ s.content_position }} mu-banner--align-{{ s.text_align }} color-{{ s.color_scheme }}"
   data-mu-over
-  style="--mu-banner-focal: {{ focal }};{% if s.image == blank %} --mu-banner-focal-m: 50% 28%;{% endif %} --mu-banner-ov: {{ ov }}; --mu-grain-a: {{ grain_a }}; --mu-contour-a: {{ contour_a }}; --mu-grain: url('{{ grain_url }}');"
+  style="--mu-b-h: {{ hero_h }}; --mu-b-h-m: {{ hero_h_m }}; --mu-banner-focal: {{ focal }};{% if s.image == blank %} --mu-banner-focal-m: 50% 28%;{% endif %} --mu-banner-ov: {{ ov }}; --mu-grain-a: {{ grain_a }}; --mu-contour-a: {{ contour_a }}; --mu-grain: url('{{ grain_url }}');"
 >
   {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
   {%- if show_media -%}

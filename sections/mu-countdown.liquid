@@ -43,6 +43,10 @@
   comment
     Date label: "Ends" (the default) keeps the translated sentence; any other word, like "Drops", leads the date.
   endcomment
+  assign tz = s.timezone | default: 'Australia/Sydney' | strip
+  if tz == blank
+    assign tz = 'Australia/Sydney'
+  endif
   assign date_label = s.date_label | strip
   if date_label == 'Ends'
     assign date_label = ''
@@ -92,7 +96,7 @@
 {{ 'mu-sections.css' | asset_url | stylesheet_tag }}
 {{ 'mu-showcase.css' | asset_url | stylesheet_tag }}
 <script src="{{ 'mu-countdown.js' | asset_url }}" defer></script>
-<mu-countdown class="mu-sec mu-fc mu-cd mu-cd--{{ s.layout | default: 'split' }} color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}{% if ended %} is-ended{% endif %}"{% render 'mu-surface', s: s, part: 'attr' %} data-end="{{ end | escape }}" data-after="{{ s.after_end }}"{% render 'mu-anim', on: section.settings.animate, items: '.mu-cd__copy > *, .mu-cd__tile, .mu-cd__end' %}>
+<mu-countdown class="mu-sec mu-fc mu-cd mu-cd--{{ s.layout | default: 'split' }} color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}{% if ended %} is-ended{% endif %}"{% render 'mu-surface', s: s, part: 'attr' %} data-end="{{ end | escape }}" data-timezone="{{ tz | escape }}" data-locale="en-AU" data-after="{{ s.after_end }}"{% render 'mu-anim', on: section.settings.animate, items: '.mu-cd__copy > *, .mu-cd__tile, .mu-cd__end' %}>
   {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
   <div class="mu-cd__copy">
     {%- if s.eyebrow != blank -%}<p class="mu-eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
@@ -101,7 +105,7 @@
     {%- unless ended -%}
       <p class="mu-cd__date" data-live-text data-cd-live-only>
         {%- if end_s > 0 -%}
-          {%- assign end_text = end | date: '%a %-d %b, %H:%M' -%}
+          {%- assign end_text = end | date: '%a %-d %b, %l:%M%P' | replace: '  ', ' ' | strip -%}
           {{ ends_tpl | escape | replace: '__DATE__', end_text }}
         {%- endif -%}
       </p>
@@ -247,6 +251,13 @@
       "label": "t:sections.countdown.date_label",
       "info": "t:sections.countdown.date_label_info",
       "default": "Ends"
+    },
+    {
+      "type": "text",
+      "id": "timezone",
+      "label": "Time zone",
+      "info": "IANA name used to display the drop date, e.g. Australia/Sydney. The countdown still targets the same instant.",
+      "default": "Australia/Sydney"
     },
     {
       "type": "select",

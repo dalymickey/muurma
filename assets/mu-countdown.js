@@ -20,15 +20,26 @@ if (!customElements.get('mu-countdown')) {
       this.said = '';
       if (this.text && this.t.ends && !this.classList.contains('is-ended')) {
         try {
-          const lang = document.documentElement.lang || undefined;
-          const date = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(this.end);
-          this.text.textContent = this.t.ends.replace('__DATE__', date);
+          this.text.textContent = this.t.ends.replace('__DATE__', this.formatEnd());
         } catch (_) { /* keep the server-written date */ }
       }
       this.tick();
       this.timer = setInterval(() => { if (!document.hidden) this.tick(); }, this.secs ? 1000 : 15000);
       this.onVis = () => { if (!document.hidden) this.tick(); };
       document.addEventListener('visibilitychange', this.onVis);
+    }
+    formatEnd() {
+      const tz = this.dataset.timezone || 'Australia/Sydney';
+      const lang = this.dataset.locale || document.documentElement.lang || 'en-AU';
+      const parts = new Intl.DateTimeFormat(lang, {
+        weekday: 'short', day: 'numeric', month: 'short',
+        hour: 'numeric', minute: '2-digit', hour12: true,
+        timeZone: tz, timeZoneName: 'short'
+      }).formatToParts(new Date(this.end));
+      const g = (t) => (parts.find((p) => p.type === t) || {}).value || '';
+      const weekday = g('weekday').replace(/\.$/, '');
+      const period = (g('dayPeriod') || '').replace(/\s+/g, '').toLowerCase();
+      return `${weekday} ${g('day')} ${g('month')}, ${g('hour')}:${g('minute')}${period} ${g('timeZoneName')}`.replace(/\s+/g, ' ').trim();
     }
     disconnectedCallback() {
       clearInterval(this.timer);
