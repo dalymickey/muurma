@@ -1,0 +1,8 @@
+{%- comment -%}
+  The quick view dialog for a section with quick add buttons, on pages where the layout doesn't already render it
+  (Theme settings > Product cards > Show quick view button off, and not a product page).
+{%- endcomment -%}
+{%- unless settings.card_quick_view or template.name == 'product' -%}
+  {{ 'mu-quick-view.css' | asset_url | stylesheet_tag }}
+  {%- render 'mu-quick-add-dialog' -%}
+{%- endunless -%}

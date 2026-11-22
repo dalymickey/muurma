@@ -1,0 +1,29 @@
+{%- comment -%}
+  Preloads the page's main image through the response's Link header (image_tag's preload, with imagesrcset and
+  imagesizes, so its own src isn't fetched). The list is mu-srcset's 'pre' ladder, the same one the matching <img> or
+  <source> uses. Shopify drops a preload Link header past about 1,400 characters (seen on this store), so a list still
+  too long is skipped (the image stays eager and high priority). The header can't carry a media query, so an
+  art-directed image (a <picture>) isn't preloaded. Outputs nothing.
+  @param image {Image} the image (or media with a preview image)
+  @param max {Number} the widest file the slot can need (optional, default 2400)
+  @param sizes {String} the sizes attribute (optional, default 100vw)
+{%- endcomment -%}
+{%- liquid
+  assign src = image
+  if image.preview_image
+    assign src = image.preview_image
+  endif
+  assign cap = max | default: 2400
+  if src.width and src.width < cap
+    assign cap = src.width
+  endif
+  assign sz = sizes | default: '100vw'
+-%}
+{%- capture set -%}{% render 'mu-srcset', image: src, max: cap, steps: 'pre' %}{%- endcapture -%}
+{%- if set.size < 1200 -%}
+  {%- assign parts = set | split: ', ' -%}
+  {%- capture ws -%}{%- for p in parts -%}{{ p | split: ' ' | last | remove: 'w' }}{% unless forloop.last %},{% endunless %}{%- endfor -%}{%- endcapture -%}
+  {%- # theme-check-disable UnusedAssign -%}
+  {%- capture pl_tag -%}{{ src | image_url: width: cap | image_tag: widths: ws, sizes: sz, fetchpriority: 'high', preload: true }}{%- endcapture -%}
+  {%- # theme-check-enable UnusedAssign -%}
+{%- endif -%}

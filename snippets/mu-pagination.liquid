@@ -1,0 +1,7 @@
+{%- if paginate.pages > 1 -%}
+  <nav class="mu-pagination" aria-label="{{ 'pagination.label' | t }}">
+    {%- if paginate.previous -%}<a class="mu-btn mu-btn--ghost mu-btn--sm" href="{{ paginate.previous.url }}">{{ 'pagination.previous' | t }}</a>{%- endif -%}
+    <span class="mu-num mu-muted">{{ 'pagination.page_of' | t: current: paginate.current_page, total: paginate.pages }}</span>
+    {%- if paginate.next -%}<a class="mu-btn mu-btn--ghost mu-btn--sm" href="{{ paginate.next.url }}">{{ 'pagination.next' | t }}</a>{%- endif -%}
+  </nav>
+{%- endif -%}

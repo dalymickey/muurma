@@ -1,0 +1,143 @@
+{%- comment -%}
+  One bag line: a row with the cover thumb (on its level tint when there's no image), title, level name, options, Remove and the price, and a quantity stepper
+  inline at the bottom. Without JS the stepper buttons submit the bag form (updates[key]); mu-cart.js turns them
+  into /cart/change.js calls by line key, taking one off or adding one to the live quantity (data-qty-step), so the
+  quantity baked into this markup is only the no-JS fallback. A variant with a quantity rule (B2B) steps by its
+  increment (data-qty-inc), drops the line below its minimum (data-qty-min), stops at its maximum, and says the rule
+  under the options. Params: item, line (1-based index), form (the bag form id), mode ('page' or 'drawer'): the
+  title is an h2 under the cart page's h1 and an h3 under the drawer's h2.
+{%- endcomment -%}
+{%- liquid
+  assign rule = item.variant.quantity_rule
+  assign q_min = rule.min | default: 1
+  assign q_inc = rule.increment | default: 1
+  assign q_down = item.quantity | minus: q_inc
+  if q_down < q_min
+    assign q_down = 0
+  endif
+  assign q_up = item.quantity | plus: q_inc
+  assign max = blank
+  if item.variant.inventory_management == 'shopify' and item.variant.inventory_policy == 'deny'
+    assign max = item.variant.inventory_quantity
+  endif
+  if rule.max
+    if max == blank or rule.max < max
+      assign max = rule.max
+    endif
+  endif
+  assign title = item.product.title | escape
+  assign gift = false
+  if settings.gift_wrap_product != blank and item.product_id == settings.gift_wrap_product.id
+    assign gift = true
+  endif
+-%}
+{%- capture hs -%}{%- render 'mu-level', product: item.product -%}{%- endcapture -%}
+{%- assign hs = hs | split: '|' -%}
+{%- assign lv = hs[0] | plus: 0 -%}
+{%- liquid
+  assign tc = ''
+  assign ts = ''
+  if lv > 0
+    assign tc = 'mu-h-' | append: lv
+  elsif settings.scale_mode == 'colors' and item.product != blank
+    capture tn
+      render 'mu-tone', product: item.product
+    endcapture
+    assign tn = tn | split: '|'
+    assign tc = tn[0]
+    assign ts = tn[1]
+  endif
+  assign fname = item.product.metafields.custom.short_name.value
+-%}
+<li class="mu-line{% if gift %} mu-line--gift{% endif %}" data-line="{{ line }}" data-key="{{ item.key }}">
+  <a class="mu-line__thumb{% if tc != blank and item.image == blank %} {{ tc }}{% endif %}"{% if ts != blank and item.image == blank %} style="{{ ts }}"{% endif %} href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+    {%- if item.image -%}
+      {{ item.image | image_url: width: 300 | image_tag: widths: '120, 200, 300', sizes: '(min-width: 990px) 128px, 92px', loading: 'lazy', alt: '' }}
+    {%- else -%}
+      {{ 'product-1' | placeholder_svg_tag: 'mu-placeholder' }}
+    {%- endif -%}
+  </a>
+  <div class="mu-line__info">
+    {%- liquid
+      assign lh = 'h3'
+      if mode == 'page'
+        assign lh = 'h2'
+      endif
+    -%}
+    <{{ lh }} class="mu-line__title"><a href="{{ item.url }}">{{ title }}</a></{{ lh }}>
+    {%- if lv > 0 -%}<p class="mu-line__level mu-h-{{ lv }}"><span aria-hidden="true"></span>{{ hs[2] | escape }}</p>
+    {%- elsif tc != blank and fname != blank -%}<p class="mu-line__level {{ tc }}" style="{{ ts }}"><span aria-hidden="true"></span>{{ fname | escape }}</p>{%- endif -%}
+    {%- capture opts -%}
+      {%- unless item.product.has_only_default_variant -%}
+        {%- for o in item.options_with_values -%}
+          {{- o.value | escape -}}{%- unless forloop.last %} · {% endunless -%}
+        {%- endfor -%}
+      {%- endunless -%}
+    {%- endcapture -%}
+    {%- if opts != blank -%}<p class="mu-line__opts mu-muted">{{ opts }}</p>{%- endif -%}
+    {%- if q_inc > 1 or q_min > 1 or rule.max -%}
+      <p class="mu-line__opts mu-line__rule mu-muted">
+        {%- if q_inc > 1 %}{{ 'products.qty_increment' | t: step: q_inc }} {% endif -%}
+        {%- if q_min > 1 %}{{ 'products.qty_min' | t: min: q_min }} {% endif -%}
+        {%- if rule.max %}{{ 'products.qty_max' | t: max: rule.max }}{% endif -%}
+      </p>
+    {%- endif -%}
+    {%- if item.selling_plan_allocation -%}
+      <p class="mu-line__opts mu-line__plan">{{ item.selling_plan_allocation.selling_plan.name | escape }}</p>
+      {%- comment -%} A plan that defers payment (pre-order, try before you buy): what's charged at checkout. {%- endcomment -%}
+      {%- assign cc = item.selling_plan_allocation.selling_plan.checkout_charge -%}
+      {%- if cc.value_type != 'percentage' or cc.value < 100 -%}
+        {%- liquid
+          if cc.value_type == 'percentage'
+            assign due = item.final_line_price | times: cc.value | divided_by: 100
+          else
+            assign due = cc.value | times: item.quantity
+          endif
+          capture due_money
+            render 'mu-money', m: due
+          endcapture
+        -%}
+        <p class="mu-line__opts mu-muted">{{ 'cart.due_today' | t: amount: due_money }}</p>
+      {%- endif -%}
+    {%- elsif settings.preorder_backorder_mode != 'off' and item.variant.inventory_management == 'shopify' and item.variant.inventory_policy == 'continue' and item.variant.inventory_quantity <= 0 -%}
+      {%- capture pre_ok %}{% render 'mu-pre-ok', product: item.product %}{% endcapture -%}
+      {%- if pre_ok contains 'true' -%}
+        {%- assign pre_label = settings.preorder_label | strip -%}
+        {%- if pre_label == blank %}{% assign pre_label = 'products.preorder' | t %}{% endif -%}
+        <p class="mu-line__opts mu-line__plan">{{ pre_label | escape }}{% if settings.preorder_note != blank %} · <span class="mu-muted">{{ settings.preorder_note | strip | escape }}</span>{% endif %}</p>
+      {%- endif -%}
+    {%- endif -%}
+    {%- for p in item.properties -%}
+      {%- assign first = p.first | slice: 0 -%}
+      {%- if p.last != blank and first != '_' -%}
+        <p class="mu-line__opts mu-muted">{{ p.first | escape }}: {% if p.last contains '/uploads/' %}<a class="mu-link" href="{{ p.last }}">{{ p.last | split: '/' | last }}</a>{% else %}{{ p.last | escape }}{% endif %}</p>
+      {%- endif -%}
+    {%- endfor -%}
+    {%- for d in item.line_level_discount_allocations -%}
+      <p class="mu-line__opts mu-line__disc">{{ d.discount_application.title | escape }} (−{% render 'mu-money', m: d.amount %})</p>
+    {%- endfor -%}
+    <a class="mu-line__remove" href="{{ item.url_to_remove }}" data-remove="{{ item.key }}">{{ 'cart.remove' | t }}<span class="visually-hidden"> {{ title }}</span></a>
+  </div>
+  <p class="mu-line__price mu-num">
+    {%- if item.original_line_price > item.final_line_price -%}
+      <s class="mu-muted"><span class="visually-hidden">{{ 'products.regular_price' | t }} </span>{% render 'mu-money', m: item.original_line_price, trim: true %}</s>
+    {%- endif -%}
+    <span>{% render 'mu-money', m: item.final_line_price, trim: true %}</span>
+    {%- if item.quantity > 1 -%}{%- capture each_price -%}{%- render 'mu-money', m: item.final_price, trim: true -%}{%- endcapture -%}<small class="mu-muted">{{ 'cart.each' | t: price: each_price }}</small>{%- endif -%}
+    {%- if item.unit_price_measurement -%}<small class="mu-muted">{% render 'mu-unit-price', price: item.unit_price, measurement: item.unit_price_measurement %}</small>{%- endif -%}
+  </p>
+  {%- comment -%} The gift wrap line is on or off (the bag's gift wrap checkbox), so it has no stepper. {%- endcomment -%}
+  {%- unless gift -%}
+  <div class="mu-line__qty">
+    <div class="mu-stepper" role="group" aria-label="{{ 'cart.quantity' | t: title: title }}">
+      <button class="mu-stepper__btn" type="submit" form="{{ form }}" name="updates[{{ item.key }}]" value="{{ q_down }}" data-qty-step="-1" data-key="{{ item.key }}"{% if q_inc > 1 %} data-qty-inc="{{ q_inc }}"{% endif %}{% if q_min > 1 %} data-qty-min="{{ q_min }}"{% endif %} aria-label="{{ 'cart.decrease' | t: title: title }}">
+        {%- render 'mu-icon', name: 'minus' -%}
+      </button>
+      <output class="mu-stepper__val mu-num" aria-live="off">{{ item.quantity }}</output>
+      <button class="mu-stepper__btn" type="submit" form="{{ form }}" name="updates[{{ item.key }}]" value="{{ q_up }}" data-qty-step="1" data-key="{{ item.key }}"{% if q_inc > 1 %} data-qty-inc="{{ q_inc }}"{% endif %} aria-label="{{ 'cart.increase' | t: title: title }}"{% if max != blank and item.quantity >= max %} disabled{% endif %}>
+        {%- render 'mu-icon', name: 'plus' -%}
+      </button>
+    </div>
+  </div>
+  {%- endunless -%}
+</li>

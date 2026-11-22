@@ -1,0 +1,33 @@
+{%- comment -%}
+  Gift card body (templates/gift_card.liquid). A dark card from the deep end of the scale ramp: the shop name, the
+  balance in the full ramp, the code and QR code in an inset panel, and "Start shopping". Print and wallet links sit
+  under the card. Params: balance, initial, code, qr, pass_url, inactive (bool), expires (date or blank),
+  shop_url.
+{%- endcomment -%}
+<div class="mu-gc">
+  <div class="mu-gc__card mu-deep mu-h-{{ settings.scale_levels | default: 6 }}">
+    <p class="mu-gc__brand mu-display">{{ shop.name | escape }}</p>
+    <div class="mu-gc__top">
+      <h1 class="mu-eyebrow mu-muted">{{ 'gift_card.heading' | t }}</h1>
+      <p class="mu-gc__balance mu-display mu-num">{{ balance }}</p>
+      {%- if initial != balance -%}<p class="mu-muted mu-num">{{ 'gift_card.of' | t: value: initial }}</p>{%- endif -%}
+      {%- if inactive -%}
+        <p class="mu-gc__state">{{ 'gift_card.expired' | t }}</p>
+      {%- elsif expires != blank -%}
+        <p class="mu-muted">{{ 'gift_card.expires' | t: date: expires }}</p>
+      {%- endif -%}
+    </div>
+    <div class="mu-gc__panel color-{{ settings.page_scheme }}">
+      <div class="mu-gc__code">
+        <p class="mu-eyebrow mu-muted" id="MuGcLabel">{{ 'gift_card.code' | t }}</p>
+        <p class="mu-gc__value mu-num" aria-labelledby="MuGcLabel">{{ code }}</p>
+      </div>
+      <div class="mu-gc__qr" id="MuQr" data-identifier="{{ qr }}" role="img" aria-label="{{ 'gift_card.qr' | t }}"></div>
+    </div>
+    <a class="mu-btn mu-gc__shop" href="{{ shop_url }}">{{ 'gift_card.shop' | t }}{% render 'mu-icon', name: 'arrow' %}</a>
+  </div>
+  <div class="mu-gc__actions">
+    <button class="mu-btn mu-btn--ghost mu-btn--sm" type="button" data-print>{{ 'gift_card.print' | t }}</button>
+    {%- if pass_url != blank -%}<a href="{{ pass_url }}" class="mu-gc__wallet"><img src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}" width="120" height="40" alt="{{ 'gift_card.wallet' | t }}" loading="lazy"></a>{%- endif -%}
+  </div>
+</div>

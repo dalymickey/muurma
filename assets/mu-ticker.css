@@ -1,0 +1,102 @@
+/* Ticker (snippets/mu-ticker). Each list slides left by its own width, so identical lists side by side loop with no
+   seam; each list ends with one gap so the join matches the spacing between items. Separators are the engine's own
+   marks (a dot, a drop or three rising steps) painted with the scale ramp. */
+.mu-tk {
+  --tk-gap: 1em; --tk-sep: var(--fg); --tk-paint: var(--mu-g-hero);
+  position: relative; display: flex; align-items: center; min-width: 0; overflow: hidden; padding-block: var(--tk-pad, 14px);
+}
+.mu-tk--dark { --tk-sep: var(--acc); }
+.mu-tk__view { display: flex; flex: none; inline-size: max-content; }
+.mu-tk__list { display: flex; flex: none; align-items: center; gap: var(--tk-gap); margin: 0; padding: 0 var(--tk-gap) 0 0; list-style: none; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+@media (prefers-reduced-motion: no-preference) {
+  .mu-tk__list { -webkit-animation: mu-tk-run var(--tk-dur, 40s) linear infinite; animation: mu-tk-run var(--tk-dur, 40s) linear infinite; will-change: transform; }
+  .mu-tk--rev .mu-tk__list { animation-direction: reverse; }
+  .mu-tk.is-reset .mu-tk__list { -webkit-animation: none; animation: none; }
+  :is(.mu-tk.is-off, .mu-tk.is-paused, .mu-tk:focus-within) .mu-tk__list { animation-play-state: paused; }
+}
+@media (prefers-reduced-motion: no-preference) and (hover: hover) { .mu-tk--hover:hover .mu-tk__list { animation-play-state: paused; } }
+@-webkit-keyframes mu-tk-run { to { -webkit-transform: translate3d(-100%, 0, 0); } }
+@keyframes mu-tk-run { to { transform: translate3d(-100%, 0, 0); } }
+
+/* Messages. white-space sits on the item itself because the base text-wrap rules reset it in Safari. */
+.mu-tk__item { display: inline-flex; flex: none; align-items: center; gap: var(--tk-gap); white-space: nowrap; }
+.mu-tk__msg { display: inline-flex; align-items: center; gap: .5em; white-space: nowrap; }
+a.mu-tk__msg { text-decoration: underline 2px color-mix(in srgb, currentColor 30%, transparent); text-underline-offset: .22em; transition: text-decoration-color .2s; }
+a.mu-tk__msg:hover { text-decoration-color: currentColor; }
+a.mu-tk__msg:focus-visible { border-radius: 4px; }
+.mu-tk__msg .mu-icon { inline-size: 1.1em; block-size: 1.1em; stroke-width: 2; }
+.mu-tk__img { display: block; inline-size: auto; block-size: 1.3em; max-inline-size: 4em; object-fit: contain; }
+
+/* Separators: drawn after every item (the last one sits in the join) and never read aloud. */
+.mu-tk__item::after { content: ""; display: block; flex: none; }
+.mu-tk--sep-none .mu-tk__item::after { display: none; }
+.mu-tk--sep-dot .mu-tk__item::after { inline-size: .34em; block-size: .34em; border-radius: 50%; background: var(--tk-sep); }
+.mu-tk--sep-drop .mu-tk__item::after, .mu-tk--sep-steps .mu-tk__item::after {
+  background: var(--tk-paint); -webkit-mask: var(--tk-mark) center / contain no-repeat; mask: var(--tk-mark) center / contain no-repeat;
+}
+.mu-tk--sep-drop { --tk-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 24'%3E%3Cpath d='M10 0C10 0 2 9.6 2 15.5a8 8 0 0 0 16 0C18 9.6 10 0 10 0z'/%3E%3C/svg%3E"); }
+.mu-tk--sep-drop .mu-tk__item::after { inline-size: .62em; block-size: .78em; }
+.mu-tk--sep-steps { --tk-mark: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 16'%3E%3Crect y='9' width='5' height='7' rx='1.5'/%3E%3Crect x='7.5' y='4.5' width='5' height='11.5' rx='1.5'/%3E%3Crect x='15' width='5' height='16' rx='1.5'/%3E%3C/svg%3E"); }
+.mu-tk--sep-steps .mu-tk__item::after { inline-size: .9em; block-size: .72em; }
+
+/* Sizes: one setting, scaled between phone and desktop. */
+.mu-tk--sm { --tk-pad: 11px; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .09em; text-transform: uppercase; }
+.mu-tk--sm .mu-tk__msg .mu-icon { inline-size: 1.4em; block-size: 1.4em; }
+.mu-tk--md { --tk-pad: 15px; font-family: var(--mu-font-heading); font-size: clamp(1.0625rem, .9rem + .7vw, 1.5rem); font-weight: var(--mu-font-heading-weight); }
+.mu-tk--lg { --tk-pad: clamp(16px, 2.2vw, 28px); --tk-gap: .55em; font-family: var(--mu-font-heading); font-size: calc(clamp(1.875rem, 1.2rem + 3.8vw, 4.75rem) * var(--mu-heading-scale)); font-weight: var(--mu-font-heading-weight); line-height: 1; }
+
+/* Pause button: a solid square-ish key at the end of the row. */
+.mu-tk--btn { padding-inline-end: 0; }
+.mu-tk__btn { position: absolute; inset: 0 0 0 auto; z-index: 1; display: grid; place-items: center; inline-size: 60px; padding-inline-start: 12px; background: linear-gradient(90deg, transparent, var(--tk-bg, var(--bg)) 14px); }
+.mu-tk__btn .mu-icon { box-sizing: content-box; inline-size: 13px; block-size: 13px; padding: 9px; border-radius: var(--mu-btn-r-s); background: var(--fg); stroke: var(--bg); stroke-width: 2.4; }
+.mu-tk__btn .mu-tk__play, .mu-tk.is-paused .mu-tk__pause { display: none; }
+.mu-tk.is-paused .mu-tk__play { display: block; }
+.mu-tk__btn:focus-visible { outline: 0; }
+.mu-tk__btn:focus-visible .mu-icon { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Reduced motion: one still row that scrolls sideways; the copies and the pause button go. */
+@media (prefers-reduced-motion: reduce) {
+  .mu-tk { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .mu-tk::-webkit-scrollbar { display: none; }
+  .mu-tk:focus-visible { outline-offset: -2px; }
+  .mu-tk__list { padding-inline: var(--tk-lead, 0px); }
+  .mu-tk__list[aria-hidden="true"], .mu-tk__btn { display: none; }
+  .mu-tk__list > .mu-tk__item:last-child::after { display: none; }
+}
+
+/* Ticker section styles. Level: the ramp itself with white type and white marks. Band: a strip in the scheme.
+   Tilt: two crossed tapes, the ticker on top and a plain ramp tape behind it at the opposite angle. */
+.mu-tks--ramp .mu-tk { --tk-lead: var(--gutter); --tk-sep: currentColor; --tk-paint: currentColor; --tk-bg: var(--mu-h-mid); background: var(--mu-g-hero); color: var(--mu-paper); }
+.mu-tks--ramp .mu-tk__btn .mu-icon { background: var(--mu-paper); stroke: var(--fg); }
+.mu-tks--band .mu-tk { --tk-lead: var(--gutter); box-shadow: inset 0 3px 0 color-mix(in srgb, var(--fg) 10%, transparent), inset 0 -3px 0 color-mix(in srgb, var(--fg) 10%, transparent); }
+.mu-tks--tilt { position: relative; isolation: isolate; overflow: hidden; padding-block: clamp(22px, 3vw, 40px); }
+.mu-tks--tilt::before { content: ""; position: absolute; inset: 50% -20px auto; z-index: -1; block-size: clamp(26px, 3vw, 40px); background: var(--mu-g-hero); opacity: .55; translate: 0 -50%; rotate: 2.2deg; }
+.mu-tks--tilt .mu-tk { --tk-lead: calc(var(--gutter) + 20px); inline-size: calc(100% + 40px); margin-inline: -20px; rotate: -1.8deg; box-shadow: 0 10px 24px -14px color-mix(in srgb, #000 45%, transparent); }
+.mu-tks--tilt .mu-tk__btn { inline-size: 80px; padding-inline-end: 20px; }
+
+/* Tape: a straight or angled band. The wrapper clips the sideways overflow from the rotation.
+   A second ticker, when the section asks for one, leans the other way. */
+.mu-tks--tape { display: grid; gap: 12px; overflow-x: clip; padding-block: clamp(20px, 6vw, 84px); }
+.mu-tks--tape .mu-tk { border-block: 3px solid var(--fg); background: var(--bg); color: var(--fg); }
+.mu-tks--tape > .mu-tk:first-child { rotate: var(--mu-tape-tilt, 0deg); }
+.mu-tks--tape > .mu-tk:nth-child(2) { rotate: calc(var(--mu-tape-tilt, 0deg) * -1); }
+@media (prefers-reduced-motion: reduce) {
+  .mu-tks--tape > .mu-tk { rotate: none; }
+}
+
+/* Product block (snippets/mu-pp-block). Pill: a strip tinted with the product's level colour (or the band colour
+   when it has none), cut cleanly at its rounded ends. Plain: no background, so the ends fade out with a mask. */
+.mu-tk.mu-pp__ticker { --tk-bg: var(--bg); --tk-sep: var(--mu, var(--fg)); margin-block: 16px; }
+.mu-tk.mu-pp__ticker--pill { --tk-bg: color-mix(in srgb, var(--h, var(--band)) 24%, var(--bg)); --tk-pad: 13px; --tk-lead: 18px; border-radius: var(--mu-chip-r); background: var(--tk-bg); }
+/* Corner radius setting: a share of half the strip's height; only written below 100, so the default stays round. */
+.mu-tk.mu-pp__ticker--pill[style*="--tk-rk"] { border-radius: calc((var(--tk-pad) + .7em) * var(--tk-rk)); }
+.mu-tk.mu-pp__ticker--plain { --tk-lead: 0px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(90deg, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+.mu-tk.mu-pp__ticker--plain.mu-tk--btn { -webkit-mask-image: linear-gradient(90deg, transparent, #000 28px); mask-image: linear-gradient(90deg, transparent, #000 28px); }
+.mu-pp__below > .mu-pp__ticker:last-child { margin-bottom: 0; }
+@media (min-width: 990px) {
+  .mu-pp__below > .mu-pp__ticker:first-child { margin-top: 0; }
+  /* The ticker alone in the card below the photos: the card steps back and the strip runs edge to edge. */
+  .mu-pp__below:has(> .mu-pp__ticker:only-child) { padding: 0; background: none; }
+  .mu-pp__below > .mu-pp__ticker:only-child { --tk-pad: 18px; --tk-lead: 28px; margin: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .mu-tk.mu-pp__ticker--plain { -webkit-mask-image: none; mask-image: none; } }

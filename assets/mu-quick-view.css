@@ -1,0 +1,133 @@
+/* Quick view (sections/mu-quick-add in snippets/mu-quick-add-dialog). Phones: a sheet with a grab bar that rises from
+   the bottom, the photos in an inset card and the details below. Desktop: details on the left, the photos on the right
+   in a tinted card with a glass thumbnail tray. A product with a level tints the dialog through --h. */
+.mu-qa {
+  inline-size: 100%; max-inline-size: 100%; margin: auto 0 0; padding: 0; border: 0; background: none; color: var(--fg);
+  max-block-size: 92vh; max-block-size: min(92dvh, 100dvh - max(12px, env(safe-area-inset-top, 0px)) - 12px);
+}
+.mu-qa::backdrop { background: color-mix(in srgb, #000 50%, transparent); }
+.mu-qa--view { overflow: auto; overscroll-behavior: contain; }
+[data-qa-body]:focus { outline: 0; }
+.mu-qa__panel { position: relative; background: var(--bg); }
+.mu-qv { display: flex; flex-direction: column; padding: 22px 10px calc(18px + env(safe-area-inset-bottom)); border-radius: var(--mu-radius-lg) var(--mu-radius-lg) 0 0; }
+/* Grab bar: a short ramp line at the top of the sheet. */
+.mu-qv::before { content: ""; position: absolute; inset: 9px auto auto 50%; inline-size: 44px; block-size: 5px; border-radius: 3px; background: var(--mu-g-hero); translate: -50% 0; }
+@media (prefers-reduced-motion: no-preference) { .mu-qa[open] .mu-qa__panel { animation: mu-qv-rise .38s var(--mu-spring); } }
+@keyframes mu-qv-rise { from { translate: 0 48px; opacity: 0; } }
+/* Close: sticky, so it stays reachable while the sheet scrolls. */
+.mu-qa__close { flex: none; }
+.mu-qv > .mu-qa__close { position: -webkit-sticky; position: sticky; inset-block-start: 10px; z-index: 3; display: grid; margin: 0 8px -52px auto; }
+/* Close and gallery steps sit over the photo, so they carry a halo in the panel colour: the two-tone edge stays visible on any image in any scheme. */
+.mu-qv > .mu-qa__close, .mu-qv__step { --mu-ib-halo: 0 0 0 2px var(--bg); background: var(--fg); color: var(--bg); box-shadow: var(--mu-ib-halo); }
+
+/* ---------- Photos ---------- */
+.mu-qv__media { position: relative; overflow: hidden; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--h, var(--fg)) 16%, var(--band)); }
+.mu-qv__media::before { content: ""; position: absolute; inset: 20% 10%; border-radius: 50%; background: var(--h, transparent); opacity: .35; filter: blur(48px); pointer-events: none; }
+.mu-qv__track { position: relative; display: flex; aspect-ratio: var(--qv-ar, 1); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.mu-qv__track::-webkit-scrollbar { display: none; }
+.mu-qv__track:focus-visible { outline-offset: -4px; }
+.mu-qv__slide { position: relative; display: grid; flex: 0 0 100%; place-items: center; scroll-snap-align: center; }
+/* The image sits in the slide's box (not a percentage-height grid cell, which WebKit can fail to resolve: the image
+   then draws at its natural height and is cropped), contained so the whole product shows. */
+.mu-qv__img { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; }
+.mu-qv__slide > .mu-qv__img { position: absolute; inset: 0; }
+.mu-qv__slide--float .mu-qv__img { padding: 10% 12%; object-fit: contain; rotate: -2deg; filter: drop-shadow(0 22px 20px color-mix(in srgb, #000 22%, transparent)); }
+.mu-qv__slide video.mu-qv__img { padding: 0; rotate: none; object-fit: contain; background: #000; filter: none; }
+.mu-qv__defer { position: absolute; inset: 0; display: grid; place-items: center; }
+.mu-qv__defer > .mu-qv__img { position: absolute; inset: 0; padding: 0; rotate: none; filter: none; }
+.mu-qv__defer.is-on > :is(.mu-qv__img, .mu-qv__play) { visibility: hidden; }
+.mu-qv__frame, .mu-qv__defer > .shopify-model-viewer-ui { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; }
+.mu-qv__model { background: var(--bg); }
+.mu-qv__defer > .shopify-model-viewer-ui > .mu-qv__model { position: static; display: block; }
+/* Play: a solid square key in the level colour. */
+.mu-qv__play { position: relative; z-index: 1; display: grid; place-items: center; inline-size: 68px; block-size: 68px; border-radius: var(--mu-radius); background: var(--h, var(--fg)); color: var(--h-fg, var(--bg)); box-shadow: 0 14px 30px -10px color-mix(in srgb, #000 45%, transparent); transition: scale .25s var(--mu-spring); }
+.mu-qv__play .mu-icon { inline-size: 26px; block-size: 26px; fill: currentColor; }
+.mu-qv__play--3d .mu-icon { fill: none; }
+.mu-qv__play:hover { scale: 1.06; }
+.mu-qv__step { display: none; }
+/* Phones: the thumbnails become short segments along the bottom edge; the current one stretches in the ramp. */
+.mu-qv__thumbs { position: absolute; inset: auto 12px 6px; display: flex; justify-content: center; gap: 4px; }
+.mu-qv__thumb { display: grid; place-items: center; block-size: 32px; }
+.mu-qv__thumb::before { content: ""; inline-size: 14px; block-size: 5px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 30%, transparent); transition: inline-size .25s var(--mu-glide); }
+.mu-qv__thumb[aria-current="true"]::before { inline-size: 32px; background: var(--mu-g-hero); }
+.mu-qv__thumb img, .mu-qv__badge { display: none; }
+.mu-qv__thumb:focus-visible { border-radius: 6px; }
+
+/* ---------- Details ---------- */
+.mu-qv__info { padding: 20px 10px 0; }
+.mu-qv__eyebrow { display: inline-block; margin-bottom: 10px; padding: 4px 9px; border-radius: 6px; background: color-mix(in srgb, var(--h, var(--fg)) 22%, transparent); color: var(--fg); }
+.mu-qa__title { font-family: var(--mu-font-heading); font-size: calc(1.75rem * var(--mu-heading-scale)); font-weight: var(--mu-font-heading-weight); line-height: 1; }
+.mu-qv__title { padding-inline-end: 44px; }
+.mu-qv__line { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin-top: 12px; }
+.mu-qa__price { font-size: 1.25rem; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; }
+.mu-qv__level { display: inline-flex; align-items: center; gap: 8px; font-size: .9375rem; }
+.mu-qv__pips { display: grid; grid-template-columns: repeat(var(--n), 6px); align-items: end; gap: 2px; block-size: 18px; }
+.mu-qv__pips i { block-size: calc(30% + 70% * var(--i) / var(--n)); border-radius: 2px; background: color-mix(in srgb, var(--fg) 14%, transparent); }
+.mu-qv__pips i.is-lit { background: var(--h); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 15%, transparent); }
+.mu-qv__desc { margin-top: 14px; font-size: .875rem; line-height: 1.55; }
+
+/* Options: ramp chips and photo tiles, as on the product page. */
+.mu-qa__opt { min-width: 0; margin-top: 20px; padding: 0; border: 0; }
+.mu-qa__opt legend { margin-bottom: 9px; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .08em; text-transform: uppercase; }
+.mu-qa__pills, .mu-qa__colours { display: flex; flex-wrap: wrap; gap: 6px; }
+.mu-qa__pill, .mu-qa__colour { position: relative; }
+:is(.mu-qa__pill, .mu-qa__colour) input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.mu-qa__pill span {
+  display: flex; align-items: center; justify-content: center; min-inline-size: 54px; min-block-size: 46px; padding: 0 14px 3px; border-radius: var(--mu-btn-r-s);
+  background: color-mix(in srgb, var(--fg) 7%, transparent) var(--mu-g-hero) no-repeat 0 100% / 100% 0; font-size: .875rem; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; white-space: nowrap; transition: background-size .2s var(--mu-glide);
+}
+.mu-qa__pills--w1 .mu-qa__pill span { padding-inline: 20px; }
+.mu-qa__pill:hover span { background-size: 100% 3px; }
+.mu-qa__pill input:checked + span { background-color: var(--fg); background-size: 100% 5px; color: var(--bg); }
+.mu-qa__pill input:disabled + span { opacity: .4; text-decoration: line-through; }
+.mu-qa__pill input:focus-visible + span, .mu-qa__colour:has(:focus-visible) .mu-qa__tile { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mu-qa__colour { display: grid; justify-items: center; gap: 6px; inline-size: 60px; cursor: pointer; }
+.mu-qa__tile { display: grid; place-items: center; inline-size: 60px; block-size: 60px; overflow: hidden; border-radius: var(--mu-radius); background: var(--band); transition: box-shadow .2s; }
+.mu-qa__tile img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.mu-qa__tile i:not(.mu-sw) { inline-size: 28px; block-size: 28px; border-radius: 50%; background-size: cover; box-shadow: inset 0 0 0 1px color-mix(in srgb, #000 15%, transparent); }
+.mu-qa__tile b { font-size: .875rem; text-transform: uppercase; }
+.mu-qa__colour-name { font-size: .6875rem; line-height: 1.2; color: var(--mu); text-align: center; overflow-wrap: anywhere; }
+.mu-qa__colour:has(:checked) .mu-qa__tile { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg); }
+.mu-qa__colour:has(:checked) .mu-qa__colour-name { color: var(--fg); font-weight: var(--mu-font-body-bold); }
+.mu-qa__colour:has(:disabled) .mu-qa__tile { opacity: .5; }
+
+/* Pickup at the preferred store (assets/mu-stores.js): a tinted note. */
+.mu-qa__pick { display: flex; align-items: baseline; gap: 8px; margin-top: 18px; padding: 10px 12px; border-radius: var(--mu-field-r); background: color-mix(in srgb, var(--fg) 6%, transparent); font-size: .875rem; }
+.mu-qa__pick[hidden] { display: none; }
+.mu-qa__pick .mu-st__dot { position: relative; inset-block-start: -1px; }
+.mu-qa__pick .mu-nowrap { white-space: nowrap; }
+.mu-qa__alt, .mu-qa__alt-time { display: block; }
+.mu-qa__alt { margin-top: 4px; }
+.mu-qa__add { inline-size: 100%; min-block-size: 56px; margin-top: 20px; }
+.mu-qa__msg { min-block-size: 1.4em; margin-top: 10px; font-size: .875rem; text-align: center; }
+.mu-qa__more { display: block; margin-top: 2px; font-size: .875rem; text-align: center; }
+
+@media (min-width: 750px) {
+  .mu-qa { inline-size: min(980px, 100% - 48px); margin: auto; }
+  .mu-qa.mu-qa--view { max-block-size: min(88vh, 740px); overflow: hidden; }
+  /* The ramp runs along the top edge, clipped by the panel's rounded corners. */
+  .mu-qv { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); max-block-size: min(88vh, 740px); padding: 12px; overflow: hidden; border-radius: var(--mu-radius-lg); }
+  .mu-qv::before { inset: 0 0 auto; z-index: 3; inline-size: auto; block-size: 6px; border-radius: 0; translate: none; }
+  .mu-qv > .mu-qa__close { position: absolute; inset: 24px 24px auto auto; margin: 0; }
+  .mu-qv__media { grid-area: 1 / 2; display: flex; flex-direction: column; min-block-size: 0; }
+  /* The frame keeps the image shape and gives way (the image stays contained) when the dialog is short. */
+  .mu-qv__track { flex: 1 1 auto; min-block-size: 0; }
+  .mu-qv__info { grid-area: 1 / 1; min-block-size: 0; overflow-y: auto; padding: 36px 30px 22px 24px; }
+  .mu-qa__title { font-size: calc(2.25rem * var(--mu-heading-scale)); }
+  .mu-qv__title { padding-inline-end: 0; }
+  /* Arrows at the bottom corners; one with nowhere to go fades out (.is-end from mu-quick-add.js). */
+  .mu-qv__step { position: absolute; inset: auto auto 16px 16px; z-index: 2; display: inline-grid; transition: opacity .2s, visibility 0s, translate .2s var(--mu-glide), box-shadow .2s; }
+  .mu-qv__step:not(.mu-qv__step--prev) { inset-inline: auto 16px; }
+  .mu-qv__step--prev .mu-icon { scale: -1 1; }
+  .mu-qv__step.is-end { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; }
+  /* Thumbnails: a glass tray floating at the bottom centre of the photo card. */
+  .mu-qv__thumbs { inset: auto 50% 14px auto; z-index: 2; gap: 6px; max-inline-size: calc(100% - 140px); padding: 6px; overflow-x: auto; border-radius: calc(var(--mu-radius) + 2px); background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); scrollbar-width: none; translate: 50% 0; }
+  .mu-qv__thumb { position: relative; flex: none; inline-size: 52px; block-size: 52px; overflow: hidden; border-radius: calc(var(--mu-radius) - 6px); background: var(--bg); transition: translate .2s var(--mu-glide); }
+  .mu-qv__thumb::before { position: absolute; inset: auto 6px 4px; z-index: 1; inline-size: auto; block-size: 4px; background: var(--mu-g-hero); opacity: 0; }
+  .mu-qv__thumb[aria-current="true"] { translate: 0 -2px; }
+  .mu-qv__thumb[aria-current="true"]::before { inline-size: auto; opacity: 1; }
+  .mu-qv__thumb img { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .mu-qv__badge { position: absolute; inset: 0; display: grid; place-items: center; inline-size: 24px; block-size: 24px; margin: auto; border-radius: 6px; background: var(--fg); color: var(--bg); }
+  .mu-qv__badge .mu-icon { inline-size: 11px; block-size: 11px; fill: currentColor; }
+}
+@media (prefers-reduced-motion: reduce) { .mu-qv__thumb, .mu-qv__thumb::before, .mu-qa__pill span, .mu-qv__play { transition: none; } }

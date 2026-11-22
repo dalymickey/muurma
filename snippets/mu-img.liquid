@@ -1,0 +1,44 @@
+{%- comment -%}
+  One responsive <img>: a capped srcset from mu-srcset, the sizes the slot really takes, and a modest src fallback.
+  Lazy and decoded off the main thread unless it's the page's main image (fp 'high': eager, high priority).
+  @param image {Image} the image (or media with a preview image)
+  @param sizes {String} the sizes attribute (optional, default 100vw)
+  @param max {Number} the widest file the slot can need (optional, default 2400)
+  @param class {String} (optional)
+  @param alt {String} plain text, escaped here (optional, default empty)
+  @param loading {String} 'lazy' (default) or 'eager'
+  @param fp {String} fetchpriority: 'high' for the main image, otherwise left out
+  @param preload {Boolean} also preload the image (main image only; optional)
+  @param style {String} an inline style (optional)
+  @param width {Number} @param height {Number} fixed attributes for small fixed-size images (optional)
+  @param attrs {String} extra raw attributes (optional)
+{%- endcomment -%}
+{%- liquid
+  assign src = image
+  if image.preview_image
+    assign src = image.preview_image
+  endif
+  assign cap = max | default: 2400
+  if src.width and src.width < cap
+    assign cap = src.width
+  endif
+  assign fb = cap
+  if fb > 960
+    assign fb = 960
+  endif
+  assign ld = loading | default: 'lazy'
+  if fp == 'high'
+    assign ld = 'eager'
+  endif
+  assign w_attr = width | default: src.width
+  assign h_attr = height | default: src.height
+  assign sz = sizes | default: '100vw'
+-%}
+{%- comment -%} A preloaded image uses the shorter 'pre' ladder, the list its preload carries (see mu-preload). {%- endcomment -%}
+{%- if preload -%}
+  {%- capture set -%}{% render 'mu-srcset', image: src, max: cap, steps: 'pre' %}{%- endcapture -%}
+  {%- render 'mu-preload', image: src, max: cap, sizes: sz -%}
+{%- else -%}
+  {%- capture set -%}{% render 'mu-srcset', image: src, max: cap %}{%- endcapture -%}
+{%- endif -%}
+<img src="{{ src | image_url: width: fb }}" srcset="{{ set }}" sizes="{{ sz }}" width="{{ w_attr }}" height="{{ h_attr }}" alt="{{ alt | escape }}" loading="{{ ld }}"{% if fp == 'high' %} fetchpriority="high"{% else %} decoding="async"{% endif %}{% if class != blank %} class="{{ class }}"{% endif %}{% if style != blank %} style="{{ style }}"{% endif %}{% if attrs != blank %} {{ attrs }}{% endif %}>

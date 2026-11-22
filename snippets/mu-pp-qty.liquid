@@ -1,0 +1,32 @@
+{%- comment -%}
+  Quantity stepper. The input joins the product form through form="", follows the variant's quantity rule (min,
+  max, increment) and is labelled by #MuQtyLabel-{uid}. assets/mu-product.js wires the buttons. Under it: the rule in
+  words and, when any variant has volume pricing (B2B quantity price breaks), a table of price per quantity tier
+  (mu-pp-breaks), which the script redraws for each variant.
+  @param v {Variant}
+  @param uid {String}
+  @param form_id {String}
+  @param attrs {String} optional theme editor attributes of the quantity block
+{%- endcomment -%}
+{%- liquid
+  assign rule = v.quantity_rule
+  assign qmin = rule.min | default: 1
+  assign qstep = rule.increment | default: 1
+-%}
+<div class="mu-qty" data-qty-wrap {{ attrs }}>
+  <button type="button" class="mu-qty__btn" data-qty-step="-1" aria-label="{{ 'products.qty_less' | t }}"{% if qmin <= 1 %} disabled{% endif %}>{% render 'mu-icon', name: 'minus' %}</button>
+  <input class="mu-qty__input" type="number" name="quantity" form="{{ form_id }}" id="MuQty-{{ uid }}" value="{{ qmin }}" min="{{ qmin }}"{% if rule.max %} max="{{ rule.max }}"{% endif %} step="{{ qstep }}" inputmode="numeric" aria-labelledby="MuQtyLabel-{{ uid }}" data-qty>
+  <button type="button" class="mu-qty__btn" data-qty-step="1" aria-label="{{ 'products.qty_more' | t }}">{% render 'mu-icon', name: 'plus' %}</button>
+</div>
+{%- liquid
+  assign has_rule = false
+  if qmin > 1 or qstep > 1 or rule.max
+    assign has_rule = true
+  endif
+-%}
+<p class="mu-pp__qtyrule mu-muted" data-qty-rule{% unless has_rule %} hidden{% endunless %}>
+  {%- if qstep > 1 %}{{ 'products.qty_increment' | t: step: qstep }} {% endif -%}
+  {%- if qmin > 1 %}{{ 'products.qty_min' | t: min: qmin }} {% endif -%}
+  {%- if rule.max %}{{ 'products.qty_max' | t: max: rule.max }}{% endif -%}
+</p>
+{%- render 'mu-pp-breaks', v: v -%}

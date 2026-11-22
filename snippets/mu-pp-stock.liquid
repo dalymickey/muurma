@@ -1,0 +1,40 @@
+{%- comment -%}
+  Stock level block (product page and featured product): a line and an optional bar for the selected variant's
+  tracked stock. Show "Below threshold" shows it only at or under the threshold; "Always" also shows "In stock" with a
+  full bar above it. Hidden when stock isn't tracked, the variant is sold out or the release date is ahead. The bar
+  fills relative to the threshold. assets/mu-product.js updates it on variant change from the variant data ("stk",
+  capped at threshold + 1 in snippets/mu-pp-data, so the exact count above the threshold never reaches the page).
+  Separate from the section's Low stock tip ("Last N" on the selected size).
+  @param b {Object} block settings
+  @param v {Variant} selected variant
+  @param coming {Boolean} release date ahead
+  @param ph {Boolean} placeholder (featured product with no product): renders nothing
+  @param attrs {String} block.shopify_attributes
+{%- endcomment -%}
+{%- unless ph -%}
+{%- liquid
+  assign th = b.threshold | plus: 0 | at_least: 1
+  assign n = 0
+  if coming == false and v.inventory_management == 'shopify' and v.inventory_quantity > 0
+    assign n = v.inventory_quantity
+  endif
+  assign st_show = false
+  if n > 0
+    if b.show == 'always' or n <= th
+      assign st_show = true
+    endif
+  endif
+  assign st_msg = b.label | strip
+  if st_msg == blank
+    assign st_msg = 'products.stock_left' | t: count: '[count]'
+  endif
+  assign st_fill = n | times: 100 | divided_by: th | at_most: 100
+-%}
+<div class="mu-pp__stock{% if n <= th %} is-low{% endif %}" data-stock-level data-th="{{ th }}" data-show="{{ b.show }}" data-stock-msg="{{ st_msg | escape }}" data-stock-high="{{ 'products.in_stock' | t | escape }}"{% unless st_show %} hidden{% endunless %} {{ attrs }}>
+  <p class="mu-pp__stock-text" data-stock-text>
+    {%- if n <= th -%}{{ st_msg | escape | replace: '[count]', n }}{%- else -%}{{ 'products.in_stock' | t }}{%- endif -%}
+  </p>
+  {%- if b.show_bar -%}<span class="mu-pp__stock-bar" aria-hidden="true"><i data-stock-fill style="--fill: {{ st_fill }}%"></i></span>{%- endif -%}
+</div>
+{%- if request.design_mode and v.inventory_management != 'shopify' -%}<p class="mu-pp__hint">{{ 'products.stock_untracked' | t }}</p>{%- endif -%}
+{%- endunless -%}

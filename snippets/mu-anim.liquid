@@ -1,0 +1,7 @@
+{%- comment -%}
+  Animate on scroll attributes for a section root (assets/mu-motion.js, loaded by the layout). Output only when Theme
+  settings > Animations is on and so is the section's own setting.
+  Accepts: on (the section's animate setting), items (selector of what rises in, inside the root; blank: the root
+  itself), p (optional selector of elements given a scroll progress, for a zoom or drift).
+{%- endcomment -%}
+{%- if settings.motion_level != 'off' and settings.animations and on %} data-mu-motion data-mu-anim="{{ items | escape }}"{% if p != blank %} data-mu-p="{{ p | escape }}"{% endif %}{% endif -%}

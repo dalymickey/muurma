@@ -1,0 +1,284 @@
+/* Showcase sections: Before/after, Countdown, Image hotspots and Image gallery. Each is a band (.mu-fc, from
+   mu-sections.css) in its colour scheme, with the section layout group (snippets/mu-surface). Custom padding (section
+   base) replaces the band's own. Media corners follow the theme radius (square at 0) and get the sticker outline when the
+   sticker look is on. */
+.mu-x__body { margin-inline: 16px; }
+.mu-x__foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 24px; margin: 22px 16px 0; }
+.mu-x__foot .mu-rte { max-inline-size: 60ch; }
+.mu-x__foot .mu-rte > :first-child { margin-top: 0; }
+.mu-x__foot .mu-rte > :last-child { margin-bottom: 0; }
+@media (min-width: 990px) { .mu-x__body { margin-inline: 0; } .mu-x__foot { margin-inline: 0; margin-top: 28px; } }
+
+/* ---------- Before/after (sections/mu-before-after) ---------- */
+/* The frame reserves its shape from the before image (--ba-ar, phones --ba-ar-m), so nothing shifts as it loads. */
+.mu-ba__frame {
+  position: relative; display: block; margin-inline: 16px; overflow: hidden; aspect-ratio: var(--ba-ar-m, 1.5); max-block-size: 88svh;
+  border-radius: var(--mu-radius-lg); background: var(--band, color-mix(in srgb, var(--fg) 6%, var(--bg)));
+  touch-action: pan-y; cursor: ew-resize; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+}
+@media (min-width: 750px) { .mu-ba__frame { aspect-ratio: var(--ba-ar, 1.5); } }
+/* Tall images cap at 88svh; the frame then narrows to keep its shape and sits centered. */
+@media (min-width: 990px) { .mu-ba__frame { margin-inline: auto; inline-size: min(100%, 88svh * var(--ba-ar, 1.5)); } }
+.mu-ba__frame--vertical { touch-action: pan-x; cursor: ns-resize; }
+.mu-ba__layer { position: absolute; inset: 0; }
+.mu-ba__layer picture { display: contents; }
+.mu-ba__img { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.mu-ba__frame--contain .mu-ba__img { object-fit: contain; padding: 6%; }
+.mu-ba__layer--before { clip-path: inset(0 calc(100% - var(--pos)) 0 0); }
+.mu-ba__frame--contain .mu-ba__layer--before { background: var(--band, color-mix(in srgb, var(--fg) 6%, var(--bg))); }
+.mu-ba__frame--vertical .mu-ba__layer--before { clip-path: inset(0 0 calc(100% - var(--pos)) 0); }
+/* Labels: page-coloured chips in the top corners; each fades when the handle nearly covers its image. */
+.mu-ba__label {
+  position: absolute; top: 12px; z-index: 1; max-inline-size: calc(50% - 40px); padding: 7px 12px; overflow: hidden; border-radius: var(--mu-chip-r);
+  background: var(--bg); color: var(--fg); font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .08em; line-height: 1; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap;
+  transition: opacity .2s; pointer-events: none;
+}
+.mu-ba__label--before { left: 12px; }
+.mu-ba__label--after { right: 12px; }
+.mu-ba__frame--vertical .mu-ba__label { max-inline-size: calc(100% - 24px); }
+.mu-ba__frame--vertical .mu-ba__label--after { top: auto; right: auto; bottom: 12px; left: 12px; }
+.mu-ba__frame[data-edge="start"] .mu-ba__label--before, .mu-ba__frame[data-edge="end"] .mu-ba__label--after { opacity: 0; }
+/* Handle: a full-height hit strip with a line and a knob in the button colours. */
+.mu-ba__handle { position: absolute; top: 0; bottom: 0; left: var(--pos); z-index: 2; inline-size: 48px; margin-inline-start: -24px; outline: none; touch-action: none; }
+.mu-ba__handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: 22px; inline-size: 4px; background: var(--bg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 18%, transparent); }
+.mu-ba__frame--vertical .mu-ba__handle { top: var(--pos); right: 0; bottom: auto; left: 0; inline-size: auto; block-size: 48px; margin: -24px 0 0; }
+.mu-ba__frame--vertical .mu-ba__handle::before { top: 22px; right: 0; bottom: auto; left: 0; inline-size: auto; block-size: 4px; }
+.mu-ba__knob {
+  position: absolute; top: 50%; left: 50%; display: grid; place-items: center; inline-size: 48px; block-size: 48px; margin: -24px 0 0 -24px;
+  border-radius: 50%; background: var(--btn); color: var(--btn-fg); box-shadow: inset 0 0 0 2px var(--ring, transparent), 0 6px 16px -6px rgb(0 0 0 / .45);
+  transition: scale .2s var(--mu-spring);
+}
+.mu-ba__frame--vertical .mu-ba__knob svg { rotate: 90deg; }
+.mu-ba__frame.is-drag .mu-ba__knob { scale: 1.08; }
+.mu-ba__handle:focus-visible .mu-ba__knob { outline: 3px solid var(--focus, var(--fg)); outline-offset: 4px; }
+@media (hover: hover) { .mu-ba__frame:hover .mu-ba__knob { scale: 1.06; } }
+.mu-stk .mu-ba__frame { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-ba__knob { box-shadow: inset 0 0 0 var(--stk-w) var(--stk-ink), 3px 3px 0 0 var(--stk-ink); }
+.mu-stk .mu-ba__label { box-shadow: inset 0 0 0 2px var(--stk-ink); background: var(--stk-paper); color: var(--stk-ink); }
+@media (prefers-reduced-motion: reduce) { .mu-ba__knob, .mu-ba__label { transition: none; } }
+@media (forced-colors: active) { .mu-ba__handle::before { background: CanvasText; } .mu-ba__knob { border: 2px solid ButtonText; } }
+
+/* ---------- Countdown (sections/mu-countdown) ---------- */
+/* Split: the copy on the left and the tiles on the right from 990px; phones and Centered stack them. The tiles keep
+   two tabular digits each, so nothing reflows as they change. */
+.mu-cd.mu-cd { grid-template-columns: minmax(0, 1fr); align-items: center; gap: 26px 48px; }
+.mu-cd.mu-cd > * { grid-column: 1; margin-inline: 16px; }
+.mu-cd__copy { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.mu-cd__copy > * { margin: 0; }
+.mu-cd .mu-cd__head { margin: 0; }
+.mu-cd__copy .mu-rte { max-inline-size: 52ch; }
+.mu-cd__date { font-weight: var(--mu-font-body-bold); }
+.mu-cd__cta { margin-top: 8px; }
+.mu-cd--center .mu-cd__copy { align-items: center; text-align: center; }
+.mu-cd--center .mu-cd__head::after { margin-inline: auto; }
+.mu-cd--center :is(.mu-cd__timer, .mu-cd__end) { justify-self: center; }
+.mu-cd__timer { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 8px; }
+.mu-cd__tile {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; min-inline-size: 0; padding: 16px 6px 18px; overflow: hidden;
+  border-radius: var(--mu-radius-lg); background: color-mix(in srgb, var(--fg) 7%, var(--bg));
+}
+.mu-cd__tile::after { content: ""; position: absolute; inset: auto 0 0; block-size: 6px; background: var(--mu-g-hero); }
+.mu-cd__tile b { font-family: var(--mu-font-heading); font-size: clamp(2.25rem, 9vw, 3.25rem); font-weight: var(--mu-font-heading-weight); font-variant-numeric: tabular-nums; line-height: 1; letter-spacing: -.01em; }
+.mu-cd__tile small { color: var(--mu, inherit); font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; text-transform: uppercase; }
+.mu-cd__end { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 24px; border-radius: var(--mu-radius-lg); background: color-mix(in srgb, var(--fg) 7%, var(--bg)); }
+.mu-cd__end[hidden] { display: none; }
+.mu-cd__end > * { margin: 0; }
+.mu-cd__end-title { font-size: calc(1.5rem * var(--mu-heading-scale)); }
+.mu-stk :is(.mu-cd__tile, .mu-cd__end) { background: var(--stk-paper); color: var(--stk-ink); box-shadow: inset 0 0 0 var(--stk-w) var(--stk-ink), var(--stk-o) var(--stk-o) 0 0 var(--stk-ink); }
+.mu-stk .mu-cd__tile small, .mu-stk .mu-cd__end .mu-muted { color: color-mix(in srgb, var(--stk-ink) 75%, var(--stk-paper)); }
+.mu-stk .mu-cd__tile::after { inset: auto var(--stk-w) var(--stk-w); }
+@media (min-width: 990px) {
+  .mu-cd.mu-cd > * { margin-inline: 0; }
+  .mu-cd--split.mu-cd { grid-template-columns: minmax(0, 1fr) auto; }
+  .mu-cd--split.mu-cd > :is(.mu-cd__timer, .mu-cd__end) { grid-column: 2; grid-row: 1; }
+  .mu-cd__timer { gap: 12px; }
+  .mu-cd__tile { inline-size: 120px; padding: 22px 8px 24px; }
+  .mu-cd__tile b { font-size: calc(3.75rem * var(--mu-heading-scale)); }
+  .mu-cd__end { max-inline-size: 460px; padding: 32px; }
+}
+
+/* ---------- Image hotspots (sections/mu-hotspots) ---------- */
+.mu-hs__body { display: grid; gap: 14px; }
+.mu-hs__frame {
+  position: relative; aspect-ratio: var(--ratio, 1.5); border-radius: var(--mu-radius-lg); overflow: hidden;
+  background: var(--band); container-type: inline-size;
+}
+.mu-hs__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+svg.mu-hs__img { fill: currentColor; opacity: .3; }
+.mu-hs__spot { display: contents; }
+/* Spots: a pop of the button colour with a ring of the background so they read on any photo; a 44px hit area. */
+.mu-hs__dot {
+  position: absolute; z-index: 2; left: var(--x); top: var(--y); translate: -50% -50%;
+  display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--btn); color: var(--btn-fg); font: inherit; font-size: .8125rem; font-weight: var(--mu-font-body-bold);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--bg) 80%, transparent), 0 6px 18px rgb(0 0 0 / .25);
+  cursor: pointer; transition: transform .2s ease;
+}
+.mu-hs__dot::before { content: ""; position: absolute; inset: -5px; border-radius: 50%; }
+.mu-hs__dot:focus-visible { outline: 3px solid var(--focus, var(--fg)); outline-offset: 5px; }
+.mu-hs__spot.is-open .mu-hs__dot, .mu-hs__dot.is-hl { transform: scale(1.14); }
+@media (prefers-reduced-motion: no-preference) {
+  .mu-hs__dot::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; box-shadow: 0 0 0 2px var(--bg); animation: mu-hs-ring 2.4s ease-out infinite; pointer-events: none; }
+  .mu-hs__spot.is-open .mu-hs__dot::after { animation: none; opacity: 0; }
+  .mu-hs.is-off .mu-hs__dot::after { animation-play-state: paused; }
+}
+@keyframes mu-hs-ring { 0% { transform: scale(1); opacity: .9; } 80%, 100% { transform: scale(1.75); opacity: 0; } }
+/* The card: docked to the bottom of a narrow image, beside its spot on a wide one (so it's never cut off). */
+.mu-hs__card {
+  position: absolute; z-index: 3; left: 10px; right: 10px; bottom: 10px; display: grid; gap: 8px; padding: 8px;
+  border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); box-shadow: 0 18px 40px rgb(0 0 0 / .24);
+}
+.mu-hs__card[hidden] { display: none; }
+.mu-hs__card > .mu-hs__link { padding-right: 40px; }
+.mu-hs__close { position: absolute; top: 2px; right: 2px; }
+.mu-hs__card .mu-qab { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 0 6px 4px; }
+.mu-hs__qa { gap: 6px; }
+.mu-hs__qa .mu-icon { width: 16px; height: 16px; }
+.mu-qab__msg { font-size: .75rem; line-height: 1.3; }
+.mu-qab__msg:empty { display: none; }
+@container (min-width: 640px) {
+  .mu-hs__card { left: calc(var(--x) + 28px); right: auto; bottom: auto; top: clamp(10px, calc(var(--y) - 44px), calc(100% - 170px)); width: 300px; }
+  .mu-hs__spot--left .mu-hs__card { left: auto; right: calc(100% - var(--x) + 28px); }
+}
+.mu-hs__link { display: flex; align-items: center; gap: 12px; padding: 4px 6px 4px 4px; color: inherit; text-decoration: none; border-radius: var(--mu-chip-r); }
+.mu-hs__thumb { flex: none; width: 72px; height: 72px; border-radius: var(--mu-chip-r); overflow: hidden; background: var(--band); }
+.mu-hs__thumb img, .mu-hs__thumb svg { width: 100%; height: 100%; object-fit: cover; }
+.mu-hs__info { display: grid; gap: 2px; min-width: 0; }
+.mu-hs__name { font-weight: var(--mu-font-body-bold); font-size: .9375rem; line-height: 1.25; }
+.mu-hs__price { font-size: .875rem; }
+.mu-hs__desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; font-size: .875rem; line-height: 1.35; }
+.mu-hs__go { display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; font-size: .8125rem; font-weight: var(--mu-font-body-bold); text-decoration: underline; text-underline-offset: 3px; }
+.mu-hs__go .mu-icon { width: 14px; height: 14px; }
+@media (hover: hover) and (pointer: fine) { a.mu-hs__link:hover .mu-hs__name { text-decoration: underline; text-underline-offset: 3px; } }
+/* The list beside the image (Image and list): numbered rows that light up with their spot. */
+.mu-hs__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; align-content: start; }
+.mu-hs__item {
+  display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border-radius: var(--mu-radius-lg);
+  background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 2px transparent; transition: box-shadow .2s ease;
+}
+.mu-hs__item .mu-hs__link { flex: 1; min-width: 0; }
+.mu-hs__num { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--btn); color: var(--btn-fg); font-size: .8125rem; font-weight: var(--mu-font-body-bold); }
+.mu-hs__item.is-hl { box-shadow: inset 0 0 0 2px var(--fg); }
+@media (min-width: 750px) {
+  /* Under the max height the image narrows rather than crops, so the spots stay on target. */
+  .mu-hs__frame { width: min(100%, calc(var(--mh, 80svh) * var(--ratio, 1.5))); margin-inline: auto; }
+}
+@media (min-width: 990px) {
+  .mu-hs__dot { width: 38px; height: 38px; font-size: .875rem; }
+  .mu-hs--split .mu-hs__body {
+    --hs-w: calc(100% - 28px);
+    grid-template-columns: minmax(0, min(calc(var(--mh, 80svh) * var(--ratio, 1.5)), calc(var(--hs-w) * .6))) minmax(280px, calc(var(--hs-w) * .4));
+    justify-content: center; gap: 28px; align-items: start;
+  }
+  .mu-hs--split .mu-hs__frame { margin-inline: 0; width: 100%; }
+  .mu-hs--img-right .mu-hs__body { grid-template-columns: minmax(280px, calc(var(--hs-w) * .4)) minmax(0, min(calc(var(--mh, 80svh) * var(--ratio, 1.5)), calc(var(--hs-w) * .6))); }
+  .mu-hs--img-right .mu-hs__frame { order: 2; }
+  .mu-hs--tall .mu-hs__list { align-self: center; }
+  .mu-hs--split .mu-hs__list { max-height: var(--mh, 80svh); overflow-y: auto; gap: 10px; }
+  .mu-hs--split .mu-hs__thumb { width: 84px; height: 84px; }
+}
+/* Sticker: ink-outlined spots, cards and rows with the offset shadow. */
+.mu-stk .mu-hs__frame { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-hs__dot { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), 3px 3px 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-hs__card { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-hs__item { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-hs__item.is-hl { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), 4px 4px 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-hs__num { box-shadow: 0 0 0 2px var(--stk-ink); }
+/* The desktop list scrolls (overflow clips), so give the outlines and the lit row's offset shadow room inside it. */
+@media (min-width: 990px) {
+  .mu-stk .mu-hs--split .mu-hs__list { --stk-in: calc(var(--stk-w) + 1px); --stk-out: calc(var(--stk-w) + 5px); padding: var(--stk-in) var(--stk-out) var(--stk-out) var(--stk-in); margin: calc(var(--stk-in) * -1) calc(var(--stk-out) * -1) calc(var(--stk-out) * -1) calc(var(--stk-in) * -1); max-height: calc(var(--mh, 80svh) + var(--stk-in) + var(--stk-out)); }
+}
+@media (prefers-reduced-motion: reduce) { .mu-hs__dot, .mu-hs__item { transition: none; } }
+@media (forced-colors: active) { .mu-hs__dot { border: 2px solid CanvasText; } .mu-hs__card, .mu-hs__item { border: 1px solid CanvasText; } }
+
+/* ---------- Image gallery / Lookbook (sections/mu-gallery) ---------- */
+.mu-gal__grid { list-style: none; margin: 0; padding: 0 16px; display: grid; grid-template-columns: repeat(var(--m-cols, 2), minmax(0, 1fr)); gap: var(--gap, 12px); }
+.mu-gal__tile { position: relative; min-width: 0; display: grid; align-content: start; gap: 8px; }
+.mu-gal__media { position: relative; aspect-ratio: var(--ar, 1); border-radius: var(--mu-radius-lg); overflow: hidden; background: var(--band); }
+.mu-gal__img, .mu-gal__video, .mu-gal__video video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+svg.mu-gal__img { fill: currentColor; opacity: .3; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mu-gal__media--img .mu-gal__img { transition: scale .5s var(--mu-glide, ease); }
+  .mu-gal__tile:has(.mu-gal__hit:hover) .mu-gal__img { scale: 1.04; }
+}
+.mu-gal__hit { position: absolute; inset: 0; z-index: 1; border-radius: inherit; }
+.mu-gal__hit:focus-visible { outline: 3px solid var(--focus, var(--fg)); outline-offset: -5px; }
+.mu-gal__cap { margin: 0; font-weight: var(--mu-font-body-bold); font-size: .9375rem; line-height: 1.3; }
+.mu-gal__cap--over {
+  position: absolute; left: 10px; bottom: 10px; z-index: 1; max-width: calc(100% - 20px); padding: 5px 11px;
+  border-radius: var(--mu-chip-r); background: var(--bg); color: var(--fg); pointer-events: none;
+}
+.mu-gal__tile:has(.mu-gal__hit:hover) .mu-gal__cap { text-decoration: underline; text-underline-offset: 3px; }
+/* Video tiles: the pause key sits top left, clear of the caption and tags. */
+.mu-gal__video .mu-bgv__ctl { inset: 10px auto auto 10px; z-index: 2; }
+/* Mosaic: phones show the first of each five across both columns; desktop a 2x2 tile beside four small ones,
+   alternating sides. Grid cells are square-ish, set by the tile shape. */
+.mu-gal--mosaic .mu-gal__tile--big { grid-column: 1 / -1; }
+/* Masonry: columns of photos at their own shape (read down each column). */
+.mu-gal--masonry .mu-gal__grid { display: block; columns: var(--m-cols, 2); column-gap: var(--gap, 12px); }
+/* Inline grid keeps WebKit balancing the columns (it skips block tiles that avoid breaks). */
+.mu-gal--masonry .mu-gal__tile { display: inline-grid; inline-size: 100%; vertical-align: top; break-inside: avoid; margin-bottom: var(--gap, 12px); }
+.mu-gal--masonry .mu-gal__media { aspect-ratio: var(--tar, 1); }
+/* Columns cut a tile's outline at a column break (its top ring drew at the foot of the previous column), so in the
+   sticker look the ring sits inside the tile's own box; the gap below shrinks to match. */
+.mu-stk .mu-gal--masonry .mu-gal__tile { padding-top: var(--stk-w); margin-bottom: max(0px, calc(var(--gap, 12px) - var(--stk-w))); }
+/* Carousel: a swipe rail on phones and tablets, a slider on desktop. */
+.mu-gal--carousel .mu-gal__grid { display: flex; --item: 78%; scroll-padding-inline: 16px; }
+@media (min-width: 750px) {
+  .mu-gal__grid { grid-template-columns: repeat(min(var(--cols, 3), 3), minmax(0, 1fr)); }
+  .mu-gal--masonry .mu-gal__grid { columns: min(var(--cols, 3), 3); }
+  .mu-gal--carousel .mu-gal__grid { --item: 44%; }
+  .mu-gal--mosaic .mu-gal__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-flow: dense; }
+  .mu-gal--mosaic .mu-gal__tile--big { grid-column: span 2; grid-row: span 2; }
+  .mu-gal--mosaic .mu-gal__tile:nth-child(10n + 6) { grid-column: 3 / span 2; }
+  .mu-gal--mosaic .mu-gal__tile--big { grid-template-rows: minmax(0, 1fr); align-content: stretch; }
+  .mu-gal--mosaic .mu-gal__tile--big .mu-gal__media { aspect-ratio: auto; min-height: 0; }
+  .mu-gal--mosaic.mu-gal--cap-below .mu-gal__tile--big { grid-template-rows: minmax(0, 1fr) auto; }
+}
+@media (min-width: 990px) {
+  .mu-gal__grid, .mu-gal__grid.mu-rail { padding-inline: 0; gap: var(--gap, 12px); }
+  .mu-gal__grid { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
+  .mu-gal--masonry .mu-gal__grid { columns: var(--cols, 3); }
+  .mu-gal--mosaic .mu-gal__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .mu-gal--carousel .mu-gal__grid > * { flex: 0 0 calc((100% - (var(--d-cols, 3) - 1) * var(--gap, 12px)) / var(--d-cols, 3)); }
+  .mu-gal__cap { font-size: 1rem; }
+}
+/* Product tags: a "Shop the look" key on the photo opens a panel of the tagged products over its foot. */
+.mu-gal__tags { position: absolute; z-index: 2; inset: auto 10px 10px 10px; display: grid; justify-items: end; gap: 8px; pointer-events: none; }
+.mu-gal__tags > * { pointer-events: auto; }
+.mu-gal__tagbtn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 4px 6px 4px 12px; list-style: none; cursor: pointer;
+  border-radius: 999px; background: var(--bg); color: var(--fg); font-size: .8125rem; font-weight: var(--mu-font-body-bold);
+  box-shadow: 0 6px 16px rgb(0 0 0 / .18); order: 2;
+}
+.mu-gal__tagbtn::-webkit-details-marker { display: none; }
+.mu-gal__tagbtn .mu-icon { width: 16px; height: 16px; }
+.mu-gal__tagbtn:focus-visible { outline: 3px solid var(--focus, var(--fg)); outline-offset: 2px; }
+.mu-gal__count { display: grid; place-items: center; min-width: 26px; height: 26px; padding-inline: 6px; border-radius: 999px; background: var(--btn); color: var(--btn-fg); font-size: .75rem; }
+/* Over a caption chip the key sits top right instead, so the two never collide. */
+.mu-gal--cap-overlay .mu-gal__tile:has(.mu-gal__cap--over) .mu-gal__tags { inset: 10px 10px auto 10px; }
+.mu-gal--cap-overlay .mu-gal__tile:has(.mu-gal__cap--over) .mu-gal__tagbtn { order: 0; }
+.mu-gal__plist {
+  list-style: none; margin: 0; padding: 6px; display: grid; gap: 4px; justify-self: stretch; max-height: 236px;
+  overflow-y: auto; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); box-shadow: 0 14px 32px rgb(0 0 0 / .22);
+}
+.mu-gal__p { display: flex; align-items: center; gap: 8px; }
+.mu-gal__plink { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 4px; color: inherit; text-decoration: none; border-radius: var(--mu-chip-r); }
+.mu-gal__pthumb { flex: none; width: 48px; height: 48px; border-radius: var(--mu-chip-r); overflow: hidden; background: var(--band); }
+.mu-gal__pthumb img { width: 100%; height: 100%; object-fit: cover; }
+.mu-gal__pinfo { display: grid; min-width: 0; font-size: .8125rem; line-height: 1.3; }
+.mu-gal__pname { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-weight: var(--mu-font-body-bold); }
+@media (hover: hover) and (pointer: fine) { .mu-gal__plink:hover .mu-gal__pname { text-decoration: underline; text-underline-offset: 3px; } }
+.mu-gal__p .mu-qab { flex: none; display: grid; justify-items: end; }
+.mu-gal__qa { gap: 4px; padding-inline: 10px; }
+.mu-gal__qa .mu-icon { width: 14px; height: 14px; }
+.mu-gal__p .mu-qab__msg { max-width: 12ch; text-align: end; }
+/* Sticker: ink-outlined tiles and keys. */
+.mu-stk .mu-gal__media { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-gal__cap--over, .mu-stk .mu-gal__tagbtn { box-shadow: 0 0 0 2px var(--stk-ink), 3px 3px 0 2px var(--stk-ink); }
+.mu-stk .mu-gal__plist { box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), 4px 4px 0 var(--stk-w) var(--stk-ink); }
+@media (forced-colors: active) { .mu-gal__tagbtn, .mu-gal__plist, .mu-gal__cap--over { border: 1px solid CanvasText; } }
+
+/* ---------- Background video key (snippets/mu-bgvideo) ---------- */
+.mu-bgv__ctl { position: absolute; inset: auto 12px 12px auto; z-index: 2; }
+.mu-bgv__ctl .mu-btn { --b-bg: var(--bg); --b-fg: var(--fg); --b-ring: transparent; border-radius: var(--mu-btn-r-s); }

@@ -1,0 +1,5 @@
+{%- comment -%}
+  Empty holder for the subscribe control assets/mu-subs.js builds in the mix pickers (mu-pp-tiers, mu-mix): the words
+  it needs ride on data attributes and the chevron for a long frequency list sits inside until then.
+{%- endcomment -%}
+<div class="mu-subp" data-subp hidden data-legend="{{ 'products.plans' | t | escape }}" data-once="{{ 'subs.once' | t | escape }}" data-freq="{{ 'products.plan_frequency' | t | escape }}" data-save="{{ 'products.plan_save' | t: pct: '[p]' | escape }}">{%- render 'mu-icon', name: 'chevron' -%}</div>

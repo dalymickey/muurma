@@ -1,0 +1,131 @@
+{%- comment -%}
+  Filter & sort panel for the collection and search pages: a sticky rail on desktop and a bottom sheet on phones.
+  Uses Shopify's storefront filters (set up in the Shopify admin). Size-like lists (short
+  values) come first as a pill grid, swatch lists (or any list with swatch data) as colour dots, other lists and
+  booleans as checkboxes with counts, and the price range as a two-handle slider with min / max boxes. Shopify only
+  offers the price filter in the store's default currency. When the store has no filters, the panel holds only sort.
+  Params: results (collection or search), id (form id), action (form action url), clear_url, count (results count),
+  noun ('products' or 'results'), active_count, scheme (colour scheme of the rail), terms (search only).
+{%- endcomment -%}
+{%- liquid
+  assign has_filters = false
+  if results.filters.size > 0
+    assign has_filters = true
+  endif
+  assign count_key = 'collections.show_' | append: noun
+-%}
+<div class="mu-f color-{{ scheme }}{% unless has_filters %} mu-f--sort-only{% endunless %}" id="{{ id }}-panel" data-panel role="dialog" aria-modal="false" aria-labelledby="{{ id }}-title" tabindex="-1">
+  <div class="mu-f__top">
+    <h2 class="mu-f__title" id="{{ id }}-title">
+      {%- render 'mu-icon', name: 'filter' -%}
+      <span class="mu-f__title-desk">{{ 'collections.filter' | t }}</span><span class="mu-f__title-phone">{{ 'collections.filter_sort' | t }}</span>
+      <span class="mu-num" data-part="title-count">{% if active_count > 0 %} · {{ active_count }}{% endif %}</span>
+    </h2>
+    <button class="mu-iconbtn mu-f__close" type="button" data-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+  </div>
+  <form class="mu-f__form" id="{{ id }}" action="{{ action }}" method="get" data-form>
+    {%- if terms != blank -%}
+      <input type="hidden" name="q" value="{{ terms | escape }}">
+      <input type="hidden" name="options[prefix]" value="last">
+    {%- endif -%}
+    <div class="mu-f__body" data-part="filters">
+      {%- if active_count > 0 -%}<a class="mu-f__clear mu-link" href="{{ clear_url }}" data-ajax>{{ 'collections.clear_all' | t }}</a>{%- endif -%}
+
+      <div class="mu-f__group mu-f__group--sort">
+        <label class="mu-f__label" for="{{ id }}-sort">{{ 'collections.sort' | t }}</label>
+        <div class="mu-f__select">
+          <select class="mu-select" id="{{ id }}-sort" name="sort_by" data-sort>
+            {%- assign sort_now = results.sort_by | default: results.default_sort_by -%}
+            {%- for option in results.sort_options -%}
+              <option value="{{ option.value | escape }}"{% if option.value == sort_now %} selected{% endif %}>{{ option.name | escape }}</option>
+            {%- endfor -%}
+          </select>
+          {%- render 'mu-icon', name: 'chevron' -%}
+        </div>
+      </div>
+
+      {%- for pass in (1..2) -%}
+        {%- for filter in results.filters -%}
+          {%- liquid
+            assign pills = false
+            assign swatches = false
+            if filter.presentation == 'swatch'
+              assign swatches = true
+            elsif filter.type == 'list' and filter.presentation != 'image'
+              assign sw_any = filter.values | map: 'swatch' | compact
+              if sw_any.size > 0
+                assign swatches = true
+              endif
+            endif
+            if filter.type == 'list' and swatches == false and filter.presentation != 'image'
+              assign pills = true
+              for v in filter.values
+                if v.label.size > 5
+                  assign pills = false
+                  break
+                endif
+              endfor
+            endif
+            if pass == 1 and pills == false
+              continue
+            endif
+            if pass == 2 and pills
+              continue
+            endif
+            assign fid = id | append: '-' | append: forloop.index
+          -%}
+          <fieldset class="mu-f__group">
+            <legend class="mu-f__label">{{ filter.label | escape }}</legend>
+            {%- case filter.type -%}
+              {%- when 'price_range' -%}
+                {%- liquid
+                  assign max = filter.range_max | divided_by: 100.0 | ceil | at_least: 1
+                  assign lo = filter.min_value.value | default: 0 | divided_by: 100 | floor
+                  assign hi = filter.max_value.value | default: filter.range_max | divided_by: 100.0 | ceil
+                -%}
+                <div class="mu-f__price" data-price-range data-max="{{ max }}" style="--lo: {{ lo | times: 100.0 | divided_by: max | default: 0 }}%; --hi: {{ hi | times: 100.0 | divided_by: max | default: 100 }}%">
+                  <div class="mu-f__track"></div>
+                  <label class="visually-hidden" for="{{ fid }}-min">{{ 'collections.price_from' | t }}</label>
+                  <input class="mu-f__range" type="range" id="{{ fid }}-min" name="{{ filter.min_value.param_name }}" min="0" max="{{ max }}" step="1" value="{{ lo }}" data-min{% if lo == 0 %} data-off{% endif %}>
+                  <label class="visually-hidden" for="{{ fid }}-max">{{ 'collections.price_to' | t }}</label>
+                  <input class="mu-f__range" type="range" id="{{ fid }}-max" name="{{ filter.max_value.param_name }}" min="0" max="{{ max }}" step="1" value="{{ hi }}" data-max-input{% if hi >= max %} data-off{% endif %}>
+                  <div class="mu-f__price-in">
+                    <label class="mu-f__num"><span class="mu-muted">{{ 'collections.price_min' | t }}</span><span class="mu-f__num-box"><span aria-hidden="true">{{ cart.currency.symbol }}</span><input type="number" inputmode="numeric" min="0" max="{{ max }}" step="1" value="{{ lo }}" placeholder="0" data-price-num="min" aria-label="{{ 'collections.price_from' | t }}"></span></label>
+                    <span class="mu-f__dash" aria-hidden="true"></span>
+                    <label class="mu-f__num"><span class="mu-muted">{{ 'collections.price_max' | t }}</span><span class="mu-f__num-box"><span aria-hidden="true">{{ cart.currency.symbol }}</span><input type="number" inputmode="numeric" min="0" max="{{ max }}" step="1" value="{{ hi }}" placeholder="{{ max }}" data-price-num="max" aria-label="{{ 'collections.price_to' | t }}"></span></label>
+                  </div>
+                </div>
+              {%- else -%}
+                {%- if pills -%}
+                  <ul class="mu-f__pills" role="list">
+                    {%- for value in filter.values -%}
+                      <li class="mu-f__pill">
+                        <input type="checkbox" id="{{ fid }}-{{ forloop.index }}" name="{{ value.param_name }}" value="{{ value.value | escape }}"{% if value.active %} checked{% endif %}{% if value.count == 0 and value.active == false %} disabled{% endif %}>
+                        <label for="{{ fid }}-{{ forloop.index }}"><span class="mu-num">{{ value.label | escape }}</span><span class="visually-hidden"> ({{ value.count }})</span></label>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- elsif swatches -%}
+                  {%- render 'mu-filter-swatches', filter: filter, fid: fid -%}
+                {%- else -%}
+                  <ul class="mu-f__checks" role="list">
+                    {%- for value in filter.values -%}
+                      <li class="mu-f__check">
+                        <input type="checkbox" id="{{ fid }}-{{ forloop.index }}" name="{{ value.param_name }}" value="{{ value.value | escape }}"{% if value.active %} checked{% endif %}{% if value.count == 0 and value.active == false %} disabled{% endif %}>
+                        <label for="{{ fid }}-{{ forloop.index }}"><span class="mu-f__box">{% render 'mu-icon', name: 'check' %}</span>{{ value.label | escape }}<span class="mu-f__n mu-num mu-muted">{{ value.count }}</span></label>
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+            {%- endcase -%}
+          </fieldset>
+        {%- endfor -%}
+      {%- endfor -%}
+
+      <div class="mu-f__foot">
+        {%- if active_count > 0 -%}<a class="mu-btn mu-btn--ghost mu-f__foot-clear" href="{{ clear_url }}" data-ajax>{{ 'collections.clear' | t }}</a>{%- endif -%}
+        <button class="mu-btn mu-f__show" type="submit" data-show>{{ count_key | t: count: count }}</button>
+      </div>
+    </div>
+  </form>
+</div>

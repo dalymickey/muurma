@@ -1,0 +1,11 @@
+{%- comment -%}
+  The bag count in words ("3 items"), for the bag heading and the bag's hidden labels. mu-header.js counts the same
+  way after each bag change, from the strings this outputs with strings: true (each plural form rendered with 1 and 7,
+  which the script swaps for the count).
+  @param strings {Boolean} output the JSON strings for mu-header.js instead of the count
+{%- endcomment -%}
+{%- if strings -%}
+  <script type="application/json" data-mu-count-strings>{"noun":"items","items":{"one":{{ 'cart.count_items' | t: count: 1 | json }},"other":{{ 'cart.count_items' | t: count: 7 | json }}},"bag":{{ 'header.bag_count' | t: count: '[c]' | json }}}</script>
+{%- else -%}
+  {{- 'cart.count_items' | t: count: cart.item_count -}}
+{%- endif -%}

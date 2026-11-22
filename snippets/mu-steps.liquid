@@ -1,0 +1,7 @@
+{%- comment -%}
+  Decorative row of rising steps, one per level in its level color, for the bottom edge of a dark panel (404, password).
+  Params: n (number of levels).
+{%- endcomment -%}
+<span class="mu-steps" aria-hidden="true">
+  {%- for i in (1..n) -%}<span class="mu-h-{{ i }}" style="--i: {{ i }}"></span>{%- endfor -%}
+</span>

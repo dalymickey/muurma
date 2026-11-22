@@ -1,0 +1,121 @@
+{
+  "current": "MUURMA",
+  "presets": {
+    "MUURMA": {
+      "color_schemes": {
+        "scheme-1": {
+          "settings": {
+            "background": "#d8d5cf",
+            "band": "#cfcbc4",
+            "text": "#2b2c2b",
+            "muted": "#424a40",
+            "accent": "#424a40",
+            "button": "#2b2c2b",
+            "button_label": "#d8d5cf",
+            "button_ring": "#2b2c2b",
+            "secondary": "#d8d5cf",
+            "secondary_label": "#2b2c2b",
+            "link": "#2b2c2b",
+            "border": "#626a65",
+            "badge": "#424a40",
+            "badge_label": "#d8d5cf",
+            "sale": "#2b2c2b"
+          }
+        },
+        "scheme-2": {
+          "settings": {
+            "background": "#424a40",
+            "band": "#3a4038",
+            "text": "#d8d5cf",
+            "muted": "#c4c6c1",
+            "accent": "#d8d5cf",
+            "button": "#d8d5cf",
+            "button_label": "#2b2c2b",
+            "button_ring": "#d8d5cf",
+            "secondary": "#424a40",
+            "secondary_label": "#d8d5cf",
+            "link": "#d8d5cf",
+            "border": "#a9aba6",
+            "badge": "#d8d5cf",
+            "badge_label": "#2b2c2b",
+            "sale": "#d8d5cf"
+          }
+        },
+        "scheme-3": {
+          "settings": {
+            "background": "#353833",
+            "band": "#2b2c2b",
+            "text": "#d8d5cf",
+            "muted": "#a9aba6",
+            "accent": "#d8d5cf",
+            "button": "#d8d5cf",
+            "button_label": "#2b2c2b",
+            "button_ring": "#d8d5cf",
+            "secondary": "#353833",
+            "secondary_label": "#d8d5cf",
+            "link": "#d8d5cf",
+            "border": "#a9aba6",
+            "badge": "#d8d5cf",
+            "badge_label": "#2b2c2b",
+            "sale": "#d8d5cf"
+          }
+        },
+        "scheme-4": {
+          "settings": {
+            "background": "#2b2c2b",
+            "band": "#353833",
+            "text": "#d8d5cf",
+            "muted": "#a9aba6",
+            "accent": "#a9aba6",
+            "button": "#d8d5cf",
+            "button_label": "#2b2c2b",
+            "button_ring": "#d8d5cf",
+            "secondary": "#2b2c2b",
+            "secondary_label": "#d8d5cf",
+            "link": "#d8d5cf",
+            "border": "#a9aba6",
+            "badge": "#d8d5cf",
+            "badge_label": "#2b2c2b",
+            "sale": "#d8d5cf"
+          }
+        },
+        "scheme-5": {
+          "settings": {
+            "background": "#a9aba6",
+            "band": "#d8d5cf",
+            "text": "#2b2c2b",
+            "muted": "#333632",
+            "accent": "#2b2c2b",
+            "button": "#2b2c2b",
+            "button_label": "#d8d5cf",
+            "button_ring": "#2b2c2b",
+            "secondary": "#a9aba6",
+            "secondary_label": "#2b2c2b",
+            "link": "#2b2c2b",
+            "border": "#2b2c2b",
+            "badge": "#2b2c2b",
+            "badge_label": "#d8d5cf",
+            "sale": "#2b2c2b"
+          }
+        }
+      },
+      "page_scheme": "scheme-1",
+      "gradient_style": "off",
+      "heading_font": "oswald_n4",
+      "heading_scale": 100,
+      "heading_case": "upper",
+      "heading_em": "color",
+      "body_font": "instrument_sans_n4",
+      "body_size": 15,
+      "label_font": "tenor_sans_n4",
+      "radius": 0,
+      "button_shape": "square",
+      "texture": "none",
+      "cart_type": "drawer",
+      "card_style": "plain",
+      "surface_style": "soft",
+      "card_quick_view": true,
+      "animations": true
+    }
+  }
+}

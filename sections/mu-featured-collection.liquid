@@ -1,0 +1,535 @@
+{%- comment -%}
+  Featured collection: a band with the heading, a "See all" link, and product cards.
+  Grid (the default): phones swipe, desktop is a 4-up grid.
+  Lineup: numbered full-width rows. Each row can take the product's accent colour or one of four schemes.
+{%- endcomment -%}
+{{ 'mu-sections.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign c = s.collection
+  assign lineup = false
+  if s.layout == 'lineup'
+    assign lineup = true
+  endif
+-%}
+{%- if lineup -%}{{ 'mu-card-lineup.css' | asset_url | stylesheet_tag }}{%- endif -%}
+<div class="mu-sec mu-fc{% if lineup %} mu-fc--lineup{% endif %} color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}"{% render 'mu-surface', s: s, part: 'attr' %}{% render 'mu-anim', on: section.settings.animate, items: '.mu-fc__title, .mu-fc__item, .mu-lineup__row' %}>
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  {%- if s.heading != blank -%}
+    <div class="mu-fc__head"><h2 class="mu-fc__title">{{ s.heading | escape }}</h2></div>
+  {%- endif -%}
+  {%- if c != blank and s.show_link -%}
+    <a class="mu-fc__all mu-link" href="{{ c.url }}">{{ 'sections.see_all' | t: count: c.products_count }}</a>
+  {%- endif -%}
+  {%- if lineup -%}
+    <ol class="mu-lineup" role="list" style="--mu-lineup-tilt: {{ s.lineup_tilt | default: 0 }}deg">
+      {%- if c != blank and c.products_count > 0 -%}
+        {%- for product in c.products limit: s.limit -%}
+          {%- liquid
+            assign row_class = 'mu-lineup__row'
+            assign row_style = ''
+            if s.row_color == 'schemes'
+              assign slot = forloop.index0 | modulo: 4
+              case slot
+                when 0
+                  assign row_scheme = s.row_scheme_1
+                when 1
+                  assign row_scheme = s.row_scheme_2
+                when 2
+                  assign row_scheme = s.row_scheme_3
+                else
+                  assign row_scheme = s.row_scheme_4
+              endcase
+              assign row_class = row_class | append: ' color-' | append: row_scheme
+            else
+              capture accent
+                render 'mu-accent-color', product: product
+              endcapture
+              assign accent = accent | strip
+              if accent != blank
+                assign on_light = accent | color_contrast: '#ffffff'
+                assign on_dark = accent | color_contrast: '#0b0b0c'
+                if on_light >= on_dark
+                  assign ink = '#ffffff'
+                else
+                  assign ink = '#0b0b0c'
+                endif
+                assign row_style = '--bg: ' | append: accent | append: '; --fg: ' | append: ink | append: '; --btn: ' | append: ink | append: '; --btn-fg: ' | append: accent | append: '; --focus: ' | append: ink | append: '; --link: ' | append: ink | append: '; --bd: ' | append: ink | append: '; --sale: ' | append: ink | append: '; background: var(--bg); color: var(--fg);'
+              endif
+            endif
+          -%}
+          <li class="{{ row_class }}"{% if row_style != blank %} style="{{ row_style }}"{% endif %}>
+            {%- render 'mu-card', product: product, layout: 'lineup', lineup_index: forloop.index, lineup_numbers: s.lineup_numbers, show_sub: s.show_sub_price, eager: forloop.first -%}
+          </li>
+        {%- endfor -%}
+      {%- else -%}
+        {%- for i in (1..4) -%}
+          {%- assign num = i | prepend: '00' | slice: -2, 2 -%}
+          <li class="mu-lineup__row">
+            <article class="mu-lineup__card">
+              <p class="mu-lineup__no mu-lineup__no--{{ s.lineup_numbers | default: 'outline' }}" aria-hidden="true">{{ num }}</p>
+              <div class="mu-lineup__copy"><h3 class="mu-lineup__title">{{ 'sections.placeholder_product' | t }}</h3></div>
+              <div class="mu-lineup__media">{{ 'product-' | append: i | placeholder_svg_tag: 'mu-placeholder' }}</div>
+              <div class="mu-lineup__buy"><p class="mu-lineup__price">{%- assign mu_c = 1900 | times: i -%}{%- render 'mu-money', m: mu_c -%}</p></div>
+            </article>
+          </li>
+        {%- endfor -%}
+      {%- endif -%}
+    </ol>
+  {%- else -%}
+  <ul class="mu-fc__rail mu-rail" role="list">
+    {%- if c != blank and c.products_count > 0 -%}
+      {%- for product in c.products limit: s.limit -%}
+        <li class="mu-fc__item">{% render 'mu-card', product: product, sizes: 'rail' %}</li>
+      {%- endfor -%}
+    {%- else -%}
+      {%- for i in (1..4) -%}
+        <li class="mu-fc__item">
+          <article class="mu-card">
+            <div class="mu-card__media">{{ 'product-' | append: i | placeholder_svg_tag: 'mu-placeholder' }}</div>
+            <h3 class="mu-card__title">{{ 'sections.placeholder_product' | t }}</h3>
+            <p class="mu-card__price">{%- assign mu_c = 1900 | times: i -%}{%- render 'mu-money', m: mu_c -%}</p>
+          </article>
+        </li>
+      {%- endfor -%}
+    {%- endif -%}
+  </ul>
+  {%- endif -%}
+  <div class="mu-block-stickers">{% content_for 'blocks' %}</div>
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.featured_collection.name",
+  "class": "mu-section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-5"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.featured_collection.layout",
+      "default": "grid",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.common.layout_grid"
+        },
+        {
+          "value": "lineup",
+          "label": "t:sections.featured_collection.layout_lineup"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "lineup_numbers",
+      "label": "t:sections.featured_collection.lineup_numbers",
+      "default": "outline",
+      "visible_if": "{{ section.settings.layout == 'lineup' }}",
+      "options": [
+        {
+          "value": "outline",
+          "label": "t:sections.featured_collection.lineup_outline"
+        },
+        {
+          "value": "solid",
+          "label": "t:sections.featured_collection.lineup_solid"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "lineup_tilt",
+      "label": "t:sections.featured_collection.lineup_tilt",
+      "info": "t:sections.featured_collection.lineup_tilt_info",
+      "min": 0,
+      "max": 3,
+      "step": 1,
+      "unit": "deg",
+      "default": 2,
+      "visible_if": "{{ section.settings.layout == 'lineup' }}"
+    },
+    {
+      "type": "select",
+      "id": "row_color",
+      "label": "t:sections.featured_collection.row_color",
+      "info": "t:sections.featured_collection.row_color_info",
+      "default": "accent",
+      "visible_if": "{{ section.settings.layout == 'lineup' }}",
+      "options": [
+        {
+          "value": "accent",
+          "label": "t:sections.featured_collection.row_color_accent"
+        },
+        {
+          "value": "schemes",
+          "label": "t:sections.featured_collection.row_color_schemes"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "row_scheme_1",
+      "label": "t:sections.featured_collection.row_scheme_1",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.layout == 'lineup' and section.settings.row_color == 'schemes' }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "row_scheme_2",
+      "label": "t:sections.featured_collection.row_scheme_2",
+      "default": "scheme-5",
+      "visible_if": "{{ section.settings.layout == 'lineup' and section.settings.row_color == 'schemes' }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "row_scheme_3",
+      "label": "t:sections.featured_collection.row_scheme_3",
+      "default": "scheme-2",
+      "visible_if": "{{ section.settings.layout == 'lineup' and section.settings.row_color == 'schemes' }}"
+    },
+    {
+      "type": "color_scheme",
+      "id": "row_scheme_4",
+      "label": "t:sections.featured_collection.row_scheme_4",
+      "default": "scheme-3",
+      "visible_if": "{{ section.settings.layout == 'lineup' and section.settings.row_color == 'schemes' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sub_price",
+      "label": "t:sections.featured_collection.show_sub_price",
+      "info": "t:sections.featured_collection.show_sub_price_info",
+      "default": true,
+      "visible_if": "{{ section.settings.layout == 'lineup' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.common.bg_full",
+      "info": "t:sections.common.bg_full_info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_radius",
+      "label": "t:sections.common.custom_radius",
+      "info": "t:sections.common.custom_radius_info",
+      "default": false,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "t:sections.common.radius",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.full_width == false and section.settings.custom_radius }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tl",
+      "label": "t:sections.common.round_tl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tr",
+      "label": "t:sections.common.round_tr",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_bl",
+      "label": "t:sections.common.round_bl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_br",
+      "label": "t:sections.common.round_br",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "default": "New arrivals"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "t:sections.common.collection"
+    },
+    {
+      "type": "range",
+      "id": "limit",
+      "label": "t:sections.featured_collection.limit",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "default": 8
+    },
+    {
+      "type": "checkbox",
+      "id": "show_link",
+      "label": "t:sections.featured_collection.show_link",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.animation"
+    },
+    {
+      "type": "checkbox",
+      "id": "animate",
+      "label": "t:sections.common.animate",
+      "info": "t:sections.common.animate_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_background"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:sections.common.bg_image",
+      "info": "t:sections.common.bg_image_info"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay",
+      "label": "t:sections.common.bg_overlay",
+      "info": "t:sections.common.bg_overlay_info",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 0,
+      "visible_if": "{{ section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "text",
+      "id": "demo_bg_image",
+      "label": "t:sections.common.demo_image",
+      "info": "t:sections.common.demo_image_info"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "mu-sticker"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.featured_collection.name"
+    }
+  ]
+}
+{% endschema %}

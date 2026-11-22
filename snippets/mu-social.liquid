@@ -1,0 +1,26 @@
+{%- comment -%}
+  Social profile links from Theme settings > Social media. Only filled-in profiles show.
+  @param class {String} optional extra class on the list
+{%- endcomment -%}
+{%- liquid
+  assign nets = 'instagram,tiktok,youtube,facebook,x,threads,pinterest,snapchat,linkedin,tumblr,vimeo,strava' | split: ','
+  assign any = false
+  for n in nets
+    assign k = 'social_' | append: n
+    if settings[k] != blank
+      assign any = true
+      break
+    endif
+  endfor
+-%}
+{%- if any -%}
+  <ul class="mu-social{% if class %} {{ class }}{% endif %}" role="list">
+    {%- for n in nets -%}
+      {%- assign k = 'social_' | append: n -%}
+      {%- assign lk = 'social.' | append: n -%}
+      {%- if settings[k] != blank -%}
+        <li><a class="mu-social__link" href="{{ settings[k] | escape }}" target="_blank" rel="noopener">{%- render 'mu-icon', name: n -%}<span class="visually-hidden">{{ lk | t }}</span></a></li>
+      {%- endif -%}
+    {%- endfor -%}
+  </ul>
+{%- endif -%}

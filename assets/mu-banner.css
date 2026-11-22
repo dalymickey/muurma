@@ -1,0 +1,146 @@
+/* Full-bleed hero. Copy sits on a 3 by 3 grid over a photograph, a top and bottom veil,
+   optional film grain and a contour overlay. */
+.mu-banner {
+  --mu-b-h: clamp(420px, 62svh, 680px);
+  position: relative;
+  display: grid;
+  min-height: var(--mu-b-h);
+  padding-top: var(--mu-over-pad, 0px);
+  overflow: clip;
+  isolation: isolate;
+  color: var(--fg);
+  background: #2b2c2b;
+}
+.mu-banner--small { --mu-b-h: clamp(280px, 42svh, 460px); }
+.mu-banner--medium { --mu-b-h: clamp(380px, 58svh, 620px); }
+.mu-banner--large { --mu-b-h: clamp(480px, 74svh, 820px); }
+.mu-banner--screen { --mu-b-h: 100vh; }
+@supports (height: 100svh) { .mu-banner--screen { --mu-b-h: 100svh; } }
+.mu-main > .shopify-section:first-child > .mu-banner--screen {
+  --mu-b-h: calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px)));
+}
+@media (max-width: 749px) {
+  .mu-banner--m-small { --mu-b-h: clamp(240px, 48svh, 420px); }
+  .mu-banner--m-medium { --mu-b-h: clamp(320px, 60svh, 520px); }
+  .mu-banner--m-large { --mu-b-h: clamp(400px, 74svh, 640px); }
+  .mu-banner--m-screen { --mu-b-h: 100svh; }
+  .mu-main > .shopify-section:first-child > .mu-banner--m-screen {
+    --mu-b-h: calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px)));
+  }
+}
+
+.mu-banner__media { position: absolute; inset: 0; z-index: 0; }
+.mu-banner__img,
+.mu-banner__vid {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  object-position: var(--mu-banner-focal, 50% 38%);
+}
+.mu-banner__video { position: absolute; inset: 0; display: block; }
+.mu-banner__ph { position: absolute; inset: 0; width: 100%; height: 100%; background: #2b2c2b; }
+.mu-banner__veil {
+  position: absolute; left: 0; right: 0; z-index: 2; pointer-events: none;
+}
+.mu-banner__veil--top { top: 0; height: 140px; }
+.mu-banner__veil--bottom { bottom: 0; height: 58%; }
+.mu-banner__motif {
+  position: absolute; left: -4%; right: 30%; bottom: -8%; height: 55%;
+  z-index: 3; pointer-events: none; opacity: var(--mu-contour-a, 0.14); color: var(--fg);
+}
+.mu-banner__motif-img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: center bottom; }
+.mu-banner__grain {
+  position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  background-image: var(--mu-grain);
+  background-size: 256px 256px;
+  opacity: var(--mu-grain-a, 0.42);
+  mix-blend-mode: overlay;
+}
+.mu-banner .mu-bgv__ctl {
+  position: absolute; z-index: 6; inset: calc(var(--mu-over-pad, 0px) + 12px) var(--gutter) auto auto; pointer-events: auto;
+}
+
+.mu-banner__frame {
+  position: relative; z-index: 5; display: grid; min-height: var(--mu-b-h);
+  padding: clamp(28px, 5vw, 48px) var(--gutter) clamp(28px, 4vw, 44px);
+}
+.mu-banner__copy {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 18px;
+  align-content: center; justify-items: start; max-inline-size: 560px;
+}
+.mu-banner__eyebrow {
+  display: flex; align-items: center; gap: 12px; margin: 0;
+  font-family: var(--mu-font-body); font-weight: 400; font-size: 10px;
+  letter-spacing: 0.28em; line-height: 1.2; text-transform: uppercase; color: var(--mu);
+}
+.mu-banner__rule { display: block; width: 28px; height: 1px; background: var(--mu); flex: none; }
+.mu-banner__titles { display: flex; flex-direction: column; gap: 8px; }
+.mu-banner__study {
+  margin: 0;
+  font-family: var(--mu-font-wordmark, var(--mu-font-heading));
+  font-weight: 400; font-size: 12px; letter-spacing: 0.42em; line-height: 1;
+  text-indent: 0.08em; text-transform: uppercase; color: var(--fg);
+}
+.mu-banner__title {
+  margin: 0; max-inline-size: none;
+  font-weight: 400; font-size: clamp(56px, 6vw, 88px);
+  line-height: 0.92; letter-spacing: 0.04em; text-transform: uppercase; text-wrap: balance;
+  color: var(--fg);
+}
+.mu-banner__sub {
+  margin: 0; max-inline-size: 22.5em;
+  font-size: 15px; font-weight: 400; line-height: 1.55; letter-spacing: 0.01em; color: var(--mu);
+}
+.mu-banner__fine {
+  margin: 0; font-size: 10.5px; letter-spacing: 0.08em; color: var(--mu);
+}
+.mu-banner__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; }
+.mu-banner .mu-btn {
+  height: 42px; min-height: 42px; padding: 0 22px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.2em; text-transform: uppercase;
+  border-radius: 0;
+}
+.mu-banner__textlink {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0; height: auto; min-height: 0;
+  background: none; border: 0; box-shadow: none;
+  font-family: var(--mu-font-body); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none;
+  color: var(--fg);
+}
+.mu-banner__textlink:hover { color: var(--mu); }
+
+.mu-banner--at-top_left .mu-banner__copy { align-self: start; justify-self: start; }
+.mu-banner--at-top_center .mu-banner__copy { align-self: start; justify-self: center; }
+.mu-banner--at-top_right .mu-banner__copy { align-self: start; justify-self: end; }
+.mu-banner--at-middle_left .mu-banner__copy { align-self: center; justify-self: start; }
+.mu-banner--at-middle_center .mu-banner__copy { align-self: center; justify-self: center; }
+.mu-banner--at-middle_right .mu-banner__copy { align-self: center; justify-self: end; }
+.mu-banner--at-bottom_left .mu-banner__copy { align-self: end; justify-self: start; }
+.mu-banner--at-bottom_center .mu-banner__copy { align-self: end; justify-self: center; }
+.mu-banner--at-bottom_right .mu-banner__copy { align-self: end; justify-self: end; }
+
+.mu-banner--align-left .mu-banner__copy { text-align: start; align-items: flex-start; }
+.mu-banner--align-center .mu-banner__copy { text-align: center; align-items: center; }
+.mu-banner--align-center .mu-banner__actions { justify-content: center; }
+.mu-banner--align-right .mu-banner__copy { text-align: end; align-items: flex-end; }
+.mu-banner--align-right .mu-banner__actions { justify-content: flex-end; }
+
+@media (max-width: 749px) {
+  .mu-banner__img, .mu-banner__vid { object-position: var(--mu-banner-focal-m, var(--mu-banner-focal, 50% 28%)); }
+  .mu-banner__veil--top { height: 130px; }
+  .mu-banner__veil--bottom { height: 62%; }
+  .mu-banner__motif { left: -20%; right: -5%; bottom: -6%; height: 48%; }
+  .mu-banner__frame { padding: 20px; }
+  .mu-banner__copy { left: 0; right: 0; max-inline-size: none; gap: 14px; }
+  .mu-banner__title { font-size: 56px; letter-spacing: 0.035em; }
+  .mu-banner__titles { gap: 6px; }
+  .mu-banner__sub { font-size: 14px; max-inline-size: none; }
+  .mu-banner__eyebrow { font-size: 9px; }
+  .mu-banner__study { font-size: 11px; letter-spacing: 0.36em; }
+  .mu-banner__actions { width: 100%; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .mu-banner .mu-btn { width: 100%; }
+  .mu-banner__fine { font-size: 10px; letter-spacing: 0.06em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-banner__grain { display: none; }
+}

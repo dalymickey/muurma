@@ -1,0 +1,89 @@
+{%- comment -%}
+  Reads a product's level (D10): the custom.scale metafield, then a tag starting with the Scale tag prefix
+  (level:4), otherwise none. Prints "level|total|name|noun|scale" with no whitespace, so callers capture and split it:
+    {% capture h %}{% render 'mu-level', product: p %}{% endcapture %}{% assign h = h | split: '|' %}
+  level is 0 when the product has no level, and always 0 for products in Product colors only mode (Theme settings > Scale > Mode). Pass level: to name a level without a product (scale: 2 for the
+  second scale; with level:, the scale comes only from scale:). Products in Theme settings > Scale > Second scale collection read the second scale's name,
+  levels and level names; colours always come from the one ramp.
+{%- endcomment -%}
+{%- liquid
+  assign sc = scale | default: 1 | plus: 0
+  if level == blank and product != blank and settings.scale2_collection != blank
+    assign sc2 = settings.scale2_collection.handle
+    for pc in product.collections
+      if pc.handle == sc2
+        assign sc = 2
+        break
+      endif
+    endfor
+  endif
+  if sc == 2 and settings.scale2_collection != blank
+    assign n = settings.scale2_levels | default: 5
+    assign noun_key = settings.scale2_noun | default: 'intensity'
+    assign custom = settings.scale2_names
+  else
+    assign sc = 1
+    assign n = settings.scale_levels | default: 6
+    assign noun_key = settings.scale_noun | default: 'level'
+    assign custom = settings.scale_names
+  endif
+  assign lv = 0
+  if level != blank
+    assign lv = level | plus: 0
+  elsif true
+    # This theme does not use the level scale. A product never resolves a level.
+  elsif product != blank
+    assign mf = product.metafields.custom.scale.value
+    if mf != blank
+      assign lv = mf | plus: 0
+    else
+      assign pre = settings.scale_tag_prefix | default: 'level:' | downcase
+      assign pre_len = pre | size
+      for tag in product.tags
+        assign tl = tag | downcase
+        assign head = tl | slice: 0, pre_len
+        if head == pre
+          assign lv = tl | slice: pre_len, 4 | strip | plus: 0
+          break
+        endif
+      endfor
+    endif
+  endif
+  if lv > n
+    assign lv = n
+  elsif lv < 0
+    assign lv = 0
+  endif
+  assign noun_tk = 'scale.noun_' | append: noun_key
+  assign noun = noun_tk | t
+  if noun_key == 'custom' and settings.scale_custom != blank
+    assign noun = settings.scale_custom | strip | replace: '|', '/'
+  endif
+  assign name = ''
+  if lv > 0
+    assign names = custom | split: ','
+    assign ni = lv | minus: 1
+    if names.size < n
+      # Built-in names come 7 per scale, mildest first; each level count takes a fixed pick so 1 is always the
+      # lowest name and n the highest.
+      assign names_key = 'scale.names_' | append: noun_key
+      assign names = names_key | t | split: ','
+      case n
+        when 3
+          assign pick = '0,3,6'
+        when 4
+          assign pick = '0,2,4,6'
+        when 5
+          assign pick = '0,1,2,4,6'
+        when 6
+          assign pick = '0,1,2,4,5,6'
+        else
+          assign pick = '0,1,2,3,4,5,6'
+      endcase
+      assign pick = pick | split: ','
+      assign ni = pick[ni] | plus: 0
+    endif
+    assign name = names[ni] | strip
+  endif
+-%}
+{{- lv }}|{{ n }}|{{ name | replace: '|', '/' }}|{{ noun }}|{{ sc -}}

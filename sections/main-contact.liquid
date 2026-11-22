@@ -1,0 +1,364 @@
+{%- comment -%}
+  Contact: the page title and copy on the page surface, the form in a rounded panel with the send
+  button at its foot. Phones: heading, the form, one action (send).
+{%- endcomment -%}
+{{ 'mu-pages.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign heading = s.heading | default: page.title
+  assign fid = 'mu-contact-' | append: section.id
+-%}
+<div class="mu-sec mu-contact">
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  <div class="mu-contact__copy">
+    {%- if s.eyebrow != blank -%}<p class="mu-eyebrow mu-muted">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    <h1 class="mu-pg__title">{{ heading | escape }}</h1>
+    {%- if page.content != blank -%}
+      <div class="mu-rte mu-muted mu-contact__text">{{ page.content }}</div>
+    {%- elsif s.text != blank -%}
+      <div class="mu-rte mu-muted mu-contact__text">{{ s.text }}</div>
+    {%- endif -%}
+    {%- if section.blocks.size > 0 -%}
+      <dl class="mu-contact__details">
+        {%- for block in section.blocks -%}
+          <div {{ block.shopify_attributes }}>
+            <dt class="mu-eyebrow mu-muted">{{ block.settings.label | escape }}</dt>
+            <dd class="mu-rte">{{ block.settings.value }}</dd>
+          </div>
+        {%- endfor -%}
+      </dl>
+    {%- endif -%}
+  </div>
+
+  <div class="mu-contact__panel color-{{ s.color_scheme }}">
+    {%- form 'contact', id: fid, class: 'mu-contact__form' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="mu-form-msg" role="status" tabindex="-1">{% render 'mu-icon', name: 'check' %}{{ 'contact.success' | t }}</p>
+      {%- elsif form.errors -%}
+        <div class="mu-form-msg mu-form-msg--error" role="alert" id="{{ fid }}-err">
+          <p>{{ 'contact.error' | t }}</p>
+          <ul>
+            {%- for field in form.errors -%}
+              <li>{% if field == 'form' %}{{ form.errors.messages[field] }}{% else %}{{ form.errors.translated_fields[field] | capitalize }} {{ form.errors.messages[field] }}{% endif %}</li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+      <div class="mu-field">
+        <label for="{{ fid }}-name">{{ 'contact.name' | t }}</label>
+        <input class="mu-input" id="{{ fid }}-name" type="text" name="contact[name]" autocomplete="name" value="{{ form.name }}">
+      </div>
+      <div class="mu-field">
+        <label for="{{ fid }}-email">{{ 'contact.email' | t }} <span aria-hidden="true">*</span></label>
+        <input class="mu-input" id="{{ fid }}-email" type="email" name="contact[email]" autocomplete="email" spellcheck="false" autocapitalize="off" required value="{% if form.email != blank %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"{% if form.errors contains 'email' %} aria-invalid="true" aria-describedby="{{ fid }}-err"{% endif %}>
+      </div>
+      {%- if s.show_phone -%}
+        <div class="mu-field">
+          <label for="{{ fid }}-phone">{{ 'contact.phone' | t }}</label>
+          <input class="mu-input" id="{{ fid }}-phone" type="tel" name="contact[phone]" autocomplete="tel" value="{{ form.phone }}">
+        </div>
+      {%- endif -%}
+      {%- if s.show_order -%}
+        <div class="mu-field">
+          <label for="{{ fid }}-order">{{ 'contact.order' | t }}</label>
+          <input class="mu-input" id="{{ fid }}-order" type="text" name="contact[order]" inputmode="numeric" value="{{ form.order }}">
+        </div>
+      {%- endif -%}
+      <div class="mu-field mu-field--wide">
+        <label for="{{ fid }}-body">{{ 'contact.message' | t }} <span aria-hidden="true">*</span></label>
+        <textarea class="mu-input mu-textarea" id="{{ fid }}-body" name="contact[body]" rows="6" required>{{ form.body }}</textarea>
+      </div>
+      <p class="mu-muted mu-contact__req">{{ 'contact.required' | t }}</p>
+      <button class="mu-btn mu-contact__send" type="submit">{{ 'contact.submit' | t }}{% render 'mu-icon', name: 'arrow' %}</button>
+    {%- endform -%}
+  </div>
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.contact.name",
+  "class": "mu-section",
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-5"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.hero.eyebrow",
+      "default": "Get in touch"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "info": "t:sections.contact.heading_info"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:sections.common.text",
+      "info": "t:sections.contact.text_info",
+      "default": "<p>Questions about an order or a product? We reply within one working day.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_phone",
+      "label": "t:sections.contact.show_phone",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_order",
+      "label": "t:sections.contact.show_order",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_background"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:sections.common.bg_image",
+      "info": "t:sections.common.bg_image_info"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay",
+      "label": "t:sections.common.bg_overlay",
+      "info": "t:sections.common.bg_overlay_info",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 0,
+      "visible_if": "{{ section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "text",
+      "id": "demo_bg_image",
+      "label": "t:sections.common.demo_image",
+      "info": "t:sections.common.demo_image_info"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "detail",
+      "name": "t:sections.contact.detail",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "t:sections.contact.label",
+          "default": "Email"
+        },
+        {
+          "type": "richtext",
+          "id": "value",
+          "label": "t:sections.contact.value",
+          "default": "<p>hello@example.com</p>"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.contact.name"
+    }
+  ]
+}
+{% endschema %}

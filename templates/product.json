@@ -1,0 +1,111 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "title": {
+          "type": "title",
+          "settings": {
+            "show_rating": false
+          }
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "show_tax": true,
+            "show_installments": true
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "size_label": "Size chart",
+            "size_style": "popup",
+            "size_option": "Size"
+          }
+        },
+        "quantity": {
+          "type": "quantity",
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": true,
+            "show_pickup": true,
+            "show_gift_card_recipient": true
+          }
+        },
+        "trust": {
+          "type": "trust",
+          "settings": {
+            "label_1": "Made to order",
+            "icon_1": "box",
+            "label_2": "Shipped worldwide",
+            "icon_2": "truck",
+            "label_3": "Zero dead stock",
+            "icon_3": "check"
+          }
+        },
+        "details": {
+          "type": "collapsible",
+          "settings": {
+            "source": "description",
+            "heading": "Details"
+          }
+        },
+        "delivery": {
+          "type": "shipping",
+          "settings": {
+            "show_policy": true,
+            "open": false
+          }
+        },
+        "share": {
+          "type": "share",
+          "settings": {
+            "share_facebook": true,
+            "share_x": true,
+            "share_pinterest": true,
+            "share_native": true
+          }
+        }
+      },
+      "block_order": [
+        "title",
+        "price",
+        "variant_picker",
+        "quantity",
+        "buy_buttons",
+        "trust",
+        "details",
+        "delivery",
+        "share"
+      ],
+      "settings": {
+        "media_scheme": "scheme-3",
+        "media_style": "fill",
+        "media_ratio": "portrait",
+        "image_zoom": true,
+        "panel_scheme": "scheme-1",
+        "low_stock": 5,
+        "price_in_button": true,
+        "rows_layout": "accordion",
+        "notify": true,
+        "sticky_bar": true,
+        "bar_scheme": "scheme-4"
+      }
+    },
+    "related": {
+      "type": "mu-related-products",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "More from the study"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "related"
+  ]
+}

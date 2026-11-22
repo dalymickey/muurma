@@ -1,0 +1,12 @@
+{%- comment -%}
+  Breadcrumb trail for the collection, search, blog, article and page templates (each section's Show breadcrumbs
+  setting): Home, an optional middle link, then the current page. The matching BreadcrumbList is in mu-json-ld.
+  Params: current (the page's own title), mid_title and mid_url (optional middle link, e.g. the blog), class (optional).
+{%- endcomment -%}
+<nav class="mu-crumbs mu-muted{% if class != blank %} {{ class }}{% endif %}" aria-label="{{ 'products.breadcrumb' | t }}">
+  <ol class="mu-crumbs__list" role="list">
+    <li><a href="{{ routes.root_url }}">{{ 'general.home' | t }}</a></li>
+    {%- if mid_title != blank -%}<li><a href="{{ mid_url }}">{{ mid_title | escape }}</a></li>{%- endif -%}
+    <li><span aria-current="page">{{ current | escape }}</span></li>
+  </ol>
+</nav>

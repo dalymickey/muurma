@@ -1,0 +1,42 @@
+{%- comment -%}
+  Picks a text colour that reads on every colour in a list (min contrast 4.5:1, WCAG AA). Tries the preferred colours
+  in order and returns the first that clears 4.5:1 on all of them; when none does, returns black or white, whichever
+  has the better worst case. Used for the collection banner's Auto title colour.
+  Accepts: bgs (background colours joined with '|'; hex, rgb() or rgba()), prefer (candidates joined with '|').
+{%- endcomment -%}
+{%- liquid
+  assign list = bgs | split: '|'
+  assign cands = prefer | append: '|#000000|#FFFFFF' | split: '|'
+  assign pick = ''
+  assign best = '#000000'
+  assign best_lo = -1
+  for c in cands
+    if c == blank
+      continue
+    endif
+    assign lo = 99
+    for b in list
+      if b == blank
+        continue
+      endif
+      assign r = c | color_contrast: b
+      if r < lo
+        assign lo = r
+      endif
+    endfor
+    if lo >= 4.5
+      assign pick = c
+      break
+    endif
+    if c == '#000000' or c == '#FFFFFF'
+      if lo > best_lo
+        assign best = c
+        assign best_lo = lo
+      endif
+    endif
+  endfor
+  if pick == ''
+    assign pick = best
+  endif
+  echo pick
+-%}

@@ -1,0 +1,501 @@
+{%- comment -%}
+  Level footer: the deep end of the scale ramp (or a color scheme) under a row of stepped rungs, one per level and
+  named from the level scale (hidden in Product colors only mode); a big line with the CTA, link columns (blocks), the newsletter, the wordmark or logo,
+  then copyright, payment icons and the country / currency.
+{%- endcomment -%}
+{{ 'mu-footer.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign wordmark = s.wordmark | default: shop.name
+  assign chars = wordmark | size | at_least: 4
+  assign desc = false
+  assign wm_down = wordmark | downcase
+  assign desc_chars = 'g,j,p,q,y' | split: ','
+  for c in desc_chars
+    if wm_down contains c
+      assign desc = true
+    endif
+  endfor
+  assign n = settings.scale_levels | default: 6
+  if s.background == 'scheme'
+    assign tone = 'mu-footer--scheme color-' | append: s.color_scheme
+  else
+    assign tone = 'mu-footer--ramp mu-h-' | append: n
+  endif
+-%}
+<footer class="mu-footer {{ tone }}" style="--n: {{ n }}">
+  {%- if s.heading != blank or s.cta_label != blank -%}
+    <div class="mu-footer__top">
+      {%- if s.heading != blank -%}<h2 class="mu-footer__heading mu-display">{{ s.heading }}</h2>{%- endif -%}
+      {%- if s.cta_label != blank -%}
+        <a class="mu-btn mu-footer__cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}{% render 'mu-icon', name: 'arrow' %}</a>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  <div class="mu-footer__grid">
+    {%- for block in section.blocks -%}
+      {%- if block.type == 'links' and block.settings.menu != blank -%}
+        <nav class="mu-footer__col" aria-label="{{ block.settings.heading | default: block.settings.menu.title | escape }}" {{ block.shopify_attributes }}>
+          <h3 class="mu-eyebrow mu-muted">{{ block.settings.heading | default: block.settings.menu.title | escape }}</h3>
+          <ul role="list">
+            {%- for link in block.settings.menu.links -%}
+              <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+    {%- endfor -%}
+    {%- if s.newsletter -%}
+      <div class="mu-footer__news">
+        <h3 class="mu-eyebrow mu-muted" id="MuFooterNews-{{ section.id }}">{{ s.newsletter_heading | escape }}</h3>
+        {%- form 'customer', id: 'MuFooterNewsForm', class: 'mu-footer__form' -%}
+          <input type="hidden" name="contact[tags]" value="newsletter">
+          {%- if form.posted_successfully? -%}
+            <p class="mu-footer__note" role="status">{{ 'newsletter.success' | t }}</p>
+          {%- else -%}
+            <div class="mu-field-pill">
+              <label class="visually-hidden" for="MuFooterEmail-{{ section.id }}">{{ 'newsletter.email' | t }}</label>
+              <input id="MuFooterEmail-{{ section.id }}" type="email" name="contact[email]" required autocomplete="email" placeholder="{{ 'newsletter.email' | t }}" aria-describedby="MuFooterNews-{{ section.id }}">
+              <button type="submit" class="mu-btn mu-btn--sm mu-footer__submit">
+                <span class="mu-footer__submit-label">{{ 'newsletter.submit' | t }}</span>
+                {%- render 'mu-icon', name: 'arrow', class: 'mu-footer__submit-icon' -%}
+              </button>
+            </div>
+            {%- assign terms_id = 'MuFooterTerms-' | append: section.id -%}
+{%- render 'mu-nl-terms', id: terms_id -%}
+            {%- if form.errors -%}<p class="mu-footer__note" role="alert">{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>{%- endif -%}
+          {%- endif -%}
+        {%- endform -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- assign mark = s.brand_mark | default: 'wordmark' -%}
+  {%- if mark == 'logo' -%}
+    {%- capture logo -%}{%- render 'mu-logo', scheme: s.color_scheme, width: s.logo_width, class: 'mu-footer__logo-img', loading: 'lazy' -%}{%- endcapture -%}
+    {%- if logo != blank -%}
+      <div class="mu-footer__logo"><a href="{{ routes.root_url }}">{{ logo }}</a></div>
+    {%- else -%}
+      {%- assign mark = 'wordmark' -%}
+    {%- endif -%}
+  {%- endif -%}
+  {%- if mark == 'wordmark' and s.wordmark_marquee -%}
+    {%- liquid
+      assign pace = settings.marquee_speed | default: 60 | at_least: 20
+      assign wm_dur = s.wordmark_speed | default: 40 | times: 60 | divided_by: pace | at_least: 10
+      assign wm_style = s.wordmark_style | default: 'alternate'
+    -%}
+    <div class="mu-footer__mq mu-footer__mq--{{ wm_style }}" style="--mu-wm-dur: {{ wm_dur }}s">
+      <div class="mu-footer__mq-track">
+        <div class="mu-footer__mq-set">
+          {%- for i in (1..6) -%}
+            <p class="mu-footer__mq-word mu-display"{% unless forloop.first %} aria-hidden="true"{% endunless %}>{{ wordmark | escape }}</p>
+          {%- endfor -%}
+        </div>
+        <div class="mu-footer__mq-set" aria-hidden="true">
+          {%- for i in (1..6) -%}
+            <p class="mu-footer__mq-word mu-display" aria-hidden="true">{{ wordmark | escape }}</p>
+          {%- endfor -%}
+        </div>
+      </div>
+      <button type="button" class="mu-footer__pause" data-wm-pause aria-pressed="false" aria-label="{{ 'sections.footer.wordmark_pause' | t | escape }}">
+        {%- render 'mu-icon', name: 'pause', class: 'mu-footer__pause-icon' -%}
+        {%- render 'mu-icon', name: 'play', class: 'mu-footer__play-icon' -%}
+      </button>
+    </div>
+    <script>
+      (() => {
+        const root = document.currentScript.previousElementSibling;
+        const btn = root && root.querySelector('[data-wm-pause]');
+        if (!btn) return;
+        const pauseLabel = {{ 'sections.footer.wordmark_pause' | t | json }};
+        const playLabel = {{ 'sections.footer.wordmark_play' | t | json }};
+        btn.addEventListener('click', () => {
+          const paused = root.classList.toggle('is-paused');
+          btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+          btn.setAttribute('aria-label', paused ? playLabel : pauseLabel);
+        });
+      })();
+    </script>
+  {%- elsif mark == 'wordmark' -%}
+    {%- comment -%}
+      CSS sizes it from the character count (a safe estimate that never overflows); the script then measures the
+      rendered text and scales it to fill the width exactly, again on resize and once the font has loaded.
+    {%- endcomment -%}
+    <p class="mu-footer__wordmark mu-display{% if desc %} is-desc{% endif %}" aria-hidden="true" style="--chars: {{ chars }}" data-fit><span>{{ wordmark | escape }}</span></p>
+    <script>
+      (() => {
+        const el = document.currentScript.previousElementSibling, t = el.firstElementChild;
+        const fit = () => {
+          el.style.fontSize = '';
+          const w = t.getBoundingClientRect().width, max = el.clientWidth;
+          if (!w || !max) return;
+          el.style.fontSize = (parseFloat(getComputedStyle(el).fontSize) * max / w * 0.995) + 'px';
+        };
+        let raf;
+        const queue = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fit); };
+        if ('ResizeObserver' in window) new ResizeObserver(queue).observe(el.parentElement);
+        document.fonts?.ready.then(queue);
+        queue();
+      })();
+    </script>
+  {%- endif -%}
+
+  {%- capture follow -%}{%- if s.follow_on_shop and shop.features.follow_on_shop? -%}{{ shop | login_button: action: 'follow' }}{%- endif -%}{%- endcapture -%}
+  {%- capture social -%}{%- if s.show_social -%}{%- render 'mu-social' -%}{%- endif -%}{%- endcapture -%}
+  {%- if follow != blank or social != blank -%}
+    <div class="mu-footer__social">
+      {{- social -}}
+      {%- if follow != blank -%}<div class="mu-footer__follow">{{ follow }}</div>{%- endif -%}
+    </div>
+  {%- endif -%}
+
+  <div class="mu-footer__base mu-muted">
+    <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name | link_to: routes.root_url }}</span>
+    {%- if s.payment_icons and shop.enabled_payment_types.size > 0 -%}
+      <ul class="mu-footer__pay" role="list">
+        <li class="visually-hidden">{{ 'footer.payment' | t }}</li>
+        {%- for type in shop.enabled_payment_types -%}<li>{{ type | payment_type_svg_tag: class: 'mu-footer__pay-icon' }}</li>{%- endfor -%}
+      </ul>
+    {%- endif -%}
+    {%- liquid
+      assign loc_id = 'MuFootLoc-' | append: section.id
+      assign one_c = true
+      if s.show_country and localization.available_countries.size > 1
+        assign one_c = false
+      endif
+    -%}
+    {%- render 'mu-loc', id: loc_id, country: s.show_country, language: s.show_language, class: 'mu-loc mu-loc--footer' -%}
+    {%- if one_c and s.show_currency != false -%}
+      <span class="mu-num">{{ localization.country.currency.iso_code }} {{ localization.country.currency.symbol }}</span>
+    {%- endif -%}
+  </div>
+  {%- if s.disclaimer != blank -%}
+    <div class="rte mu-footer__disclaimer">{{ s.disclaimer }}</div>
+  {%- endif -%}
+</footer>
+
+{% schema %}
+{
+  "name": "t:sections.footer.name",
+  "class": "mu-footer-section",
+  "enabled_on": {
+    "groups": [
+      "footer"
+    ]
+  },
+  "max_blocks": 4,
+  "settings": [
+    {
+      "type": "select",
+      "id": "background",
+      "label": "t:sections.footer.background",
+      "default": "scheme",
+      "options": [
+        {
+          "value": "ramp",
+          "label": "t:sections.footer.bg_ramp"
+        },
+        {
+          "value": "scheme",
+          "label": "t:sections.footer.bg_scheme"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.background == 'scheme' }}"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "t:sections.footer.heading",
+      "info": "t:sections.footer.heading_info",
+      "default": "Find your favorite. <em>Come back for more.</em>"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.footer.cta_label",
+      "default": "Shop all"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.footer.cta_link",
+      "visible_if": "{{ section.settings.cta_label != blank }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "newsletter",
+      "label": "t:sections.footer.newsletter",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "t:sections.footer.newsletter_heading",
+      "default": "New drops, first",
+      "visible_if": "{{ section.settings.newsletter }}"
+    },
+    {
+      "type": "select",
+      "id": "brand_mark",
+      "label": "t:sections.footer.brand_mark",
+      "info": "t:sections.footer.brand_mark_info",
+      "default": "wordmark",
+      "options": [
+        {
+          "value": "wordmark",
+          "label": "t:sections.footer.mark_wordmark"
+        },
+        {
+          "value": "logo",
+          "label": "t:sections.footer.mark_logo"
+        },
+        {
+          "value": "none",
+          "label": "t:sections.footer.mark_none"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "wordmark",
+      "label": "t:sections.footer.wordmark",
+      "info": "t:sections.footer.wordmark_info",
+      "visible_if": "{{ section.settings.brand_mark == 'wordmark' or section.settings.brand_mark == 'logo' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "wordmark_marquee",
+      "label": "t:sections.footer.wordmark_marquee",
+      "info": "t:sections.footer.wordmark_marquee_info",
+      "default": false,
+      "visible_if": "{{ section.settings.brand_mark == 'wordmark' }}"
+    },
+    {
+      "type": "select",
+      "id": "wordmark_style",
+      "label": "t:sections.footer.wordmark_style",
+      "default": "alternate",
+      "visible_if": "{{ section.settings.brand_mark == 'wordmark' and section.settings.wordmark_marquee }}",
+      "options": [
+        {
+          "value": "solid",
+          "label": "t:sections.footer.wordmark_solid"
+        },
+        {
+          "value": "outline",
+          "label": "t:sections.footer.wordmark_outline"
+        },
+        {
+          "value": "alternate",
+          "label": "t:sections.footer.wordmark_alternate"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "wordmark_speed",
+      "label": "t:sections.footer.wordmark_speed",
+      "info": "t:sections.footer.wordmark_speed_info",
+      "min": 10,
+      "max": 120,
+      "step": 5,
+      "unit": "s",
+      "default": 40,
+      "visible_if": "{{ section.settings.brand_mark == 'wordmark' and section.settings.wordmark_marquee }}"
+    },
+    {
+      "type": "richtext",
+      "id": "disclaimer",
+      "label": "t:sections.footer.disclaimer",
+      "info": "t:sections.footer.disclaimer_info"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "label": "t:sections.footer.logo_width",
+      "min": 80,
+      "max": 600,
+      "step": 20,
+      "unit": "px",
+      "default": 240,
+      "visible_if": "{{ section.settings.brand_mark == 'logo' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.social_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_social",
+      "label": "t:sections.footer.show_social",
+      "info": "t:sections.footer.show_social_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "follow_on_shop",
+      "label": "t:sections.footer.follow_on_shop",
+      "info": "t:sections.footer.follow_on_shop_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.footer.base_header"
+    },
+    {
+      "type": "checkbox",
+      "id": "payment_icons",
+      "label": "t:sections.footer.payment_icons",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_country",
+      "label": "t:sections.common.show_country",
+      "info": "t:sections.common.show_country_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_language",
+      "label": "t:sections.common.show_language",
+      "info": "t:sections.common.show_language_info",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_currency",
+      "label": "t:sections.footer.show_currency",
+      "info": "t:sections.footer.show_currency_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "links",
+      "name": "t:sections.footer.links",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.footer.links_heading"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "t:sections.footer.links_menu",
+          "default": "footer"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

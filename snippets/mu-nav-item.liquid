@@ -1,0 +1,127 @@
+{%- comment -%}
+  One top-level menu item. A plain link; a dropdown when it has children; a mega panel (columns of children with
+  their own links, plus promo tiles from the header's Promo tile blocks) when it has a third level or a promo tile.
+  @param link {Link}
+  @param blocks {Array} section.blocks of the header (promo tiles match the link's title)
+  @param scheme {String} header colour scheme
+  @param mobile {Boolean} render for the phone menu sheet
+  @param active {Boolean} this is the one current top-level item (worked out once in mu-header)
+  @param dot {Boolean} show the pulsing highlight dot before the title (header setting Highlight menu item)
+{%- endcomment -%}
+{%- liquid
+  assign key = link.title | handleize
+  assign promo_n = 0
+  for b in blocks
+    if b.type == 'promo'
+      assign bk = b.settings.menu_item | handleize
+      if bk == key
+        assign promo_n = promo_n | plus: 1
+      endif
+    endif
+  endfor
+  assign deep = false
+  for child in link.links
+    if child.links.size > 0
+      assign deep = true
+      break
+    endif
+  endfor
+  assign has_panel = false
+  if link.links.size > 0 or promo_n > 0
+    assign has_panel = true
+  endif
+  assign mega = false
+  if deep or promo_n > 0
+    assign mega = true
+  endif
+-%}
+{%- capture lbl -%}
+  {%- if dot -%}<span class="mu-hl-l"><span class="mu-hl" aria-hidden="true"></span>{{ link.title | escape }}</span>{%- else -%}{{ link.title | escape }}{%- endif -%}
+{%- endcapture -%}
+{%- capture promos -%}
+  {%- for b in blocks -%}
+    {%- assign bk = b.settings.menu_item | handleize -%}
+    {%- if b.type == 'promo' and bk == key -%}
+      <a class="mu-mega__promo" href="{{ b.settings.link | default: link.url }}" {{ b.shopify_attributes }}>
+        <span class="mu-mega__promo-img">
+          {%- if b.settings.image != blank -%}
+            {% render 'mu-img', image: b.settings.image, max: 1200, sizes: '(min-width: 990px) 22vw, 45vw' %}
+          {%- else -%}
+            {%- capture demo_promo -%}
+              {%- render 'mu-demo-image', asset: b.settings.demo_image, sizes: '(min-width: 990px) 22vw, 45vw' -%}
+            {%- endcapture -%}
+            {%- assign demo_promo = demo_promo | strip -%}
+            {%- if demo_promo != '' -%}
+              {{ demo_promo }}
+            {%- else -%}
+              {{ 'lifestyle-1' | placeholder_svg_tag: 'mu-placeholder' }}
+            {%- endif -%}
+          {%- endif -%}
+        </span>
+        {%- if b.settings.heading != blank -%}<span class="mu-mega__promo-title">{{ b.settings.heading | escape }}{% render 'mu-icon', name: 'arrow' %}</span>{%- endif -%}
+        {%- if b.settings.text != blank -%}<span class="mu-mega__promo-text mu-muted">{{ b.settings.text | escape }}</span>{%- endif -%}
+      </a>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- if has_panel == false -%}
+  <a{% if mobile %} class="mu-display"{% endif %} href="{{ link.url }}"{% if link.current and mobile %} aria-current="page"{% elsif active %} aria-current="{% if link.current %}page{% else %}true{% endif %}"{% endif %}>{{ lbl }}</a>
+{%- elsif mobile -%}
+  <details>
+    <summary class="mu-display">{{ lbl }}{% render 'mu-icon', name: 'chevron' %}</summary>
+    <ul role="list" class="mu-menu__sub">
+      {%- if mega -%}<li><a href="{{ link.url }}">{{ 'header.view_all' | t: title: link.title }}</a></li>{%- endif -%}
+      {%- for child in link.links -%}
+        <li>
+          {%- if child.links.size > 0 -%}
+            <details class="mu-menu__deep">
+              <summary>{{ child.title | escape }}{% render 'mu-icon', name: 'chevron' %}</summary>
+              <ul role="list">
+                <li><a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ 'header.view_all' | t: title: child.title }}</a></li>
+                {%- for g in child.links -%}
+                  <li><a href="{{ g.url }}"{% if g.current %} aria-current="page"{% endif %}>{{ g.title | escape }}</a></li>
+                {%- endfor -%}
+              </ul>
+            </details>
+          {%- else -%}
+            <a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+    {%- if promos != blank -%}<div class="mu-menu__promos">{{ promos }}</div>{%- endif -%}
+  </details>
+{%- elsif mega -%}
+  <details class="mu-header__drop mu-header__drop--mega{% unless deep %} mu-header__drop--compact{% endunless %}">
+    <summary{% if active %} aria-current="true"{% endif %}>{{ lbl }}{% render 'mu-icon', name: 'chevron' %}</summary>
+    <div class="mu-mega color-{{ scheme }}">
+      <div class="mu-mega__in">
+      <div class="mu-mega__cols">
+        <a class="mu-mega__all" href="{{ link.url }}">{{ 'header.view_all' | t: title: link.title }}{% render 'mu-icon', name: 'arrow' %}</a>
+        {%- for child in link.links -%}
+          <div class="mu-mega__col">
+            <a class="mu-mega__head" href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a>
+            {%- if child.links.size > 0 -%}
+              <ul role="list">
+                {%- for g in child.links -%}
+                  <li><a href="{{ g.url }}"{% if g.current %} aria-current="page"{% endif %}>{{ g.title | escape }}</a></li>
+                {%- endfor -%}
+              </ul>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+      {%- if promos != blank -%}<div class="mu-mega__promos mu-mega__promos--{% if promo_n > 4 %}many{% else %}{{ promo_n }}{% endif %}">{{ promos }}</div>{%- endif -%}
+      </div>
+    </div>
+  </details>
+{%- else -%}
+  <details class="mu-header__drop">
+    <summary{% if active %} aria-current="true"{% endif %}>{{ lbl }}{% render 'mu-icon', name: 'chevron' %}</summary>
+    <ul role="list" class="mu-header__drop-list color-{{ scheme }}">
+      {%- for child in link.links -%}
+        <li><a href="{{ child.url }}"{% if child.current %} aria-current="page"{% endif %}>{{ child.title | escape }}</a></li>
+      {%- endfor -%}
+    </ul>
+  </details>
+{%- endif -%}

@@ -1,0 +1,18 @@
+{%- comment -%}
+  Fallback colour for an option value with no Shopify swatch (no colour or image on the value, and no linked
+  category colour metafield). Paints the tile with the value's name when it is a single-word CSS named colour
+  ("Olive", "Navy", "Black"), otherwise shows the value's first two letters. A real swatch hex set in admin always
+  wins (callers only render this when value.swatch is empty). Params: value (product_option_value).
+{%- endcomment -%}
+{%- liquid
+  assign mu_css = ''
+  assign mu_cn = value.name | default: value | append: '' | strip | downcase
+  unless mu_cn == '' or mu_cn contains ' '
+    assign mu_named = ' aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen '
+    assign mu_needle = ' ' | append: mu_cn | append: ' '
+    if mu_named contains mu_needle
+      assign mu_css = mu_cn
+    endif
+  endunless
+-%}
+{%- if mu_css != '' -%}<i style="background-color: {{ mu_css }}"></i>{%- else -%}<b>{{ value | slice: 0, 2 | escape }}</b>{%- endif -%}

@@ -1,0 +1,87 @@
+{%- comment -%}
+  Preferred store: settings, strings and the picker sheet. Rendered once in the layout.
+  The store list comes from the mu-stores section: inline on the stores page, otherwise fetched from
+  Theme settings > Stores > Stores page by mu-stores.js. Without a list the header store button stays hidden;
+  product pickup keeps working from Shopify's own pickup locations.
+{%- endcomment -%}
+{%- liquid
+  assign unit = settings.distance_unit | default: 'auto'
+  if unit != 'km' and unit != 'mi'
+    assign unit = 'km'
+    assign mile_countries = 'US,GB,LR,MM' | split: ','
+    if mile_countries contains shop.address.country_code
+      assign unit = 'mi'
+    endif
+  endif
+  assign src = ''
+  if settings.stores_page != blank
+    assign src = settings.stores_page.url
+  endif
+  assign key = settings.maps_api_key | strip
+-%}
+<script type="application/json" data-mu-store-cfg>
+  {
+    "src": {{ src | json }},
+    "key": {{ key | json }},
+    "unit": {{ unit | json }},
+    "tz": {{ 'now' | date: '%z' | json }},
+    "lang": {{ request.locale.iso_code | json }},
+    "t": {
+      "choose": {{ 'stores.choose' | t | json }},
+      "mine": {{ 'stores.my_store' | t | json }},
+      "myStore": {{ 'stores.my_store' | t | json }},
+      "set": {{ 'stores.set' | t | json }},
+      "saved": {{ 'stores.saved' | t: store: '[store]' | json }},
+      "openUntil": {{ 'stores.open_until' | t: time: '[time]' | json }},
+      "closingSoon": {{ 'stores.closing_soon' | t: time: '[time]' | json }},
+      "opensAt": {{ 'stores.opens_at' | t: time: '[time]' | json }},
+      "opensDay": {{ 'stores.opens_day' | t: day: '[day]', time: '[time]' | json }},
+      "closed": {{ 'stores.closed' | t | json }},
+      "tomorrow": {{ 'stores.tomorrow' | t | json }},
+      "km": {{ 'stores.km' | t: n: '[n]' | json }},
+      "mi": {{ 'stores.mi' | t: n: '[n]' | json }},
+      "loading": {{ 'stores.loading' | t | json }},
+      "loadError": {{ 'stores.load_error' | t | json }},
+      "locating": {{ 'stores.locating' | t | json }},
+      "locError": {{ 'stores.location_error' | t | json }},
+      "searchError": {{ 'stores.search_error' | t | json }},
+      "sorted": {{ 'stores.sorted' | t | json }},
+      "directions": {{ 'stores.directions' | t | json }},
+      "hours": {{ 'stores.hours' | t | json }},
+      "pickOn": {{ 'stores.pick_on' | t: store: '[store]' | json }},
+      "pickOff": {{ 'stores.pick_off' | t: store: '[store]' | json }},
+      "pickAlt": {{ 'stores.pick_alt' | t: store: '[store]' | json }},
+      "pickStore": {{ 'stores.pick_store' | t: store: '[store]' | json }},
+      "cartLine": {{ 'stores.cart_line' | t: store: '[store]' | json }},
+      "cartOff": {{ 'stores.cart_off' | t: store: '[store]' | json }},
+      "cartAlt": {{ 'stores.cart_alt' | t: store: '[store]' | json }},
+      "days": [{{ 'stores.days.mon' | t | json }}, {{ 'stores.days.tue' | t | json }}, {{ 'stores.days.wed' | t | json }}, {{ 'stores.days.thu' | t | json }}, {{ 'stores.days.fri' | t | json }}, {{ 'stores.days.sat' | t | json }}, {{ 'stores.days.sun' | t | json }}]
+    }
+  }
+</script>
+<link rel="stylesheet" href="{{ 'mu-stores.css' | asset_url }}" media="print" onload="this.media='all'">
+<dialog class="mu-st color-{{ settings.page_scheme }}{% if key != blank %} mu-st--map{% endif %}" aria-labelledby="mu-st-title" data-st>
+  <div class="mu-st__top">
+    <h2 class="mu-st__title" id="mu-st-title">{{ 'stores.picker_title' | t }}</h2>
+    <button type="button" class="mu-btn mu-btn--icon mu-btn--ghost mu-st__close" data-st-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+  </div>
+  <div class="mu-st__find">
+    <button type="button" class="mu-st__locate" data-st-locate>{% render 'mu-icon', name: 'locate' %}<span>{{ 'stores.use_location' | t }}</span></button>
+    {%- if key != blank -%}
+      <form class="mu-st__search" role="search" data-st-search>
+        <label class="visually-hidden" for="mu-st-q">{{ 'stores.search_label' | t }}</label>
+        <input id="mu-st-q" type="search" name="q" autocomplete="postal-code" enterkeyhint="search" placeholder="{{ 'stores.search_label' | t }}">
+        <button type="submit" class="mu-st__go" aria-label="{{ 'stores.search' | t }}">{% render 'mu-icon', name: 'search' %}</button>
+      </form>
+    {%- endif -%}
+    <p class="mu-st__msg" role="status" aria-live="polite" data-st-msg></p>
+  </div>
+  <div class="mu-st__main">
+    <div class="mu-st__map" role="region" aria-label="{{ 'stores.map_label' | t }}" data-st-map hidden></div>
+    <ul class="mu-st__list" role="list" data-st-list></ul>
+  </div>
+  <div class="mu-st__foot">
+    <button type="button" class="mu-btn mu-st__save" data-st-save disabled>{{ 'stores.set' | t }}</button>
+  </div>
+</dialog>
+<script src="{{ 'mu-stores.js' | asset_url }}" defer></script>

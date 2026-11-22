@@ -1,0 +1,27 @@
+{%- comment -%}
+  A filter's values as round swatches (Shopify's filter swatch data: a colour or an image). A value without swatch
+  data shows as a small text pill so it can still be picked. Params: filter, fid (id prefix).
+{%- endcomment -%}
+<ul class="mu-f__swatches" role="list">
+  {%- for value in filter.values -%}
+    {%- liquid
+      assign sw = ''
+      if value.swatch.image
+        assign sw_url = value.swatch.image | image_url: width: 72
+        assign sw = 'background-image: url(' | append: sw_url | append: ')'
+      elsif value.swatch.color
+        assign sw = 'background-color: ' | append: value.swatch.color
+      endif
+    -%}
+    <li class="mu-f__swatch{% if sw == '' %} mu-f__swatch--text{% endif %}">
+      <input type="checkbox" id="{{ fid }}-{{ forloop.index }}" name="{{ value.param_name }}" value="{{ value.value | escape }}"{% if value.active %} checked{% endif %}{% if value.count == 0 and value.active == false %} disabled{% endif %}>
+      <label for="{{ fid }}-{{ forloop.index }}" title="{{ value.label | escape }}">
+        {%- if sw != '' -%}
+          <span class="mu-f__dot" style="{{ sw }}"></span><span class="visually-hidden">{{ value.label | escape }} ({{ value.count }})</span>
+        {%- else -%}
+          <span class="mu-num">{{ value.label | escape }}</span><span class="visually-hidden"> ({{ value.count }})</span>
+        {%- endif -%}
+      </label>
+    </li>
+  {%- endfor -%}
+</ul>

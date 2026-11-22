@@ -1,0 +1,48 @@
+{%- comment -%}
+  Not added in the theme editor: the product page's complementary block fetches this through the recommendations
+  endpoint: intent=complementary (the product's shopify--discovery--product_recommendation.complementary_products
+  metafield) and/or intent=related (picked automatically by Shopify), per the block's Products setting.
+  The + adds a single-variant product straight to the cart; for products with options it opens quick view,
+  so shoppers stay on the page. The title still links to the product. Coming soon products (snippets/mu-pp-release)
+  only link to their page.
+{%- endcomment -%}
+{%- if recommendations.performed and recommendations.products_count > 0 -%}
+  <ul class="mu-comp" role="list">
+    {%- for item in recommendations.products -%}
+      {%- assign iv = item.selected_or_first_available_variant -%}
+      {%- capture irs -%}{%- render 'mu-pp-release', product: item -%}{%- endcapture -%}
+      {%- assign ok = item.available -%}
+      {%- if irs != '0' -%}{%- assign ok = false -%}{%- endif -%}
+      <li class="mu-comp__item">
+        <a class="mu-comp__img" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
+          {%- if item.featured_media -%}
+            {{ item.featured_media | image_url: width: 440 | image_tag: loading: 'lazy', alt: '', width: 64, height: 64, widths: '150, 300, 440', sizes: '142px' }}
+          {%- else -%}
+            {{ 'product-1' | placeholder_svg_tag: 'mu-placeholder' }}
+          {%- endif -%}
+        </a>
+        <div class="mu-comp__info">
+          <a class="mu-comp__title" href="{{ item.url }}">{{ item.title | escape }}</a>
+          <span class="mu-comp__price">{% render 'mu-price', product: item %}</span>
+        </div>
+        {%- if item.has_only_default_variant and ok and item.requires_selling_plan == false -%}
+          {%- form 'product', item, class: 'mu-comp__form', data-comp-form: '' -%}
+            <input type="hidden" name="id" value="{{ iv.id }}">
+            <button type="submit" class="mu-btn mu-btn--sm mu-btn--ghost mu-comp__add" aria-label="{{ 'products.comp_add' | t: title: item.title }}">{% render 'mu-icon', name: 'plus' %}</button>
+          {%- endform -%}
+        {%- elsif ok and item.requires_selling_plan == false -%}
+          <a class="mu-btn mu-btn--sm mu-btn--ghost mu-comp__add" href="{{ item.url }}" data-quick-add="{{ item.url }}" aria-haspopup="dialog" aria-label="{{ 'products.quick_view' | t: title: item.title | escape }}">{% render 'mu-icon', name: 'plus' %}</a>
+        {%- else -%}
+          <a class="mu-btn mu-btn--sm mu-btn--ghost mu-comp__add" href="{{ item.url }}" aria-label="{{ 'products.comp_view' | t: title: item.title }}">{% render 'mu-icon', name: 'arrow-right' %}</a>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.complementary.name",
+  "class": "mu-complementary-src"
+}
+{% endschema %}

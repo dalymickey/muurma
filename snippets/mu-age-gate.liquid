@@ -1,0 +1,113 @@
+{%- comment -%}
+  Age verification (Theme settings > Age verification): a full-screen native modal <dialog> that asks visitors to
+  confirm their age, either with two buttons or a date of birth, before they can use the store. It is rendered first
+  in <body> and opened straight away by the script below, so the page never shows unguarded; the store's markup stays
+  in the document for search engines, and without JavaScript nothing blocks. While it is open the rest of the page is
+  inert (focus stays inside), Esc does nothing and the page can't scroll. A pass is remembered in this browser for the
+  chosen time (this visit only uses session storage). Declining goes to the decline link, or shows the decline
+  message. In the theme editor it only shows with "Show in theme editor" on, and then on every load (nothing saved).
+  This is a self-declared check, not identity verification.
+{%- endcomment -%}
+{%- liquid
+  assign s = settings
+  assign age = s.age_gate_min | default: 18
+  assign uid = 'MuAge'
+-%}
+{{ 'mu-age.css' | asset_url | stylesheet_tag }}
+<dialog
+  class="mu-age color-{{ s.age_gate_scheme | default: 'scheme-1' }}{% if s.age_gate_image != blank %} mu-age--img{% endif %}"
+  id="{{ uid }}"
+  data-mu-age
+  data-age="{{ age }}"
+  data-days="{{ s.age_gate_remember }}"
+  {%- if s.age_gate_decline_url != blank %} data-url="{{ s.age_gate_decline_url }}"{% endif %}
+  {%- if request.design_mode %} data-design{% endif %}
+  {%- if s.age_gate_heading != blank %} aria-labelledby="{{ uid }}-title"{% else %} aria-label="{{ 'age.label' | t }}"{% endif %}
+>
+  {%- if s.age_gate_image != blank -%}
+    {% render 'mu-img', image: s.age_gate_image, class: 'mu-age__img', fp: 'high' %}
+  {%- endif -%}
+  <div class="mu-age__panel">
+    {%- if settings.logo != blank -%}
+      <div class="mu-age__logo">{{ settings.logo | image_url: width: 320 | image_tag: alt: shop.name, widths: '160, 320', sizes: '160px', loading: 'eager' }}</div>
+    {%- endif -%}
+    <div class="mu-age__ask" data-age-ask>
+      {%- if s.age_gate_heading != blank -%}<h2 class="mu-age__title" id="{{ uid }}-title">{{ s.age_gate_heading | escape }}</h2>{%- endif -%}
+      {%- if s.age_gate_text != blank -%}<div class="mu-age__text mu-rte">{{ s.age_gate_text }}</div>{%- endif -%}
+      {%- if s.age_gate_mode == 'birth' -%}
+        <form class="mu-age__form" data-age-form novalidate>
+          <label class="mu-age__label" for="{{ uid }}-dob">{{ 'age.dob' | t }}</label>
+          <input class="mu-input mu-age__dob" type="date" id="{{ uid }}-dob" name="dob" required autocomplete="bday" max="{{ 'now' | date: '%Y-%m-%d' }}" min="1900-01-01" aria-describedby="{{ uid }}-err" autofocus>
+          <p class="mu-age__err" id="{{ uid }}-err" role="alert" data-age-err hidden>{{ 'age.dob_error' | t }}</p>
+          <button type="submit" class="mu-btn mu-age__go">{{ 'age.enter' | t }}</button>
+        </form>
+      {%- else -%}
+        <div class="mu-age__btns">
+          <button type="button" class="mu-btn mu-age__go" data-age-yes autofocus>{{ 'age.yes' | t: age: age }}</button>
+          <button type="button" class="mu-btn mu-btn--ghost" data-age-no>{{ 'age.no' | t: age: age }}</button>
+        </div>
+      {%- endif -%}
+    </div>
+    <div class="mu-age__ask" data-age-declined hidden tabindex="-1">
+      <p class="mu-display mu-age__title mu-age__title--sm">{% if s.age_gate_decline_text != blank %}{{ s.age_gate_decline_text | escape }}{% else %}{{ 'age.declined' | t }}{% endif %}</p>
+      <button type="button" class="mu-btn mu-btn--ghost" data-age-back>{{ 'age.back' | t }}</button>
+    </div>
+  </div>
+</dialog>
+<script>
+  (() => {
+    const d = document.getElementById('{{ uid }}');
+    if (!d || typeof d.showModal !== 'function') return;
+    const KEY = 'mu-age', design = d.hasAttribute('data-design'), days = Number(d.dataset.days) || 0, min = Number(d.dataset.age) || 18;
+    const st = (s) => { try { return window[s]; } catch (e) { return null; } };
+    const passed = () => {
+      if (design) return false;
+      try {
+        if (st('sessionStorage') && sessionStorage.getItem(KEY)) return true;
+        const until = Number(st('localStorage') && localStorage.getItem(KEY));
+        return until > Date.now();
+      } catch (e) { return false; }
+    };
+    if (passed()) { d.remove(); return; }
+    let ok = false;
+    const pass = () => {
+      ok = true;
+      if (!design) {
+        try {
+          if (days > 0) localStorage.setItem(KEY, String(Date.now() + days * 864e5));
+          else sessionStorage.setItem(KEY, '1');
+        } catch (e) { /* private mode: asks again next page */ }
+      }
+      d.close();
+      d.remove();
+      document.dispatchEvent(new CustomEvent('ks:age-pass'));
+    };
+    const ask = d.querySelector('[data-age-ask]'), no = d.querySelector('[data-age-declined]');
+    const decline = () => {
+      if (d.dataset.url && !design) { location.href = d.dataset.url; return; }
+      ask.hidden = true; no.hidden = false; no.focus();
+    };
+    d.addEventListener('cancel', (e) => e.preventDefault());
+    /* Nothing else may dismiss it: another script closing every open dialog just gets it back. */
+    d.addEventListener('close', () => { if (!ok && d.isConnected) d.showModal(); });
+    d.addEventListener('click', (e) => {
+      if (e.target.closest('[data-age-yes]')) pass();
+      else if (e.target.closest('[data-age-no]')) decline();
+      else if (e.target.closest('[data-age-back]')) { no.hidden = true; ask.hidden = false; (ask.querySelector('[autofocus]') || ask).focus(); }
+    });
+    const form = d.querySelector('[data-age-form]');
+    if (form) form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = form.elements.dob, err = form.querySelector('[data-age-err]');
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.value);
+      const born = m && new Date(+m[1], m[2] - 1, +m[3]);
+      if (!born || born > new Date() || +m[1] < 1900) { err.hidden = false; input.setAttribute('aria-invalid', 'true'); input.focus(); return; }
+      err.hidden = true; input.removeAttribute('aria-invalid');
+      const t = new Date();
+      let years = t.getFullYear() - born.getFullYear();
+      if (t.getMonth() < born.getMonth() || (t.getMonth() === born.getMonth() && t.getDate() < born.getDate())) years--;
+      if (years >= min) pass(); else decline();
+    });
+    d.showModal();
+  })();
+</script>

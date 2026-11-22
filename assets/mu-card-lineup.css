@@ -1,0 +1,56 @@
+/* Numbered full-width product rows. The row (the li) carries the colour and the slight tilt;
+   the card inside is not clipped, and focus rings sit inside the links so a tilt cannot cut them off.
+   Reading order is the list order. The number is decorative; the list position is what gets announced. */
+
+.mu-fc--lineup { overflow-x: clip; }
+.mu-lineup {
+  display: flex; flex-direction: column; gap: 12px; margin: 0; padding-block: 10px;
+  list-style: none; overflow-x: clip;
+}
+.mu-lineup__row {
+  background: var(--bg); color: var(--fg);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fg) 16%, transparent);
+  rotate: var(--mu-lineup-tilt, 0deg);
+}
+.mu-lineup__row:nth-child(even) { rotate: calc(var(--mu-lineup-tilt, 0deg) * -1); }
+.mu-lineup__card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "no copy" "img img" "buy buy";
+  gap: 12px 16px; align-items: center; min-width: 0; padding: 16px;
+}
+.mu-lineup__no {
+  grid-area: no; font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight);
+  font-size: calc(clamp(3rem, 1.4rem + 6vw, 7rem) * var(--mu-heading-scale));
+  line-height: 0.8; letter-spacing: -0.03em;
+}
+.mu-lineup__no--outline { color: transparent; -webkit-text-stroke: max(1.5px, 0.03em) currentColor; }
+@supports not (-webkit-text-stroke: 1px #000) { .mu-lineup__no--outline { color: currentColor; } }
+.mu-lineup__copy { grid-area: copy; min-width: 0; }
+.mu-lineup__title {
+  margin: 0; font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight);
+  font-size: calc(clamp(1.5rem, 1rem + 2vw, 3rem) * var(--mu-heading-scale)); line-height: 0.95;
+}
+.mu-lineup__title a { text-decoration: none; }
+.mu-lineup__title a:hover { text-decoration: underline 2px; text-underline-offset: 0.12em; }
+.mu-lineup__media { position: relative; grid-area: img; display: grid; place-items: center; }
+.mu-lineup__media img, .mu-lineup__media .mu-placeholder {
+  width: auto; height: auto; max-width: min(100%, 220px); max-height: 180px; object-fit: contain;
+}
+.mu-lineup__buy { grid-area: buy; display: grid; justify-items: start; gap: 2px; }
+.mu-lineup__price { margin: 0; font-weight: var(--mu-font-body-bold); font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.mu-lineup__sub { margin: 0; font-size: 0.8125rem; }
+.mu-lineup__subprice { margin-inline-end: 0.35em; font-weight: var(--mu-font-body-bold); }
+.mu-lineup a:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: -3px; }
+
+@media (min-width: 750px) {
+  .mu-lineup__card {
+    grid-template-columns: auto minmax(0, 1.3fr) 180px auto;
+    grid-template-areas: "no copy img buy";
+    gap: 16px 28px; padding: 22px 28px;
+  }
+  .mu-lineup__buy { justify-items: end; text-align: end; }
+  .mu-lineup__media img, .mu-lineup__media .mu-placeholder { max-height: 200px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mu-lineup__row, .mu-lineup__row:nth-child(even) { rotate: none; }
+}

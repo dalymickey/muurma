@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="{{ settings.color_schemes[settings.page_scheme].settings.background }}">
+    <link rel="canonical" href="{{ canonical_url }}">
+    <link rel="preconnect" href="https://fonts.shopifycdn.com" crossorigin>
+    {%- if settings.favicon != blank -%}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 64, height: 64 }}">
+    {%- else -%}
+      {%- # theme-check-disable RemoteAsset -%}
+      <link rel="icon" href="data:,">
+      {%- # theme-check-enable RemoteAsset -%}
+    {%- endif -%}
+    <title>
+      {%- if request.page_type == 'cart' -%}{{- 'cart.title' | t -}}{%- else -%}{{- page_title -}}{%- endif -%}
+      {%- if current_tags %} &ndash; {{ current_tags | join: ', ' }}{% endif -%}
+      {%- if current_page != 1 %} &ndash; {{ 'general.page' | t: page: current_page }}{% endif -%}
+      {%- unless page_title contains shop.name %} &ndash; {{ shop.name }}{% endunless -%}
+    </title>
+    {%- if page_description %}<meta name="description" content="{{ page_description | escape }}">{% endif %}
+    {% render 'mu-meta-tags' %}
+    {% render 'mu-head-vars' %}
+    {% render 'mu-json-ld' %}
+    {{ 'mu-base.css' | asset_url | stylesheet_tag }}
+    {{ 'mu-card.css' | asset_url | stylesheet_tag }}
+    {%- comment -%} Quick view styles only a closed dialog away from product pages, so it loads without holding up the first paint. {%- endcomment -%}
+    {%- if template.name == 'product' -%}
+      {{ 'mu-quick-view.css' | asset_url | stylesheet_tag }}
+    {%- elsif settings.card_quick_view -%}
+      <link rel="stylesheet" href="{{ 'mu-quick-view.css' | asset_url }}" media="print" onload="this.media='all'">
+    {%- endif -%}
+    {%- if settings.animations -%}<script src="{{ 'mu-motion.js' | asset_url }}" defer></script>{%- endif -%}
+    <script src="{{ 'mu-add.js' | asset_url }}" defer></script>
+    {%- if settings.smooth_scroll -%}<script src="{{ 'mu-smooth.js' | asset_url }}" data-ease="{% if settings.smoothness == 'medium' %}0.075{% else %}0.12{% endif %}" defer></script>{%- endif -%}
+    <script>
+      document.documentElement.classList.replace('no-js', 'js');
+      /* Looping decoration (ticker, glows, bobbing art) holds still until the shopper's first move, so an untouched page settles after load. */
+      (function () {
+        var d = document.documentElement, ev = ['pointermove', 'pointerdown', 'scroll', 'keydown', 'touchstart'];
+        var up = function () { d.classList.add('mu-woke'); ev.forEach(function (e) { removeEventListener(e, up, true); }); };
+        {% if request.design_mode %}up();{% else %}ev.forEach(function (e) { addEventListener(e, up, { passive: true, capture: true }); });{% endif %}
+      })();
+    </script>
+    {{ content_for_header }}
+  </head>
+  <body class="color-{{ settings.page_scheme }} mu-t-{{ template.name }}{% if settings.texture == 'grain' or settings.texture == 'char' %} mu-tex mu-tex--{{ settings.texture }}{% endif %}{% if settings.badge_style == 'stamp' %} mu-stamp{% endif %}{% if settings.rung_style == 'gauge' %} mu-flat{% endif %}{% if settings.radius == 0 %} mu-sq{% endif %}{% if settings.page_width != blank and settings.page_width != 'full' %} mu-pagew{% endif %}{% if settings.surface_style == 'sticker' %} mu-stk{% endif %}{% if settings.heading_case == 'upper' %} mu-hup{% endif %}{% if settings.heading_em == 'outline' %} mu-emo{% endif %}{% if settings.motion_level == 'off' %} mu-motion-off{% endif %}{% if settings.motion_level == 'lively' %} mu-motion-lively{% endif %}{% if settings.scroll_tilt and settings.motion_level == 'lively' %} mu-scroll-tilt{% endif %}{% if settings.hover_lift and settings.motion_level != 'off' %} mu-hover-lift{% endif %}{% if settings.spin_badges and settings.motion_level == 'lively' %} mu-spin{% endif %}">
+    {%- if settings.age_gate -%}{%- unless request.design_mode and settings.age_gate_editor == false -%}{% render 'mu-age-gate' %}{%- endunless -%}{%- endif -%}
+    <a class="mu-skip" href="#main">{{ 'accessibility.skip' | t }}</a>
+    {%- if settings.cookie_banner -%}{%- unless request.design_mode and settings.cookie_editor == false -%}{% render 'mu-cookie-banner' %}{%- endunless -%}{%- endif -%}
+    {%- capture mu_head_group -%}{% sections 'header-group' %}{%- endcapture -%}
+    {{ mu_head_group }}
+    <main id="main" class="mu-main" tabindex="-1">
+      {{ content_for_layout }}
+    </main>
+    {%- capture mu_foot_group -%}{% sections 'footer-group' %}{%- endcapture -%}
+    {{ mu_foot_group }}
+    {%- comment -%}
+      Shared section scripts load once here rather than from every section or snippet that uses them (popups can sit
+      in the footer group and the home page; pickers in the header, menu and footer). Each loads only when its markup
+      is on the page, and always in the theme editor so a section added there works without a reload.
+    {%- endcomment -%}
+    {%- if request.design_mode or mu_foot_group contains 'data-mu-popup=' or content_for_layout contains 'data-mu-popup=' or mu_head_group contains 'data-mu-popup=' -%}
+      <script src="{{ 'mu-popup.js' | asset_url }}" defer></script>
+    {%- endif -%}
+    {%- if request.design_mode or mu_head_group contains 'data-loc-dd' or mu_foot_group contains 'data-loc-dd' or content_for_layout contains 'data-loc-dd' -%}
+      <script src="{{ 'mu-loc.js' | asset_url }}" defer></script>
+    {%- endif -%}
+    {%- if settings.cart_type != 'page' and template.name != 'cart' -%}{% section 'mu-cart-drawer' %}{%- endif -%}
+    {%- if settings.card_quick_view or template.name == 'product' -%}{% render 'mu-quick-add-dialog' %}{%- endif -%}
+    {% render 'mu-store-picker' %}
+    {%- if settings.back_to_top -%}{% render 'mu-to-top' %}{%- endif -%}
+  </body>
+</html>

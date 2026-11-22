@@ -1,0 +1,40 @@
+{%- comment -%}
+  Volume pricing: a table of the price each per quantity tier, from the variant's quantity price breaks (B2B
+  catalogs). Renders nothing unless some variant of the product has breaks; a variant without them hides the table.
+  assets/mu-product.js redraws the rows on variant change and marks the tier the picked quantity falls in.
+  @param v {Variant}
+{%- endcomment -%}
+{%- liquid
+  assign any = false
+  for x in v.product.variants
+    if x.quantity_price_breaks.size > 0
+      assign any = true
+      break
+    endif
+  endfor
+-%}
+{%- if any -%}
+  {%- liquid
+    assign breaks = v.quantity_price_breaks
+    assign qmin = v.quantity_rule.min | default: 1
+  -%}
+  <div class="mu-pp__breaks" data-qty-breaks{% if breaks.size == 0 %} hidden{% endif %}>
+    <table class="mu-breaks">
+      <caption class="mu-breaks__cap">{{ 'products.volume_pricing' | t }}</caption>
+      <thead><tr><th scope="col">{{ 'products.quantity' | t }}</th><th scope="col">{{ 'products.price_each' | t }}</th></tr></thead>
+      <tbody data-qty-breaks-body>
+        {%- if breaks.size > 0 -%}
+          {%- assign first = breaks.first.minimum_quantity -%}
+          {%- if first > qmin -%}
+            {%- assign upto = first | minus: 1 -%}
+            <tr class="is-on" data-from="{{ qmin }}"><td class="mu-num">{% if upto > qmin %}{{ qmin }}–{{ upto }}{% else %}{{ qmin }}{% endif %}</td><td class="mu-num">{% render 'mu-money', m: v.price %}</td></tr>
+          {%- endif -%}
+          {%- for qb in breaks -%}
+            {%- assign nxt = breaks[forloop.index].minimum_quantity -%}
+            <tr data-from="{{ qb.minimum_quantity }}"{% if forloop.first and first <= qmin %} class="is-on"{% endif %}><td class="mu-num">{% if nxt %}{% assign upto = nxt | minus: 1 %}{% if upto > qb.minimum_quantity %}{{ qb.minimum_quantity }}–{{ upto }}{% else %}{{ qb.minimum_quantity }}{% endif %}{% else %}{{ qb.minimum_quantity }}+{% endif %}</td><td class="mu-num">{% render 'mu-money', m: qb.price %}</td></tr>
+          {%- endfor -%}
+        {%- endif -%}
+      </tbody>
+    </table>
+  </div>
+{%- endif -%}

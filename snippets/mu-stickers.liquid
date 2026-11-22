@@ -1,0 +1,59 @@
+{%- comment -%}
+  Product stickers. A list metafield custom.stickers (list of single-line text) wins over tags.
+  Each entry is "Label" or "Label:2" (slot 1–3). Tags use the same words after "sticker:",
+  for example sticker:Staff pick or sticker:Staff pick:2. At most three.
+  @param product {Product}
+  @param class {String} optional class on the group
+{%- endcomment -%}
+{%- liquid
+  assign entries = blank
+  assign meta = product.metafields.custom.stickers.value
+  if meta != blank
+    assign entries = meta
+  endif
+-%}
+{%- if entries == blank -%}
+  {%- capture from_tags -%}
+    {%- for t in product.tags -%}
+      {%- assign head = t | split: ':' | first | downcase | strip -%}
+      {%- if head == 'sticker' -%}{{ t }}|||{%- endif -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- assign entries = from_tags | split: '|||' -%}
+{%- endif -%}
+{%- capture stickers -%}
+  {%- assign shown = 0 -%}
+  {%- for entry in entries -%}
+    {%- if shown >= 3 -%}{% break %}{%- endif -%}
+    {%- liquid
+      assign raw = entry | strip
+      if raw == blank
+        continue
+      endif
+      assign bits = raw | split: ':'
+      assign head = bits[0] | downcase | strip
+      assign slot = 1
+      if head == 'sticker'
+        assign label = bits[1] | strip
+        assign slot_raw = bits[2] | strip
+      elsif bits.size > 1
+        assign slot_raw = bits[1] | strip
+        assign label = bits[0] | strip
+      else
+        assign label = raw
+        assign slot_raw = ''
+      endif
+      if slot_raw == '1' or slot_raw == '2' or slot_raw == '3'
+        assign slot = slot_raw
+      endif
+    -%}
+    {%- if label != blank -%}
+      {%- assign shown = shown | plus: 1 -%}
+      {%- render 'mu-sticker', text: label, slot: slot, position: 'top_right' -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- assign stickers = stickers | strip -%}
+{%- if stickers != blank -%}
+  <div class="mu-stickers{% if class != blank %} {{ class }}{% endif %}">{{ stickers }}</div>
+{%- endif -%}

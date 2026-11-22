@@ -1,0 +1,10 @@
+{%- comment -%}
+  A small round swatch for an option value with Shopify swatch data (colour or image, set on the product's option
+  values or through the category's colour metafield). Prints nothing when the value has none, so text pills stay
+  as they are. Params: value (product_option_value), class (optional extra class).
+{%- endcomment -%}
+{%- if value.swatch.image -%}
+  <i class="mu-sw{% if class %} {{ class }}{% endif %}" style="background-image: url({{ value.swatch.image | image_url: width: 64 }})" aria-hidden="true"></i>
+{%- elsif value.swatch.color -%}
+  <i class="mu-sw{% if class %} {{ class }}{% endif %}" style="background-color: {{ value.swatch.color }}" aria-hidden="true"></i>
+{%- endif -%}

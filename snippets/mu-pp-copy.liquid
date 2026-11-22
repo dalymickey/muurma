@@ -1,0 +1,34 @@
+{%- comment -%}
+  A short product block: Ingredients or How to use. A rich text setting, or a rich text metafield connected to
+  "From a metafield" (that one wins when it has text). Collapsible, or always open. Nothing on the storefront
+  when both are empty; the theme editor shows a hint.
+  @param block {Block}
+  @param hint {String} editor hint when there is no text
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign body = b.text
+  assign from_meta = b.source | strip_html | strip
+  if from_meta != blank
+    assign body = b.source
+  endif
+  assign heading = b.heading | strip
+  assign tag = 'details'
+  if b.display == 'open'
+    assign tag = 'div'
+  endif
+-%}
+{%- if body != blank -%}
+  <div class="mu-pp__acc" {{ block.shopify_attributes }}>
+    <{{ tag }} class="mu-pp__acc-item"{% if tag == 'details' and b.open %} open{% endif %}>
+      {%- if tag == 'details' -%}
+        <summary>{{ heading | escape }}<span class="mu-pp__acc-mark" aria-hidden="true"></span></summary>
+      {%- else -%}
+        <h2 class="mu-pp__copy-head">{{ heading | escape }}</h2>
+      {%- endif -%}
+      <div class="mu-rte mu-pp__acc-body">{{ body }}</div>
+    </{{ tag }}>
+  </div>
+{%- elsif request.design_mode -%}
+  <p class="mu-pp__hint" {{ block.shopify_attributes }}>{{ hint }}</p>
+{%- endif -%}

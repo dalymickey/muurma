@@ -1,0 +1,174 @@
+/* Stores: the store picker (a sheet that rises from the bottom on phones and floats centred on desktop), the
+   Our stores section and the map pins. Status dots (.mu-st__dot) are in mu-base. */
+
+/* ---------- Shared pieces ---------- */
+.mu-st__locate { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px 0 12px; border-radius: var(--mu-btn-r-s); background: color-mix(in srgb, var(--fg) 7%, transparent); font-size: .875rem; font-weight: var(--mu-font-body-bold); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mu-st__locate[hidden], .mu-st__map[hidden], .mu-sl__map[hidden] { display: none; }
+.mu-st__locate .mu-icon { inline-size: 20px; block-size: 20px; }
+.mu-st__msg { flex-basis: 100%; font-size: .8125rem; color: var(--mu); }
+.mu-st__msg:empty, .mu-st__status:empty, .mu-st__dist:empty, .mu-st__list:empty { display: none; }
+.mu-st__status { display: inline-flex; align-items: center; gap: 8px; font-size: .8125rem; }
+.mu-st__dist { padding: 2px 7px; border-radius: 6px; background: color-mix(in srgb, var(--fg) 7%, transparent); font-size: .75rem; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* Opening hours: today's row is highlighted in a tinted band. */
+:is(.mu-st__hours, .mu-sl__hours) { inline-size: 100%; max-inline-size: 320px; border-collapse: separate; border-spacing: 0 1px; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+:is(.mu-st__hours, .mu-sl__hours) :is(th, td) { padding: 4px 8px; }
+:is(.mu-st__hours, .mu-sl__hours) th { font-weight: inherit; text-align: start; color: var(--mu); }
+:is(.mu-st__hours, .mu-sl__hours) td { text-align: end; white-space: nowrap; }
+:is(.mu-st__hours, .mu-sl__hours) th { padding-inline-end: 16px; white-space: nowrap; }
+:is(.mu-st__hours, .mu-sl__hours) .is-today > * { background: color-mix(in srgb, var(--h, var(--mu-h-mid)) 18%, transparent); color: var(--fg); font-weight: var(--mu-font-body-bold); }
+:is(.mu-st__hours, .mu-sl__hours) .is-today > :first-child { border-radius: 6px 0 0 6px; }
+:is(.mu-st__hours, .mu-sl__hours) .is-today > :last-child { border-radius: 0 6px 6px 0; }
+
+/* ---------- Picker ---------- */
+.mu-st {
+  inset: auto 0 0; inline-size: 100%; max-inline-size: none; block-size: min(88svh, 820px); max-block-size: none; margin: auto 0 0;
+  padding: 0; overflow: hidden; border: 0; border-radius: var(--mu-radius-lg) var(--mu-radius-lg) 0 0; background: var(--bg); color: var(--fg); overscroll-behavior: contain;
+}
+.mu-st[open] { display: flex; flex-direction: column; }
+.mu-st::before { content: ""; flex: none; block-size: 5px; background: var(--mu-g-hero); }
+.mu-st::backdrop { background: color-mix(in srgb, #000 48%, transparent); }
+@media (prefers-reduced-motion: no-preference) { .mu-st[open] { animation: mu-st-rise .4s var(--mu-spring); } }
+@keyframes mu-st-rise { from { translate: 0 60px; opacity: 0; } }
+html:has(.mu-st[open]) { overflow: hidden; }
+.mu-st__top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 14px 4px 22px; }
+.mu-st__title { font-family: var(--mu-font-heading); font-size: calc(1.75rem * var(--mu-heading-scale)); font-weight: var(--mu-font-heading-weight); line-height: 1; }
+.mu-st__close { flex: none; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.mu-st__find { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 10px 22px 14px; }
+.mu-st__search { flex: 1 1 180px; display: flex; min-height: 48px; border-radius: var(--mu-field-r); background: color-mix(in srgb, var(--fg) 7%, var(--bg)); box-shadow: inset 0 -2px 0 var(--bd); }
+.mu-st__search:focus-within { background: var(--bg); box-shadow: inset 0 0 0 2px var(--focus); }
+.mu-st__search input { flex: 1; min-width: 0; padding-inline-start: 16px; border: 0; background: none; font-size: 16px; outline: 0; -webkit-appearance: none; appearance: none; }
+.mu-st__search input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.mu-st__go { flex: none; display: grid; place-items: center; inline-size: 46px; }
+.mu-st__main { flex: 1; min-height: 0; overflow-y: auto; }
+.mu-st__map { block-size: 200px; margin: 0 22px 12px; overflow: hidden; border-radius: var(--mu-radius); background: var(--band); }
+.mu-st__list { display: grid; gap: 6px; margin: 0; padding: 0 22px 18px; list-style: none; }
+/* Store rows: tinted boxes; the chosen one turns to the page colour with a ring and a ramp edge. */
+.mu-st__item { border-radius: var(--mu-radius); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-st__item.is-on { background: var(--bg); box-shadow: inset 0 0 0 2px var(--fg), inset 6px 0 0 var(--mu-h-mid); }
+.mu-st__pick { display: flex; gap: 14px; inline-size: 100%; padding: 16px 16px 6px; border-radius: var(--mu-radius) var(--mu-radius) 0 0; text-align: start; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mu-st__pick:focus-visible { outline-offset: -3px; }
+/* The choice mark is a round radio that fills and shows a tick. */
+.mu-st__box { flex: none; display: grid; place-items: center; inline-size: 22px; block-size: 22px; margin-top: 1px; border-radius: 50%; box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fg) 40%, transparent); }
+.mu-st__box .mu-icon { inline-size: 14px; block-size: 14px; stroke: var(--bg); stroke-width: 3; scale: 0; transition: scale .25s var(--mu-spring); }
+.mu-st__item.is-on .mu-st__box { background: var(--fg); box-shadow: none; }
+.mu-st__item.is-on .mu-st__box .mu-icon { scale: 1; }
+.mu-st__body { flex: 1; display: grid; gap: 5px; min-width: 0; }
+.mu-st__row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.mu-st__row .mu-st__dist { margin-inline-start: auto; }
+.mu-st__name { font-size: 1rem; font-weight: var(--mu-font-body-bold); }
+.mu-st__tag { padding: 3px 7px; border-radius: 6px; background: var(--mu-h-mid); color: var(--fg); font-size: .65625rem; font-weight: var(--mu-font-body-bold); letter-spacing: .07em; text-transform: uppercase; }
+.mu-st__ready, .mu-st__addr { font-size: .8125rem; color: var(--mu); }
+.mu-st__ready { display: inline-flex; align-items: center; gap: 7px; }
+.mu-st__ready .mu-icon { inline-size: 16px; block-size: 16px; }
+.mu-st__more { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0 18px; padding: 0 16px 10px 52px; }
+.mu-st__det { order: 2; flex-basis: 100%; }
+.mu-st__det:not([open]) { order: 0; flex-basis: auto; }
+.mu-st__det summary { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; font-size: .8125rem; list-style: none; cursor: pointer; }
+.mu-st__det summary::-webkit-details-marker { display: none; }
+.mu-st__det summary .mu-icon { inline-size: 14px; block-size: 14px; transition: rotate .2s var(--mu-glide); }
+.mu-st__det[open] summary .mu-icon { rotate: 45deg; }
+.mu-st__det .mu-st__hours { margin-bottom: 6px; }
+.mu-st__dir { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: var(--link); font-size: .8125rem; font-weight: var(--mu-font-body-bold); text-decoration: underline 2px; text-underline-offset: 4px; }
+.mu-st__dir .mu-icon { inline-size: 14px; block-size: 14px; }
+:is(.mu-st__det summary, .mu-st__dir, .mu-st__locate, .mu-st__go):focus-visible { border-radius: 8px; }
+.mu-st__foot { flex: none; padding: 12px 22px calc(14px + env(safe-area-inset-bottom)); background: var(--bg); box-shadow: 0 -1px 0 var(--bd); }
+.mu-st__save { inline-size: 100%; }
+.mu-st__save:disabled { opacity: .4; cursor: default; translate: none; box-shadow: none; }
+@media (min-width: 990px) {
+  .mu-st { inset: 0; inline-size: min(560px, 100% - 48px); block-size: min(84svh, 860px); margin: auto; border-radius: var(--mu-radius-lg); }
+  .mu-st__top { padding: 24px 20px 6px 32px; }
+  .mu-st__title { font-size: calc(2.25rem * var(--mu-heading-scale)); }
+  .mu-st__find { padding: 10px 32px 14px; }
+  .mu-st__list { padding: 0 32px 20px; }
+  .mu-st__foot { padding: 14px 32px 20px; }
+  .mu-st:has(.mu-st__map:not([hidden])) { inline-size: min(1120px, 100% - 48px); }
+  .mu-st:has(.mu-st__map:not([hidden])) .mu-st__main { display: grid; grid-template-columns: minmax(0, 1fr) 440px; overflow: hidden; }
+  .mu-st:has(.mu-st__map:not([hidden])) .mu-st__map { block-size: auto; margin: 0 0 20px 32px; }
+  .mu-st:has(.mu-st__map:not([hidden])) .mu-st__list { align-content: start; overflow-y: auto; padding-inline-start: 16px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .mu-st__item:not(.is-on):hover { background: color-mix(in srgb, var(--fg) 9%, transparent); }
+  .mu-st__locate:hover { background: var(--fg); color: var(--bg); }
+  .mu-st__det summary:hover { text-decoration: underline; }
+}
+
+/* ---------- Map pins (Google Maps overlays) ---------- */
+/* A dark pin; the chosen store's pin grows and takes the middle level colour. */
+.mu-pin { position: absolute; inline-size: 36px; block-size: 44px; translate: -50% -100%; transform-origin: 50% 100%; filter: drop-shadow(0 5px 6px color-mix(in srgb, #000 30%, transparent)); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mu-pin svg { display: block; inline-size: 100%; block-size: 100%; overflow: visible; }
+.mu-pin__body { fill: var(--fg); stroke: var(--bg); stroke-width: 2; }
+.mu-pin__ic { fill: none; stroke: var(--bg); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.mu-pin.is-on { z-index: 2; scale: 1.25; }
+.mu-pin.is-on .mu-pin__body { fill: var(--mu-h-mid); stroke: var(--fg); }
+.mu-pin.is-on .mu-pin__ic { stroke: var(--fg); }
+.mu-pin:focus-visible { outline: 0; }
+.mu-pin:focus-visible .mu-pin__body { stroke: var(--focus); stroke-width: 3.5; }
+@media (prefers-reduced-motion: no-preference) { .mu-pin { transition: scale .25s var(--mu-spring); } }
+
+/* ---------- Our stores section ---------- */
+.mu-sl { display: grid; gap: 22px; padding: 30px 16px 16px; }
+.mu-sl__head { display: grid; gap: 14px; }
+.mu-sl__head > div { display: grid; gap: 10px; }
+.mu-sl__text { max-inline-size: 36em; }
+.mu-sl__find { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.mu-sl__empty { padding: 24px 0; }
+.mu-sl__body { display: grid; gap: 12px; }
+.mu-sl__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* Store cards: the photo runs across the top with the name over a level-tinted body. */
+.mu-sl__card { display: grid; align-content: start; overflow: hidden; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--fg) 5%, var(--bg)); scroll-margin: 90px; container-type: inline-size; }
+.mu-sl__card.is-on { box-shadow: inset 0 0 0 2px var(--fg); }
+.mu-sl__img { aspect-ratio: 16 / 9; overflow: hidden; background: var(--band); }
+.mu-sl__img img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+/* Details, then hours, then actions; on a wide card the hours move beside the details (container query). */
+.mu-sl__info { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 12px; min-width: 0; padding: 16px 16px 12px; }
+.mu-sl__main { display: grid; align-content: start; gap: 8px; min-width: 0; }
+@container (min-width: 520px) {
+  .mu-sl__info { grid-template: "main hours" auto "act hours" 1fr / minmax(0, 1fr) auto; column-gap: 28px; }
+  .mu-sl__main { grid-area: main; }
+  .mu-sl__hours { grid-area: hours; inline-size: 260px; }
+  .mu-sl__actions { grid-area: act; align-self: end; }
+}
+.mu-sl__name { font-family: var(--mu-font-heading); font-size: calc(1.5rem * var(--mu-heading-scale)); font-weight: var(--mu-font-heading-weight); line-height: 1; }
+.mu-sl__focus { text-align: start; letter-spacing: inherit; cursor: pointer; }
+.mu-sl__focus:focus-visible { border-radius: 6px; }
+.mu-sl__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.mu-sl__meta:not(:has(:not(:empty))) { display: none; }
+.mu-sl__addr { font-size: .875rem; font-style: normal; line-height: 1.45; overflow-wrap: anywhere; }
+.mu-sl__phone { display: inline-flex; align-items: center; justify-self: start; gap: 6px; min-height: 32px; font-size: .875rem; }
+.mu-sl__phone .mu-icon, .mu-sl__dir .mu-icon { inline-size: 16px; block-size: 16px; }
+.mu-sl__hours { margin: 0; align-self: start; }
+.mu-sl__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.mu-sl__set .mu-icon { display: none; inline-size: 18px; block-size: 18px; }
+.mu-sl__set.is-on { --b-bg: var(--fg); --b-fg: var(--bg); --b-ring: var(--fg); }
+.mu-sl__set.is-on .mu-icon { display: block; }
+.mu-sl__dir { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: .875rem; font-weight: var(--mu-font-body-bold); }
+.mu-sl__map { position: relative; min-height: 300px; overflow: hidden; border-radius: var(--mu-radius); background: var(--band); }
+.mu-sl__embed { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; filter: grayscale(1) contrast(1.05) sepia(.15); }
+@media (max-width: 989px) { .mu-sl--map .mu-sl__map { order: -1; } }
+@media (min-width: 750px) and (max-width: 989px) { .mu-sl--map .mu-sl__map { min-height: 360px; } }
+/* Sticker surface: an outline and hard offset shadow in the section's text colour, so it follows each scheme. */
+.mu-stk .mu-sl__list { gap: calc(14px + var(--stk-o)); padding: var(--stk-w) calc(var(--stk-w) + var(--stk-o)) calc(var(--stk-w) + var(--stk-o)) var(--stk-w); }
+.mu-stk .mu-sl__card { background: var(--bg); box-shadow: 0 0 0 var(--stk-w) var(--fg), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--fg); }
+.mu-stk .mu-sl__card.is-on { box-shadow: 0 0 0 var(--stk-w) var(--fg), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--mu-h-mid); }
+.mu-stk .mu-sl__map { margin: var(--stk-w) calc(var(--stk-w) + var(--stk-o)) calc(var(--stk-w) + var(--stk-o)) var(--stk-w); box-shadow: 0 0 0 var(--stk-w) var(--fg), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--fg); }
+@media (min-width: 750px) { .mu-sl:not(.mu-sl--map) .mu-sl__list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 990px) {
+  .mu-sl { gap: 30px; padding: 48px 36px 36px; }
+  .mu-sl__head { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+  .mu-sl__find { justify-content: flex-end; }
+  .mu-sl__info { padding: 20px 20px 14px; }
+  /* Beside the map a card with a photo turns into a row: photo left, details right. Without a photo the details
+     take the full width. */
+  .mu-sl--map .mu-sl__card:has(> .mu-sl__img) { grid-template-columns: 150px minmax(0, 1fr); }
+  .mu-sl--map .mu-sl__img { aspect-ratio: auto; }
+  .mu-sl--map .mu-sl__body { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); align-items: start; gap: 14px; }
+  .mu-sl--map .mu-sl__map { position: sticky; inset-block-start: 90px; block-size: min(660px, 100vh - 120px); min-height: 0; }
+  .mu-sl:not(.mu-sl--map) .mu-sl__list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (hover: hover) and (pointer: fine) {
+  .mu-sl__card:not(.is-on):hover { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 40%, transparent); }
+  .mu-stk .mu-sl__card:not(.is-on):hover { box-shadow: 0 0 0 var(--stk-w) var(--fg), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--fg); translate: -2px -2px; }
+  .mu-sl__focus:hover { text-decoration: underline 2px; text-underline-offset: 4px; }
+}
+@media (prefers-reduced-motion: no-preference) { .mu-stk .mu-sl__card { transition: translate .2s var(--mu-glide), box-shadow .2s var(--mu-glide); } }
+@media (prefers-reduced-motion: reduce) { .mu-st__box .mu-icon, .mu-st__det summary .mu-icon { transition: none; } .mu-stk .mu-sl__card:hover { translate: none; } }

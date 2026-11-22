@@ -1,0 +1,59 @@
+{%- comment -%}
+  Ticker: a row of short messages that scrolls in a seamless loop (assets/mu-ticker.css + mu-ticker.js), shared by the
+  ticker section and the product page's ticker block. The first list is the one read by screen readers; the copies
+  that close the loop are aria-hidden and inert, and the script adds more when one list is narrower than the screen.
+  It pauses off screen, on hover (optional), while a link inside has focus and with the optional pause button.
+  Reduced motion: a still row that scrolls sideways.
+  @param items {String} one <li class="mu-tk__item"> per message
+  @param lines {String} or plain text, one message per line (used when items is not given; blank lines are skipped)
+  @param icon {String} with lines: icon name before each message, or none
+  @param speed {Number} pixels per second
+  @param reverse {Boolean} move left to right
+  @param hover {Boolean} pause on hover
+  @param sep {String} none | dot | drop | steps
+  @param size {String} sm | md | lg
+  @param dark {Boolean} dark background: separators take the accent colour
+  @param button {Boolean} show a pause button
+  @param class {String} optional extra class
+  @param attrs {String} optional extra attributes (a block's shopify_attributes)
+  @param rk {Number} optional corner radius share, 0 to 100 (product block pill); writes --tk-rk only below 100
+{%- endcomment -%}
+{%- liquid
+  if items == blank and lines != blank
+    assign rows = lines | newline_to_br | split: '<br />'
+    capture items
+      for row in rows
+        assign t = row | strip | escape
+        if t != blank
+          echo '<li class="mu-tk__item"><span class="mu-tk__msg">'
+          if icon != blank and icon != 'none'
+            render 'mu-icon', name: icon
+          endif
+          echo '<span>' | append: t | append: '</span></span></li>'
+        endif
+      endfor
+    endcapture
+    assign items = items | strip
+  endif
+-%}
+{%- if items != blank -%}
+  {%- liquid
+    assign pace = settings.marquee_speed | default: 60 | at_least: 20
+    assign tk_speed = speed | default: 60 | times: pace | divided_by: 60 | at_least: 10
+  -%}
+  <mu-ticker class="mu-tk mu-tk--{{ size | default: 'md' }} mu-tk--sep-{{ sep | default: 'none' }}{% if reverse %} mu-tk--rev{% endif %}{% if hover %} mu-tk--hover{% endif %}{% if dark %} mu-tk--dark{% endif %}{% if button %} mu-tk--btn{% endif %}{% if class %} {{ class }}{% endif %}" data-speed="{{ tk_speed }}" data-label="{{ 'sections.ticker.label' | t | escape }}"{% if attrs %} {{ attrs }}{% endif %}{% if rk != blank and rk != 100 %} style="--tk-rk: {{ rk | divided_by: 100.0 }}"{% endif %}>
+    {%- comment -%} Inside the element, so the ticker stays its container's only child (the card's :only-child styles). {%- endcomment -%}
+    {{ 'mu-ticker.css' | asset_url | stylesheet_tag }}
+    <script src="{{ 'mu-ticker.js' | asset_url }}" defer></script>
+    <div class="mu-tk__view">
+      <ul class="mu-tk__list" role="list">{{ items }}</ul>
+      <ul class="mu-tk__list" role="list" aria-hidden="true" inert>{{ items }}</ul>
+    </div>
+    {%- if button -%}
+      <button type="button" class="mu-tk__btn" aria-pressed="false" aria-label="{{ 'sections.ticker.pause' | t | escape }}">
+        {%- render 'mu-icon', name: 'pause', class: 'mu-tk__pause' -%}
+        {%- render 'mu-icon', name: 'play', class: 'mu-tk__play' -%}
+      </button>
+    {%- endif -%}
+  </mu-ticker>
+{%- endif -%}

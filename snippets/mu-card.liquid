@@ -1,0 +1,255 @@
+{%- comment -%}
+  Product card: a tile with the image and a tag (snippets/mu-badges: coming soon / sold out / pre-order, see mu-pp-pre / sale, or % off with Cards > Sale badge, see mu-sale-pct / new; New and Sale take Cards > Badge colours when set, the rest use the scheme; coming soon reads custom.release_date; Cards > Badge position moves the badges to a row above the title instead).
+  Below it the title (Cards > Title size), the star rating (Cards > Show rating; Show empty ratings gives unrated products empty stars and "No reviews", see mu-rating), the price, up to 4 colour dots (from option swatches; each dot links to its colour: in a combined listing that colour's product, otherwise this product with the first available variant of that colour)
+  and, with Cards > Show quick view button, an outline button that opens quick view (sections/mu-quick-add, assets/mu-quick-add.js), or adds a product without options straight to the bag (quick buy, below).
+  With Theme settings > Cards: the second media fades in on hover (mouse only; a Shopify-hosted video plays muted,
+  an external video shows its preview image; off = the hover motion applies to the first image), and product tags that start with the
+  badge prefix (default "badge:", e.g. "badge:Staff pick") show as extra badges, skipping one that repeats the tag (e.g. "badge:Pre-order" on a pre-order).
+  Coming-soon products and products that can only be bought with a purchase option (selling plan) keep the button, but it links to the product page.
+  Card style (Theme settings > Cards): level fills the card with its level's gradient, the image stands on it and price
+  and button sit on a calm chip; plain keeps the image on a soft band. Products with no level use the scheme. In
+  Product colors only mode the accent colour (mu-tone) stands in for the level, and the label strip shows custom.short_name.
+  Label stands the product's cut-out (custom.cutout, else the featured image) on a flat square panel over a printed
+  strip with its level; with the hover image on, the featured photo fills the panel on hover.
+  Pass product. Optional: sizes (the image sizes attribute; 'rail' for the 4-up rails of Featured collection and the
+  product-page rails, measured from their layout), eager (true for cards above the fold), fp ('high' for the first row's images), heading ('h2' where
+  the card sits straight under the page h1, as in the collection and search grids; default 'h3').
+  layout 'lineup' renders snippets/mu-card-lineup instead (numbered row). Pass lineup_index, lineup_numbers
+  (outline or solid) and show_sub (first selling plan price).
+{%- endcomment -%}
+{%- if layout == 'lineup' -%}
+  {%- render 'mu-card-lineup', product: product, index: lineup_index, numbers: lineup_numbers, show_sub: show_sub, eager: eager -%}
+{%- else -%}
+{%- liquid
+  assign img = product.featured_media.preview_image
+  assign title_tag = heading | default: 'h3'
+  assign img_sizes = sizes | default: '(min-width: 990px) 25vw, 45vw'
+  if sizes == 'rail'
+    assign c_mob = 'calc(66vw - 34px)'
+    if settings.card_mobile_size == 'compact'
+      assign c_mob = 'calc(47vw - 24px)'
+    endif
+    capture img_sizes
+      render 'mu-sizes', sub: 64, f: 0.25, tab: '28vw', mob: c_mob
+    endcapture
+  endif
+  assign load = 'lazy'
+  if eager
+    assign load = 'eager'
+  endif
+  assign v = product.selected_or_first_available_variant
+  assign coming = false
+  assign release = product.metafields.custom.release_date.value
+  if release != blank
+    assign release_s = release | date: '%s' | plus: 0
+    assign now_s = 'now' | date: '%s' | plus: 0
+    if release_s > now_s
+      assign coming = true
+    endif
+  endif
+  assign img2 = blank
+  assign vid2 = blank
+  assign fill2 = false
+  if settings.card_style == 'label'
+    assign cut = product.metafields.custom.cutout.value
+    if cut != blank
+      assign img = cut.preview_image | default: cut
+      if settings.card_hover_image and product.featured_media.preview_image
+        assign img2 = product.featured_media.preview_image
+        assign fill2 = true
+      endif
+    endif
+  endif
+  if settings.card_hover_image and img and fill2 == false
+    for m in product.media offset: 1
+      if m.preview_image
+        assign img2 = m.preview_image
+        if m.media_type == 'video'
+          assign vid2 = m
+        endif
+        break
+      endif
+    endfor
+  endif
+  if vid2 != blank
+    assign vsrc = blank
+    assign vh = 0
+    for src in vid2.sources
+      if src.format == 'mp4' and src.height <= 720 and src.height > vh
+        assign vsrc = src
+        assign vh = src.height
+      endif
+    endfor
+    if vsrc == blank
+      assign vsrc = vid2.sources | where: 'format', 'mp4' | first
+    endif
+    if vsrc == blank
+      assign vid2 = blank
+    endif
+  endif
+  assign dots = blank
+  for option in product.options_with_values
+    assign has_swatch = false
+    for value in option.values
+      if value.swatch.color or value.swatch.image
+        assign has_swatch = true
+        break
+      endif
+    endfor
+    if has_swatch
+      assign dots = option
+      break
+    endif
+  endfor
+-%}
+{%- liquid
+  assign badge_pos = settings.card_badge_position | default: 'image'
+  assign title_size = settings.card_title_size | default: 'medium'
+  capture hs
+    render 'mu-level', product: product
+  endcapture
+  assign lv = hs | split: '|' | first | plus: 0
+  assign hsc = hs | split: '|' | last | plus: 0
+  assign style = settings.card_style | default: 'plain'
+  assign card_cls = 'mu-card mu-card--' | append: style
+  assign tone_sty = ''
+  if settings.scale_mode == 'colors'
+    capture tn
+      render 'mu-tone', product: product
+    endcapture
+    assign tn = tn | split: '|'
+    if tn[0] != blank
+      assign card_cls = card_cls | append: ' ' | append: tn[0]
+      assign tone_sty = tn[1]
+    else
+      assign card_cls = card_cls | append: ' mu-card--unrated'
+    endif
+  elsif lv > 0
+    assign card_cls = card_cls | append: ' mu-h-' | append: lv
+    if hsc == 2
+      assign card_cls = card_cls | append: ' mu-s2'
+    endif
+  else
+    assign card_cls = card_cls | append: ' mu-card--unrated'
+  endif
+-%}
+{%- capture tags_html -%}{%- render 'mu-badges', product: product, coming: coming -%}{%- endcapture -%}
+<article class="{{ card_cls }}{% if settings.card_quick_view %} mu-card--qv{% endif %} mu-card--t-{{ title_size }} mu-card--b-{{ badge_pos }}" style="--l: {{ lv }};{% if tone_sty != blank %} {{ tone_sty }}{% endif %}">
+  <div class="mu-card__media">
+    <a class="mu-card__img-link" href="{{ product.url }}" tabindex="-1" aria-hidden="true">
+      {%- if img -%}
+        {%- assign ar_style = '--ar: ' | append: img.aspect_ratio | append: ';' -%}
+        {% render 'mu-img', image: img, max: 1200, sizes: img_sizes, loading: load, fp: fp, class: 'mu-card__img', style: ar_style %}
+        {%- if vid2 != blank -%}
+          {%- comment -%} Shopify-hosted video as the second media: nothing loads until a mouse hovers the card (mu-card-video.js), then it plays muted, inline and looped and fades in once playing. {%- endcomment -%}
+          <video class="mu-card__img mu-card__img--alt mu-card__vid" data-src="{{ vsrc.url }}" muted playsinline loop preload="none" disablepictureinpicture aria-hidden="true" tabindex="-1"></video>
+          <script src="{{ 'mu-card-video.js' | asset_url }}" defer></script>
+        {%- elsif fill2 -%}
+          {% render 'mu-img', image: img2, max: 1200, sizes: img_sizes, class: 'mu-card__img mu-card__img--alt mu-card__img--fill' %}
+        {%- elsif img2 != blank -%}
+          {%- assign ar_style2 = '--ar: ' | append: img2.aspect_ratio | append: ';' -%}
+          {% render 'mu-img', image: img2, max: 1200, sizes: img_sizes, class: 'mu-card__img mu-card__img--alt', style: ar_style2 %}
+        {%- endif -%}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'mu-placeholder' }}
+      {%- endif -%}
+    </a>
+    {%- render 'mu-stickers', product: product -%}
+    {%- if badge_pos == 'image' -%}{{ tags_html }}{%- endif -%}
+  </div>
+  {%- if style == 'label' and lv > 0 -%}
+    <div class="mu-card__label">{%- render 'mu-rung', product: product, size: 'sm' -%}</div>
+  {%- elsif style == 'label' and tone_sty != blank and product.metafields.custom.short_name != blank -%}
+    <div class="mu-card__label"><span class="mu-card__accent">{{ product.metafields.custom.short_name.value | escape }}</span></div>
+  {%- endif -%}
+  <div class="mu-card__body">
+    {%- if badge_pos == 'title' -%}{{ tags_html }}{%- endif -%}
+    {%- if settings.scale_on_cards and style != 'label' -%}{%- render 'mu-rung', product: product, size: 'sm' -%}{%- endif -%}
+    <{{ title_tag }} class="mu-card__title mu-scale-type"><a href="{{ product.url }}">{{ product.title | escape }}</a></{{ title_tag }}>
+    {%- render 'mu-rating', product: product, show: settings.card_rating, empty: settings.card_rating_empty, class: 'mu-card__rating' -%}
+    {%- if dots != blank -%}
+      {%- assign dot_index = dots.position | minus: 1 -%}
+      <ul class="mu-card__dots" role="list" aria-label="{{ dots.name | escape }}">
+        {%- for value in dots.values limit: 4 -%}
+          {%- comment -%} Every dot links to its colour. Combined listings: a colour that is its own product (option_value.product_url) links to it. Otherwise the dot links to this product with the first available variant of that colour selected (first variant if none is available). The colour shown on the card gets aria-current. {%- endcomment -%}
+          {%- liquid
+            assign dot_url = ''
+            assign sib_url = value.product_url | append: ''
+            if sib_url != '' and sib_url != product.url
+              assign dot_url = sib_url
+            endif
+            if dot_url == ''
+              assign dot_variant = nil
+              for dv in product.variants
+                if dv.options[dot_index] == value.name
+                  if dv.available
+                    assign dot_variant = dv
+                    break
+                  elsif dot_variant == nil
+                    assign dot_variant = dv
+                  endif
+                endif
+              endfor
+              if dot_variant
+                assign dot_url = dot_variant.url
+              else
+                assign dot_url = product.url
+              endif
+            endif
+          -%}
+          <li class="mu-card__dot mu-card__dot--link" title="{{ value | escape }}" style="
+            {%- if value.swatch.image -%}background-image: url({{ value.swatch.image | image_url: width: 48 }});{%- else -%}background-color: {{ value.swatch.color }};{%- endif -%}
+          ">
+            <a href="{{ dot_url }}"{% if value.selected %} aria-current="true"{% endif %}><span class="visually-hidden">{{ value | escape }}</span></a>
+          </li>
+        {%- endfor -%}
+        {%- if dots.values.size > 4 -%}<li class="mu-card__more">+{{ dots.values.size | minus: 4 }}</li>{%- endif -%}
+      </ul>
+    {%- endif -%}
+    <div class="mu-card__chip">
+      <div class="mu-card__money">
+        <p class="mu-card__price">{% render 'mu-price', product: product %}</p>
+        {%- if v.unit_price_measurement -%}
+          <p class="mu-card__unit">{% render 'mu-unit-price', price: v.unit_price, measurement: v.unit_price_measurement %}</p>
+        {%- elsif v.title != 'Default Title' and product.variants.size > 1 -%}
+          <p class="mu-card__unit">{{ v.title | escape }}</p>
+        {%- endif -%}
+      </div>
+      {%- if settings.card_quick_view -%}
+        {%- liquid
+          assign qv_label = settings.card_quick_view_label | strip
+          if qv_label == blank
+            assign qv_label = 'products.quick_view_button' | t
+          endif
+        -%}
+        {%- comment -%}
+          Quick buy (Cards > Add single-variant products directly): a product with only one variant (no options, or options
+          with one value each, like Size: 200 g) that can be bought outright adds straight to the bag (assets/mu-quick-add.js). Anything risky keeps quick view: gift cards
+          (recipient form), purchase options, and out-of-stock selling (pre-orders). Adds the B2B minimum when there is one.
+        {%- endcomment -%}
+        {%- liquid
+          assign qb = false
+          if settings.card_quick_buy and product.variants.size == 1 and v.available and product.gift_card? == false and product.selling_plan_groups.size == 0
+            assign qb = true
+            if v.inventory_management == 'shopify' and v.inventory_policy == 'continue' and v.inventory_quantity <= 0
+              assign qb = false
+            endif
+          endif
+          assign qb_label = settings.card_quick_buy_label | strip
+          if qb_label == blank
+            assign qb_label = 'products.add_short' | t
+          endif
+        -%}
+          {%- if coming or product.requires_selling_plan -%}
+            <a class="mu-btn mu-btn--sm mu-card__qv" href="{{ product.url }}">{{ qv_label | escape }}<span class="visually-hidden">: {{ product.title | escape }}</span></a>
+          {%- elsif qb -%}
+            <button class="mu-btn mu-btn--sm mu-card__qv" type="button" data-quick-add="{{ product.url }}" data-quick-buy="{{ v.id }}" data-qty="{{ v.quantity_rule.min | default: 1 }}">{{ qb_label | escape }}<span class="visually-hidden">: {{ product.title | escape }}. {{ 'products.quick_buy_hint' | t }}</span></button>
+            <p class="mu-card__msg" role="status" data-qb-msg></p>
+          {%- else -%}
+            <button class="mu-btn mu-btn--sm mu-card__qv" type="button" data-quick-add="{{ product.url }}" aria-haspopup="dialog">{{ qv_label | escape }}<span class="visually-hidden">: {{ product.title | escape }}</span></button>
+          {%- endif -%}
+      {%- endif -%}
+    </div>
+  </div>
+</article>
+{%- endif -%}

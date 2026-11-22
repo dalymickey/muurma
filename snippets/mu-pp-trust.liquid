@@ -1,0 +1,36 @@
+{%- comment -%}
+  A short trust row: up to four icon and text items (secure checkout, returns, delivery). An item needs a label.
+  Icons are decorative. Nothing renders when every label is empty.
+  @param block {Block}
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+-%}
+{%- capture items -%}
+  {%- for i in (1..4) -%}
+    {%- liquid
+      assign nk = 'icon_' | append: i
+      assign lk = 'label_' | append: i
+      assign sk = 'sub_' | append: i
+      assign label = b[lk] | strip
+      assign sub = b[sk] | strip
+    -%}
+    {%- if label != blank -%}
+      <li class="mu-pp__feat-item">
+        {%- render 'mu-icon-pick', icon: b[nk], tint: true, size: 28, cls: 'mu-pp__feat', join: '-' -%}
+        <span class="mu-pp__feat-text">
+          <span class="mu-pp__feat-label">{{ label | escape }}</span>
+          {%- if sub != blank -%}<span class="mu-pp__feat-sub">{{ sub | escape }}</span>{%- endif -%}
+        </span>
+      </li>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- if items != blank -%}
+  <div class="mu-pp__feat mu-pp__feat--row mu-pp__feat--plain mu-pp__feat--tsm" style="--mu-feat-icon: 28px; --mu-feat-m: 1;" {{ block.shopify_attributes }}>
+    {%- if b.heading != blank -%}<h2 class="mu-pp__comp-head">{{ b.heading | escape }}</h2>{%- endif -%}
+    <ul class="mu-pp__feat-list" role="list">{{ items }}</ul>
+  </div>
+{%- elsif request.design_mode -%}
+  <p class="mu-pp__hint" {{ block.shopify_attributes }}>{{ 'products.trust_empty' | t }}</p>
+{%- endif -%}

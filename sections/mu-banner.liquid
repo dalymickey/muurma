@@ -1,0 +1,589 @@
+{%- comment -%}
+  Full-bleed hero. A photograph (or a muted video) with a dark coastal veil, optional film grain
+  and a contour-line overlay. Copy sits bottom-left by default: a tracked kicker, a study label,
+  a condensed headline, a lede, a primary button, a text link and fine print.
+  An empty image picker shows the packaged asset named in Packaged photo.
+{%- endcomment -%}
+{{ 'mu-banner.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign htag = s.heading_tag | default: 'h2'
+  if htag != 'h1' and htag != 'h2' and htag != 'h3'
+    assign htag = 'h2'
+  endif
+  assign focal = '50% 38%'
+  if s.image != blank and s.image.presentation.focal_point != blank
+    assign focal = s.image.presentation.focal_point
+  endif
+  assign demo_loading = 'lazy'
+  assign demo_fp = ''
+  if section.index == 1
+    assign demo_loading = 'eager'
+    assign demo_fp = 'high'
+  endif
+  capture demo_banner
+    render 'mu-demo-image', asset: s.demo_image, class: 'mu-banner__img', sizes: '100vw', alt: '', style: 'object-position: var(--mu-banner-focal, 50% 38%);', loading: demo_loading, fetchpriority: demo_fp
+  endcapture
+  assign demo_banner = demo_banner | strip
+  assign has_media = false
+  if s.image != blank or s.video != blank or demo_banner != ''
+    assign has_media = true
+  endif
+  assign show_media = has_media
+  if request.design_mode and has_media == false
+    assign show_media = true
+  endif
+  assign ov = s.overlay_color | default: '#2b2c2b'
+  assign strength = s.overlay_opacity | default: 80 | divided_by: 100.0
+  assign top_a = strength | times: 0.9
+  assign bot_a = strength
+  assign bot_mid = bot_a | times: 0.7
+  assign bot_soft = bot_a | times: 0.25
+  assign grain_a = s.grain_opacity | default: 42 | divided_by: 100.0
+  assign contour_a = s.contour_opacity | default: 14 | divided_by: 100.0
+  assign grain_url = 'mu-grain.jpg' | asset_url
+  if s.grain_image != blank
+    assign grain_url = s.grain_image | image_url: width: 512
+  endif
+-%}
+{%- if s.video != blank -%}<script src="{{ 'mu-video.js' | asset_url }}" defer></script>{%- endif -%}
+{%- if section.index == 1 -%}
+  <style>:root { --mu-hero-fg: {{ settings.color_schemes[s.color_scheme].settings.text }}; }</style>
+{%- endif -%}
+<div
+  class="mu-sec mu-banner mu-bleed mu-banner--{{ s.height }} mu-banner--m-{{ s.height_mobile }} mu-banner--at-{{ s.content_position }} mu-banner--align-{{ s.text_align }} color-{{ s.color_scheme }}"
+  data-mu-over
+  style="--mu-banner-focal: {{ focal }};{% if s.image == blank %} --mu-banner-focal-m: 50% 28%;{% endif %} --mu-banner-ov: {{ ov }}; --mu-grain-a: {{ grain_a }}; --mu-contour-a: {{ contour_a }}; --mu-grain: url('{{ grain_url }}');"
+>
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  {%- if show_media -%}
+    <div class="mu-banner__media">
+      {%- if s.video != blank -%}
+        {%- render 'mu-bgvideo', video: s.video, poster: s.image, class: 'mu-banner__video', media_class: 'mu-banner__vid', ctl: 'mu-banner__vctl' -%}
+      {%- elsif s.image != blank -%}
+        {%- if section.index == 1 -%}
+          {%- render 'mu-img', image: s.image, class: 'mu-banner__img', sizes: '100vw', alt: '', fp: 'high', preload: true, style: 'object-position: var(--mu-banner-focal, 50% 38%);' -%}
+        {%- else -%}
+          {%- render 'mu-img', image: s.image, class: 'mu-banner__img', sizes: '100vw', alt: '', style: 'object-position: var(--mu-banner-focal, 50% 38%);' -%}
+        {%- endif -%}
+      {%- elsif demo_banner != '' -%}
+        {{ demo_banner }}
+      {%- else -%}
+        {{ 'lifestyle-2' | placeholder_svg_tag: 'mu-banner__ph' }}
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+  <div class="mu-banner__veil mu-banner__veil--top" style="background: linear-gradient(to bottom, {{ ov | color_modify: 'alpha', top_a }} 0%, {{ ov | color_modify: 'alpha', 0 }} 100%);" aria-hidden="true"></div>
+  <div class="mu-banner__veil mu-banner__veil--bottom" style="background: linear-gradient(to top, {{ ov | color_modify: 'alpha', bot_a }} 0%, {{ ov | color_modify: 'alpha', bot_mid }} 28%, {{ ov | color_modify: 'alpha', bot_soft }} 62%, {{ ov | color_modify: 'alpha', 0 }} 100%);" aria-hidden="true"></div>
+  {%- if s.show_contour -%}
+    <div class="mu-banner__motif" aria-hidden="true">
+      {%- if s.contour_image != blank -%}
+        {{ s.contour_image | image_url: width: 1600 | image_tag: alt: '', class: 'mu-banner__motif-img' }}
+      {%- else -%}
+        <img class="mu-banner__motif-img" src="{{ 'mu-contours.svg' | asset_url }}" alt="" width="1440" height="900">
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+  {%- if s.show_grain -%}
+    <div class="mu-banner__grain" aria-hidden="true"></div>
+  {%- endif -%}
+  <div class="mu-banner__frame">
+    <div class="mu-banner__copy">
+      {%- if s.eyebrow != blank -%}<p class="mu-banner__eyebrow"><span class="mu-banner__rule" aria-hidden="true"></span>{{ s.eyebrow | escape }}</p>{%- endif -%}
+      <div class="mu-banner__titles">
+        {%- if s.study != blank -%}<p class="mu-banner__study">{{ s.study | escape }}</p>{%- endif -%}
+        {%- if s.heading != blank -%}<{{ htag }} class="mu-banner__title">{{ s.heading }}</{{ htag }}>{%- endif -%}
+      </div>
+      {%- if s.subheading != blank -%}<p class="mu-banner__sub">{{ s.subheading | escape }}</p>{%- endif -%}
+      {%- if s.button_label != blank or s.button_label_2 != blank -%}
+        <div class="mu-banner__actions">
+          {%- if s.button_label != blank -%}
+            {%- if s.button_link != blank -%}
+              <a class="mu-btn{% if s.button_style == 'secondary' %} mu-btn--secondary{% elsif s.button_style == 'ghost' %} mu-banner__textlink{% endif %}" href="{{ s.button_link }}">{{ s.button_label | escape }}</a>
+            {%- else -%}
+              <a class="mu-btn{% if s.button_style == 'secondary' %} mu-btn--secondary{% elsif s.button_style == 'ghost' %} mu-banner__textlink{% endif %}" href="{{ routes.all_products_collection_url }}">{{ s.button_label | escape }}</a>
+            {%- endif -%}
+          {%- endif -%}
+          {%- if s.button_label_2 != blank -%}
+            {%- if s.button_link_2 != blank -%}
+              <a class="{% if s.button_style_2 == 'ghost' %}mu-banner__textlink{% else %}mu-btn{% if s.button_style_2 == 'secondary' %} mu-btn--secondary{% endif %}{% endif %}" href="{{ s.button_link_2 }}">{{ s.button_label_2 | escape }}{% if s.button_style_2 == 'ghost' %} <span aria-hidden="true">→</span>{% endif %}</a>
+            {%- else -%}
+              <span class="{% if s.button_style_2 == 'ghost' %}mu-banner__textlink{% else %}mu-btn{% if s.button_style_2 == 'secondary' %} mu-btn--secondary{% endif %}{% endif %}">{{ s.button_label_2 | escape }}{% if s.button_style_2 == 'ghost' %} <span aria-hidden="true">→</span>{% endif %}</span>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+      {%- if s.fine != blank -%}<p class="mu-banner__fine">{{ s.fine | escape }}</p>{%- endif -%}
+    </div>
+  </div>
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.banner.name",
+  "class": "mu-section mu-section--banner",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.common.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Kicker",
+      "default": "New drop every Thursday"
+    },
+    {
+      "type": "text",
+      "id": "study",
+      "label": "Study label",
+      "default": "Study 001"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "default": "The Break"
+    },
+    {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "t:sections.banner.heading_tag",
+      "info": "t:sections.banner.heading_tag_info",
+      "default": "h1",
+      "options": [
+        {
+          "value": "h1",
+          "label": "t:sections.banner.h1"
+        },
+        {
+          "value": "h2",
+          "label": "t:sections.banner.h2"
+        },
+        {
+          "value": "h3",
+          "label": "t:sections.banner.h3"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "t:sections.banner.subheading",
+      "default": "A breaking wave, held in contour. Made to order on the east coast."
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:sections.common.button_label",
+      "default": "Shop Study 001"
+    },
+    {
+      "type": "url",
+      "id": "button_link",
+      "label": "t:sections.common.link"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "t:sections.banner.button_style",
+      "default": "primary",
+      "options": [
+        {
+          "value": "primary",
+          "label": "t:sections.banner.style_primary"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.banner.style_secondary"
+        },
+        {
+          "value": "ghost",
+          "label": "t:sections.banner.style_ghost"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "button_label_2",
+      "label": "t:sections.banner.button_label_2",
+      "default": "How we make it"
+    },
+    {
+      "type": "url",
+      "id": "button_link_2",
+      "label": "t:sections.banner.button_link_2"
+    },
+    {
+      "type": "select",
+      "id": "button_style_2",
+      "label": "t:sections.banner.button_style_2",
+      "default": "ghost",
+      "options": [
+        {
+          "value": "primary",
+          "label": "t:sections.banner.style_primary"
+        },
+        {
+          "value": "secondary",
+          "label": "t:sections.banner.style_secondary"
+        },
+        {
+          "value": "ghost",
+          "label": "t:sections.banner.style_ghost"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "fine",
+      "label": "Fine print",
+      "default": "Made to order. Zero dead stock. Shipped worldwide."
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.layout"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.banner.image",
+      "info": "t:sections.banner.image_info"
+    },
+    {
+      "type": "text",
+      "id": "demo_image",
+      "label": "t:sections.common.demo_image",
+      "info": "t:sections.common.demo_image_info",
+      "default": "mu-hero-back.jpg"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "t:sections.banner.video",
+      "info": "t:sections.banner.video_info"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:sections.banner.overlay_color",
+      "info": "t:sections.banner.overlay_info",
+      "default": "#2b2c2b"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "t:sections.banner.overlay_opacity",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 80
+    },
+    {
+      "type": "checkbox",
+      "id": "show_grain",
+      "label": "Film grain",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "grain_image",
+      "label": "Grain image",
+      "info": "Optional. Leave empty to use the packaged grain."
+    },
+    {
+      "type": "range",
+      "id": "grain_opacity",
+      "label": "Grain strength",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "%",
+      "default": 42
+    },
+    {
+      "type": "checkbox",
+      "id": "show_contour",
+      "label": "Contour overlay",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "contour_image",
+      "label": "Contour image",
+      "info": "Optional line drawing. Leave empty to use the packaged contours."
+    },
+    {
+      "type": "range",
+      "id": "contour_opacity",
+      "label": "Contour strength",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "%",
+      "default": 14
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "t:sections.banner.height",
+      "default": "screen",
+      "options": [
+        {
+          "value": "small",
+          "label": "t:sections.banner.height_small"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.banner.height_medium"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.banner.height_large"
+        },
+        {
+          "value": "screen",
+          "label": "t:sections.banner.height_screen"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "height_mobile",
+      "label": "t:sections.banner.height_mobile",
+      "default": "screen",
+      "options": [
+        {
+          "value": "same",
+          "label": "t:sections.banner.height_same"
+        },
+        {
+          "value": "small",
+          "label": "t:sections.banner.height_small"
+        },
+        {
+          "value": "medium",
+          "label": "t:sections.banner.height_medium"
+        },
+        {
+          "value": "large",
+          "label": "t:sections.banner.height_large"
+        },
+        {
+          "value": "screen",
+          "label": "t:sections.banner.height_screen"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "t:sections.banner.position",
+      "default": "bottom_left",
+      "options": [
+        {
+          "value": "top_left",
+          "label": "t:sections.banner.pos_top_left"
+        },
+        {
+          "value": "top_center",
+          "label": "t:sections.banner.pos_top_center"
+        },
+        {
+          "value": "top_right",
+          "label": "t:sections.banner.pos_top_right"
+        },
+        {
+          "value": "middle_left",
+          "label": "t:sections.banner.pos_middle_left"
+        },
+        {
+          "value": "middle_center",
+          "label": "t:sections.banner.pos_middle_center"
+        },
+        {
+          "value": "middle_right",
+          "label": "t:sections.banner.pos_middle_right"
+        },
+        {
+          "value": "bottom_left",
+          "label": "t:sections.banner.pos_bottom_left"
+        },
+        {
+          "value": "bottom_center",
+          "label": "t:sections.banner.pos_bottom_center"
+        },
+        {
+          "value": "bottom_right",
+          "label": "t:sections.banner.pos_bottom_right"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "text_align",
+      "label": "t:sections.banner.align",
+      "default": "left",
+      "options": [
+        {
+          "value": "left",
+          "label": "t:sections.banner.align_left"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.banner.align_center"
+        },
+        {
+          "value": "right",
+          "label": "t:sections.banner.align_right"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.common.color_scheme",
+      "info": "t:sections.banner.scheme_info",
+      "default": "scheme-4"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.banner.preset"
+    }
+  ]
+}
+{% endschema %}

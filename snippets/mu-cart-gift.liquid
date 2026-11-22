@@ -1,0 +1,34 @@
+{%- comment -%}
+  Gift wrap in the bag: one checkbox that adds the gift wrap product (Theme settings > Cart > Gift wrap product) at
+  quantity 1, or takes it off again. mu-cart.js sets the quantity with /cart/update.js and re-renders every bag, so the
+  drawer, the cart page and the line itself stay in step. Optional gift message (Theme settings > Cart > Gift message):
+  saved as the cart attribute "Gift message", which shows on the order. Nothing renders without an available product.
+  Params: form (the bag form id).
+{%- endcomment -%}
+{%- assign gw = settings.gift_wrap_product -%}
+{%- if gw != blank and gw.available -%}
+  {%- liquid
+    assign gv = gw.selected_or_first_available_variant
+    assign on = false
+    for item in cart.items
+      if item.variant_id == gv.id
+        assign on = true
+        break
+      endif
+    endfor
+  -%}
+  <div class="mu-gift" data-gift data-variant="{{ gv.id }}">
+    <label class="mu-gift__row" for="{{ form }}-gift">
+      <input class="mu-gift__check" type="checkbox" id="{{ form }}-gift" data-gift-check{% if on %} checked{% endif %}>
+      <span class="mu-gift__box" aria-hidden="true">{% render 'mu-icon', name: 'check' %}</span>
+      <span class="mu-gift__text">{{ 'cart.gift_wrap' | t }}</span>
+      <span class="mu-gift__price mu-num">{% if gv.price > 0 %}{% render 'mu-money', m: gv.price, trim: true %}{% else %}{{ 'cart.free' | t }}{% endif %}</span>
+    </label>
+    {%- if settings.gift_wrap_message and on -%}
+      <div class="mu-gift__msg">
+        <label class="mu-gift__label" for="{{ form }}-gift-msg">{{ 'cart.gift_message' | t }}</label>
+        <textarea class="mu-acc__note" id="{{ form }}-gift-msg" name="attributes[Gift message]" rows="2" maxlength="300" data-gift-msg>{{ cart.attributes['Gift message'] }}</textarea>
+      </div>
+    {%- endif -%}
+  </div>
+{%- endif -%}

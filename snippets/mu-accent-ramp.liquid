@@ -1,0 +1,81 @@
+{%- comment -%}
+  Product colors only mode: the accent colours of a product list as a gradient. Reads the first 16 products and keeps up to 8
+  distinct accent colours (mu-accent-color), in list order. Each colour follows Colors > Gradient style like a level
+  does (bold: as is; soft: mixed into the page background; off: one flat colour, the middle one).
+  Prints "gradient~text colour~band" with no whitespace, or nothing when no product has a accent colour:
+  gradient for --mu-g-hero (115deg), band for --mu-g-band (first, middle, last), text colour clears 4.5:1 on every stop
+  (mu-pick-fg: the page scheme's text or background first, then black or white).
+  Pass products. With raw: true it prints just the colours joined with '|'.
+{%- endcomment -%}
+{%- liquid
+  assign seen = ''
+  assign n = 0
+  for p in products limit: 16
+    capture c
+      render 'mu-accent-color', product: p
+    endcapture
+    assign c = c | strip
+    if c == blank
+      continue
+    endif
+    assign key = c | downcase | append: '|'
+    if seen contains key
+      continue
+    endif
+    assign seen = seen | append: key
+    assign n = n | plus: 1
+    if n >= 8
+      break
+    endif
+  endfor
+  if raw
+    echo seen
+  elsif n > 0
+    assign list = seen | split: '|'
+    assign pgs = settings.page_scheme.settings
+    assign ink = pgs.text | default: '#1A0F12'
+    assign paper = pgs.background | default: '#FFFFFF'
+    assign gs = settings.gradient_style | default: 'bold'
+    assign gl = ''
+    for c in list
+      case gs
+        when 'soft'
+          assign g = c | color_mix: paper, 55
+        else
+          assign g = c
+      endcase
+      assign gl = gl | append: g | append: '|'
+    endfor
+    assign gs_list = gl | split: '|'
+    assign mid = n | minus: 1 | divided_by: 2
+    assign last = n | minus: 1
+    if gs == 'off' or n == 1
+      assign one = gs_list[mid]
+      if gs == 'off'
+        assign grad = one
+        assign band = one
+        assign bgs = one
+      else
+        case gs
+          when 'soft'
+            assign two = list[mid] | color_mix: paper, 80
+          else
+            assign two = list[mid] | color_darken: 12
+        endcase
+        assign grad = 'linear-gradient(115deg, ' | append: one | append: ', ' | append: two | append: ')'
+        assign band = grad | replace: '115deg', '90deg'
+        assign bgs = one | append: '|' | append: two
+      endif
+    else
+      assign joined = gs_list | join: ', '
+      assign grad = 'linear-gradient(115deg, ' | append: joined | append: ')'
+      assign band = 'linear-gradient(90deg, ' | append: gs_list[0] | append: ', ' | append: gs_list[mid] | append: ', ' | append: gs_list[last] | append: ')'
+      assign bgs = gl
+    endif
+    assign pref = ink | append: '|' | append: paper
+    capture fg
+      render 'mu-pick-fg', bgs: bgs, prefer: pref
+    endcapture
+    echo grad | append: '~' | append: fg | strip | append: '~' | append: band
+  endif
+-%}

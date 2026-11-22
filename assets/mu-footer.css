@@ -1,0 +1,164 @@
+/* Engine footer: full bleed, the deep end of the scale ramp by default, topped by a stepped level scale. */
+.mu-footer-section { margin-top: var(--mu-gap); }
+.mu-footer { --fx: var(--gutter); position: relative; padding: 0 var(--fx) 22px; overflow: hidden; }
+.mu-pagew .mu-footer { --fx: max(var(--gutter), (100% - var(--mu-page-width)) / 2); }
+.mu-footer--ramp {
+  --fg: var(--g-fg); --mu: color-mix(in srgb, var(--g-fg) 74%, transparent); --bd: color-mix(in srgb, var(--g-fg) 30%, transparent);
+  --btn: var(--g-fg); --btn-fg: var(--h); --ring: transparent; --focus: var(--g-fg);
+  background: var(--mu-g-foot) 0 var(--rh, 0px) / 100% calc(100% - var(--rh, 0px)) no-repeat; color: var(--g-fg);
+}
+.mu-footer--scheme { background: var(--bg); color: var(--fg); }
+.mu-footer--scheme { border-top: 3px solid transparent; border-image: var(--mu-g-hero) 1; }
+
+/* Level scale: one rung per level, each a step taller, named underneath on wide screens. */
+/* The rungs stand on the footer's top edge, against the page, so every level reads (the gradient starts under them). */
+.mu-footer:has(.mu-footer__rungs) { --rh: calc(8px + var(--n) * 6px); }
+.mu-footer__rungs {
+  height: var(--rh); display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); align-items: end; gap: 4px;
+  margin: 0 calc(-1 * var(--fx)); padding: 0; list-style: none;
+}
+.mu-footer__rung {
+  display: flex; align-items: flex-end; height: calc(8px + var(--i) * 6px); padding: 0 10px 6px;
+  background: var(--h); color: var(--h-fg); border-radius: 6px 6px 0 0;
+  font-size: 11px; font-weight: var(--mu-font-body-bold); letter-spacing: 0.03em; line-height: 1;
+}
+.mu-footer__rung span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; opacity: 0; }
+@media (min-width: 750px) {
+  .mu-footer:has(.mu-footer__rungs) { --rh: calc(18px + var(--n) * 7px); }
+  .mu-footer__rung { height: calc(18px + var(--i) * 7px); padding-bottom: 8px; }
+  .mu-footer__rung span { opacity: 1; }
+}
+
+.mu-footer__top { display: grid; row-gap: 22px; justify-items: start; padding: 48px 0 40px; border-bottom: 1px solid var(--bd); }
+.mu-footer__heading { max-width: 14ch; font-size: calc(clamp(2.4rem, 1.5rem + 4.4vw, 5.6rem) * var(--mu-heading-scale)); line-height: 0.95; text-wrap: balance; }
+/* Italic words on the ramp ground: outlined letters. */
+.mu-footer--ramp .mu-footer__heading em { color: transparent; font-style: normal; -webkit-text-stroke: max(1.5px, 0.025em) var(--g-fg); text-shadow: none; }
+.mu-footer__cta { min-height: 54px; padding-inline: 24px; font-size: 1rem; }
+@media (min-width: 990px) {
+  .mu-footer__top { grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 40px; padding: 72px 0 56px; }
+}
+
+.mu-footer__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 18px; padding-top: 34px; }
+.mu-footer__col h3, .mu-footer__news h3 { margin-bottom: 8px; font-size: 11px; color: var(--mu); }
+.mu-footer__col ul { margin: 0; padding: 0; list-style: none; }
+.mu-footer__col a { display: inline-flex; align-items: center; min-height: 34px; font-size: 15px; }
+@media (hover: hover) and (pointer: fine) { .mu-footer__col a:hover { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; } }
+.mu-footer__news { grid-column: 1 / -1; }
+.mu-field-pill {
+  display: flex; align-items: center; gap: 8px; height: 54px; padding: 0 5px 0 20px;
+  border-radius: var(--mu-btn-radius, 999px); background: color-mix(in srgb, var(--fg) 10%, transparent);
+  outline: 2px solid transparent; outline-offset: -2px;
+}
+.mu-field-pill:focus-within { outline-color: var(--focus); }
+.mu-field-pill input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: inherit; font-size: 16px; outline: none; }
+.mu-field-pill input::placeholder { color: var(--mu); opacity: 1; }
+.mu-footer__submit { width: 44px; min-height: 44px; padding: 0; border-radius: var(--mu-btn-r-s); }
+.mu-footer__submit-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.mu-footer__note { margin-top: 8px; font-size: 14px; }
+@media (min-width: 750px) {
+  .mu-footer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(280px, 1.5fr); gap: 40px; padding-top: 48px; }
+  .mu-footer__news { grid-column: -2 / -1; }
+  .mu-footer__submit { width: auto; padding: 0 18px; }
+  .mu-footer__submit-label { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+  .mu-footer__submit-icon { display: none; }
+}
+@media (min-width: 750px) and (max-width: 989px) {
+  .mu-footer__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mu-footer__news { grid-column: 1 / -1; }
+}
+
+/* Wordmark: lower case, filling the width, sitting on the base line. The estimate below is deliberately wide per
+   character so it never overflows; the section's script then scales it to fit exactly. Extra room for descenders. */
+.mu-footer__wordmark {
+  margin: 56px 0 0; padding-bottom: 0.06em;
+  font-family: var(--mu-font-wordmark, var(--mu-font-heading));
+  font-weight: 400; font-size: clamp(28px, 6vw, 64px);
+  line-height: 1; letter-spacing: 0.42em; text-indent: 0.42em;
+  white-space: nowrap; text-transform: uppercase;
+  max-width: 100%; overflow-x: clip;
+}
+.mu-footer__wordmark span { display: inline-block; padding-right: 0.05em; }
+.mu-footer__wordmark.is-desc { padding-bottom: 0.2em; }
+/* Decorative only: the font's tall text box reaches above the line box, so it never takes clicks meant for the menus,
+   and the columns stack above it. Where supported, the box is trimmed to the letters (cap height to baseline). */
+.mu-footer__wordmark { position: relative; z-index: 0; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.mu-footer__grid { position: relative; z-index: 1; }
+@supports (text-box: trim-both cap alphabetic) {
+  .mu-footer__wordmark { margin-top: 64px; line-height: 1; text-box: trim-both cap alphabetic; }
+  .mu-footer__wordmark span { text-box: trim-both cap alphabetic; }
+}
+.mu-pagew .mu-footer__wordmark { --fit: calc(min(100vw - 2 * var(--gutter), var(--mu-page-width)) / (var(--chars) * 0.7)); }
+.mu-footer__logo { margin-top: 56px; }
+
+/* Scrolling wordmark. The first word is read once; the copies are hidden. A pause button is always
+   shown. Reduced motion keeps a single still word and drops the button. */
+.mu-footer__mq { position: relative; margin-top: 48px; overflow: hidden; }
+.mu-footer__mq-track { display: flex; width: max-content; }
+.mu-footer__mq-set { display: flex; flex: none; }
+.mu-footer__mq-word {
+  margin: 0; padding-inline: 0.28em; font-size: calc(clamp(3rem, 1.4rem + 6vw, 7rem) * var(--mu-heading-scale));
+  line-height: 0.86; letter-spacing: -0.04em; white-space: nowrap;
+}
+.mu-footer__mq--outline .mu-footer__mq-word,
+.mu-footer__mq--alternate .mu-footer__mq-word:nth-child(even) {
+  color: transparent; -webkit-text-stroke: max(1.5px, 0.02em) currentColor;
+}
+@supports not (-webkit-text-stroke: 1px #000) {
+  .mu-footer__mq--outline .mu-footer__mq-word,
+  .mu-footer__mq--alternate .mu-footer__mq-word:nth-child(even) { color: currentColor; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mu-footer__mq-track { animation: mu-wm-run var(--mu-wm-dur, 40s) linear infinite; }
+  .mu-footer__mq.is-paused .mu-footer__mq-track { animation-play-state: paused; }
+}
+@keyframes mu-wm-run { to { transform: translate3d(-50%, 0, 0); } }
+.mu-footer__pause {
+  position: absolute; z-index: 2; inset-block-start: 50%; inset-inline-end: 0; translate: 0 -50%;
+  display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--mu-btn-r-s);
+  background: var(--btn); color: var(--btn-fg);
+}
+.mu-footer__pause .mu-icon { width: 16px; height: 16px; }
+.mu-footer__pause .mu-footer__play-icon, .mu-footer__mq.is-paused .mu-footer__pause-icon { display: none; }
+.mu-footer__mq.is-paused .mu-footer__play-icon { display: block; }
+.mu-footer__pause:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 3px; }
+.mu-footer__disclaimer { max-width: 78ch; margin-top: 14px; font-size: 12.5px; }
+.mu-footer__disclaimer :is(p, ul, ol) { margin: 0; }
+.mu-footer__disclaimer :is(p, ul, ol) + * { margin-top: 0.45em; }
+@media (prefers-reduced-motion: reduce) {
+  .mu-footer__mq-track { transform: none; }
+  .mu-footer__mq-set[aria-hidden="true"], .mu-footer__mq-word[aria-hidden="true"], .mu-footer__pause { display: none; }
+  .mu-footer__mq-word { color: inherit; -webkit-text-stroke: 0; }
+}
+.mu-footer__logo a { display: inline-block; max-width: 100%; }
+.mu-footer__logo-img { display: block; max-width: 100%; height: auto; }
+
+.mu-footer__social { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; margin-top: 28px; }
+.mu-footer__follow { display: flex; align-items: center; min-height: 44px; }
+.mu-footer__base {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px;
+  margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--bd); font-size: 12.5px;
+}
+.mu-footer__base a { color: inherit; }
+.mu-footer__pay { display: none; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mu-footer__pay-icon { width: auto; height: 22px; }
+@media (min-width: 750px) { .mu-footer__pay { display: flex; } .mu-footer { padding-bottom: 28px; } }
+/* Room for the phone tab bar under the footer. */
+@media (max-width: 749px) { body.has-tabbar .mu-footer { padding-bottom: calc(110px + env(safe-area-inset-bottom)); } }
+
+/* Country / language in the base row. */
+.mu-loc--footer { display: flex; flex-wrap: wrap; gap: 8px; }
+.mu-loc--footer .mu-loc__label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mu-loc--footer .mu-loc__trigger { min-height: 40px; font-size: 13px; color: inherit; box-shadow: inset 0 0 0 1px var(--bd); }
+.mu-loc--footer .mu-loc__panel {
+  position: absolute; z-index: 5; bottom: calc(100% + 8px); left: 0; width: min(320px, calc(100vw - 40px)); margin: 0;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 12%, transparent), 0 18px 40px rgb(20 8 4 / 0.2);
+}
+/* On the ramp ground the open panel inverts: light card, the deepest swatch for text. */
+.mu-footer--ramp .mu-loc__panel {
+  --bg: var(--g-fg); --fg: var(--h); --mu: color-mix(in srgb, var(--h) 70%, transparent); --bd: color-mix(in srgb, var(--h) 25%, transparent); --focus: var(--h);
+}
+
+/* Gauge scale (body.mu-flat): one flat strip of levels instead of rising rungs. */
+.mu-flat .mu-footer:has(.mu-footer__rungs) { --rh: 16px; }
+.mu-flat .mu-footer__rung { height: var(--rh); border-radius: 0; }
+@media (min-width: 750px) { .mu-flat .mu-footer:has(.mu-footer__rungs) { --rh: 30px; } }

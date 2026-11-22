@@ -1,0 +1,11 @@
+{%- comment -%}
+  Optional "agree to the terms" checkbox for newsletter sign-ups (Theme settings > Newsletter). When it's on, the box
+  is required, so the browser won't send the form until it's ticked. Renders nothing when it's off or has no label.
+  Params: id (unique per form).
+{%- endcomment -%}
+{%- if settings.newsletter_terms and settings.newsletter_terms_label != blank -%}
+  <label class="mu-terms" for="{{ id }}">
+    <input type="checkbox" id="{{ id }}" required>
+    <span class="mu-terms__text">{{ settings.newsletter_terms_label }}</span>
+  </label>
+{%- endif -%}

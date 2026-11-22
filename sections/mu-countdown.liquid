@@ -1,0 +1,550 @@
+{%- comment -%}
+  Countdown: the offer (eyebrow, heading, text, the end date and a button) beside a row of tiles counting down the
+  days, hours, minutes and (optionally) seconds; Centered stacks them. The end is an ISO date-time with its offset
+  (2026-11-01T23:59:00+11:00). The end date is always written out as text; the tiles are decorative and a polite live
+  region reads the time left at most once a minute (assets/mu-countdown.js). After the end the section hides itself or
+  shows an end card (title, message, optional button) in the timer's place, so the layout holds. With no end set the
+  storefront shows nothing and the theme editor previews an end 7 days out (snippets/mu-cd-preview).
+  Drop product: with the end date blank, the countdown runs to the product's custom.release_date (the same date that
+  flips its product page from Coming soon to buy, see snippets/mu-pp-release), and the button goes to the product:
+  its notify form while counting, the page itself on the end message.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign end = s.end | strip
+  assign drop = s.product
+  assign drop_s = 0
+  if drop != blank
+    assign drop_rel = drop.metafields.custom.release_date.value
+    if drop_rel != blank
+      assign drop_s = drop_rel | date: '%s' | plus: 0
+    endif
+    if end == blank and drop_s > 0
+      assign dz = drop_s | date: '%z'
+      assign dzh = dz | slice: 0, 3
+      assign dzm = dz | slice: 3, 2
+      assign end = drop_s | date: '%Y-%m-%dT%H:%M:%S' | append: dzh | append: ':' | append: dzm
+    endif
+  endif
+  if end == blank and request.design_mode
+    capture end
+      render 'mu-cd-preview'
+    endcapture
+  endif
+  assign end_s = 0
+  if end != blank
+    assign end_s = end | date: '%s' | plus: 0
+  endif
+  assign now_s = 'now' | date: '%s' | plus: 0
+  assign ended = false
+  if end_s > 0 and now_s > end_s
+    assign ended = true
+  endif
+  comment
+    Date label: "Ends" (the default) keeps the translated sentence; any other word, like "Drops", leads the date.
+  endcomment
+  assign date_label = s.date_label | strip
+  if date_label == 'Ends'
+    assign date_label = ''
+  endif
+  if date_label != blank
+    assign ends_tpl = date_label | append: ' __DATE__.'
+  else
+    assign ends_tpl = 'sections.countdown.ends' | t: date: '__DATE__'
+  endif
+  assign end_title = s.end_title | strip
+  assign end_msg = s.end_message | strip
+  assign end_btn = false
+  if s.end_button and s.button_label != blank
+    assign end_btn = true
+  endif
+  assign end_say = end_title
+  if end_title != blank and end_msg != blank
+    assign end_say = end_title | append: '. ' | append: end_msg
+  elsif end_msg != blank
+    assign end_say = end_msg
+  endif
+  assign card = false
+  if s.after_end == 'message' or request.design_mode
+    if end_title != blank or end_msg != blank or end_btn
+      assign card = true
+    endif
+  endif
+  assign show = false
+  if request.design_mode
+    assign show = true
+  elsif end_s > 0
+    if ended == false or s.after_end == 'message'
+      assign show = true
+    endif
+  endif
+  assign link = s.link | default: routes.all_products_collection_url
+  assign end_link = link
+  if drop != blank
+    assign end_link = drop.url
+    assign link = drop.url
+    if end_s > 0 and ended == false
+      assign link = link | append: '#notify'
+    endif
+  endif
+-%}
+{%- if show -%}
+{{ 'mu-sections.css' | asset_url | stylesheet_tag }}
+{{ 'mu-showcase.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-countdown.js' | asset_url }}" defer></script>
+<mu-countdown class="mu-sec mu-fc mu-cd mu-cd--{{ s.layout | default: 'split' }} color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}{% if ended %} is-ended{% endif %}"{% render 'mu-surface', s: s, part: 'attr' %} data-end="{{ end | escape }}" data-after="{{ s.after_end }}"{% render 'mu-anim', on: section.settings.animate, items: '.mu-cd__copy > *, .mu-cd__tile, .mu-cd__end' %}>
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  <div class="mu-cd__copy">
+    {%- if s.eyebrow != blank -%}<p class="mu-eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    {%- if s.heading != blank -%}<div class="mu-fc__head mu-cd__head"><h2 class="mu-fc__title">{{ s.heading }}</h2></div>{%- endif -%}
+    {%- if s.text != blank -%}<div class="mu-rte mu-muted">{{ s.text }}</div>{%- endif -%}
+    {%- unless ended -%}
+      <p class="mu-cd__date" data-live-text data-cd-live-only>
+        {%- if end_s > 0 -%}
+          {%- assign end_text = end | date: '%a %-d %b, %H:%M' -%}
+          {{ ends_tpl | escape | replace: '__DATE__', end_text }}
+        {%- endif -%}
+      </p>
+      {%- if s.button_label != blank -%}
+        <a class="mu-btn mu-cd__cta" href="{{ link }}" data-cd-live-only>{{ s.button_label | escape }}{% render 'mu-icon', name: 'arrow' %}</a>
+      {%- endif -%}
+    {%- endunless -%}
+  </div>
+  {%- unless ended -%}
+    <div class="mu-cd__timer" aria-hidden="true" data-cd-timer>
+      <span class="mu-cd__tile"><b data-unit="d">00</b><small>{{ 'sections.countdown.days' | t }}</small></span>
+      <span class="mu-cd__tile"><b data-unit="h">00</b><small>{{ 'sections.countdown.hours' | t }}</small></span>
+      <span class="mu-cd__tile"><b data-unit="m">00</b><small>{{ 'sections.countdown.minutes' | t }}</small></span>
+      {%- if s.show_seconds -%}<span class="mu-cd__tile"><b data-unit="s">00</b><small>{{ 'sections.countdown.seconds' | t }}</small></span>{%- endif -%}
+    </div>
+  {%- endunless -%}
+  {%- if card -%}
+    <div class="mu-cd__end" data-end-card{% unless ended %} hidden{% endunless %}>
+      {%- if end_title != blank -%}<h3 class="mu-cd__end-title">{{ end_title | escape }}</h3>{%- endif -%}
+      {%- if end_msg != blank -%}<p class="mu-muted">{{ end_msg | escape }}</p>{%- endif -%}
+      {%- if end_btn -%}<a class="mu-btn" href="{{ end_link }}">{{ s.button_label | escape }}{% render 'mu-icon', name: 'arrow' %}</a>{%- endif -%}
+    </div>
+  {%- endif -%}
+  <p class="visually-hidden" aria-live="polite" data-live></p>
+  <script type="application/json" data-strings>
+    {"ends":{{ ends_tpl | json }},"left":{{ 'sections.countdown.left' | t: days: '__D__', hours: '__H__', minutes: '__M__' | json }},"ended":{{ end_say | json }}}
+  </script>
+</mu-countdown>
+{%- endif -%}
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.countdown.name",
+  "class": "mu-section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.common.bg_full",
+      "info": "t:sections.common.bg_full_info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_radius",
+      "label": "t:sections.common.custom_radius",
+      "info": "t:sections.common.custom_radius_info",
+      "default": false,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "t:sections.common.radius",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.full_width == false and section.settings.custom_radius }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tl",
+      "label": "t:sections.common.round_tl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tr",
+      "label": "t:sections.common.round_tr",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_bl",
+      "label": "t:sections.common.round_bl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_br",
+      "label": "t:sections.common.round_br",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.countdown.layout",
+      "default": "split",
+      "options": [
+        {
+          "value": "split",
+          "label": "t:sections.countdown.layout_split"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.countdown.layout_center"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.countdown.timer"
+    },
+    {
+      "type": "text",
+      "id": "end",
+      "label": "t:sections.countdown.end",
+      "info": "t:sections.countdown.end_info",
+      "placeholder": "2026-12-24T23:59:00-05:00"
+    },
+    {
+      "type": "product",
+      "id": "product",
+      "label": "t:sections.countdown.product",
+      "info": "t:sections.countdown.product_info"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_seconds",
+      "label": "t:sections.countdown.show_seconds",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "date_label",
+      "label": "t:sections.countdown.date_label",
+      "info": "t:sections.countdown.date_label_info",
+      "default": "Ends"
+    },
+    {
+      "type": "select",
+      "id": "after_end",
+      "label": "t:sections.countdown.after_end",
+      "default": "hide",
+      "options": [
+        {
+          "value": "hide",
+          "label": "t:sections.countdown.after_hide"
+        },
+        {
+          "value": "message",
+          "label": "t:sections.countdown.after_message"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "end_title",
+      "label": "t:sections.countdown.end_title",
+      "default": "It's here",
+      "visible_if": "{{ section.settings.after_end == 'message' }}"
+    },
+    {
+      "type": "text",
+      "id": "end_message",
+      "label": "t:sections.countdown.end_message",
+      "default": "The drop is live. Get yours while stock lasts.",
+      "visible_if": "{{ section.settings.after_end == 'message' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "end_button",
+      "label": "t:sections.countdown.end_button",
+      "info": "t:sections.countdown.end_button_info",
+      "default": false,
+      "visible_if": "{{ section.settings.after_end == 'message' }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.before_after.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.common.eyebrow",
+      "default": "Limited edition"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "default": "Something new drops soon"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:sections.common.text"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:sections.common.button_label",
+      "default": "Shop the drop"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "t:sections.common.link",
+      "visible_if": "{{ section.settings.button_label != blank and section.settings.product == blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.animation"
+    },
+    {
+      "type": "checkbox",
+      "id": "animate",
+      "label": "t:sections.common.animate",
+      "info": "t:sections.common.animate_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_background"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:sections.common.bg_image",
+      "info": "t:sections.common.bg_image_info"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay",
+      "label": "t:sections.common.bg_overlay",
+      "info": "t:sections.common.bg_overlay_info",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 0,
+      "visible_if": "{{ section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.countdown.name"
+    }
+  ]
+}
+{% endschema %}

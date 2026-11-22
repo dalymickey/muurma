@@ -1,0 +1,45 @@
+{%- comment -%}
+  Shipping and delivery: a collapsible row with the merchant's text (or a connected rich text metafield), an
+  optional estimated-delivery line, and a link to the store's shipping policy when one is published.
+  @param block {Block}
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign body = b.text
+  assign from_meta = b.source | strip_html | strip
+  if from_meta != blank
+    assign body = b.source
+  endif
+  assign estimate = b.estimate | strip
+  assign policy = shop.shipping_policy
+  assign show_policy = false
+  if b.show_policy and policy != blank and policy.url != blank
+    assign show_policy = true
+  endif
+  assign heading = b.heading | strip
+  if heading == blank
+    assign heading = 'products.shipping_title' | t
+  endif
+-%}
+{%- if body != blank or estimate != blank or show_policy -%}
+  <div class="mu-pp__acc" {{ block.shopify_attributes }}>
+    <details class="mu-pp__acc-item"{% if b.open %} open{% endif %}>
+      <summary>{{ heading | escape }}<span class="mu-pp__acc-mark" aria-hidden="true"></span></summary>
+      <div class="mu-pp__acc-body">
+        {%- if body != blank -%}<div class="mu-rte">{{ body }}</div>{%- endif -%}
+        {%- if estimate != blank -%}<p class="mu-pp__ship-est">{{ estimate | escape }}</p>{%- endif -%}
+        {%- if show_policy -%}
+          {%- liquid
+            assign policy_label = policy.title | strip
+            if policy_label == blank
+              assign policy_label = 'products.shipping_policy' | t
+            endif
+          -%}
+          <p class="mu-pp__ship-policy"><a href="{{ policy.url }}">{{ policy_label | escape }}</a></p>
+        {%- endif -%}
+      </div>
+    </details>
+  </div>
+{%- elsif request.design_mode -%}
+  <p class="mu-pp__hint" {{ block.shopify_attributes }}>{{ 'products.shipping_empty' | t }}</p>
+{%- endif -%}

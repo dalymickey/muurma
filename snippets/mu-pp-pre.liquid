@@ -1,0 +1,65 @@
+{%- comment -%}
+  Pre-order state for a variant. Two kinds:
+  - A purchase option (selling plan) with a single delivery: Liquid's selling_plan.recurring_deliveries is false for
+    pre-order and try before you buy plans and true for subscriptions. Applies when the plan is picked, or when the
+    product can only be bought with a plan (the first one is used). The badge is the plan group name (set where the
+    plan is made, e.g. "Pre-order"); when the plan charges less than the full price at checkout, the note says what's
+    paid today.
+  - Theme settings > Pre-order > Out-of-stock pre-orders (all products, or tagged ones, see mu-pre-ok): a variant tracked
+    by Shopify, set to keep selling when out of stock, with no stock left.
+  part 'label': the button label: the pre-order label, or the translation key in fallback.
+  part 'tag': the pre-order label, or nothing (product card tag).
+  part 'line': the badge (plan group name or the label) and a note (pay today amount, or the ship note) under the price.
+  assets/mu-product.js keeps both in step from the variant data (mu-pp-data).
+  @param product {Product}
+  @param v {Variant}
+  @param part {String} 'label', 'tag' or 'line'
+  @param fallback {String} part 'label': translation key for the usual label
+{%- endcomment -%}
+{%- liquid
+  assign label = settings.preorder_label | strip
+  if label == blank
+    assign label = 'products.preorder' | t
+  endif
+  assign badge = blank
+  capture pre_ok
+    render 'mu-pre-ok', product: product
+  endcapture
+  assign pre_ok = pre_ok | strip
+  assign note = blank
+  assign alloc = v.selected_selling_plan_allocation
+  if alloc == blank and product.requires_selling_plan
+    assign alloc = v.selling_plan_allocations.first
+  endif
+  if alloc
+    if alloc.selling_plan.recurring_deliveries == false
+      assign group = product.selling_plan_groups | where: 'id', alloc.selling_plan.group_id | first
+      assign badge = group.name | default: label
+      assign cc = alloc.selling_plan.checkout_charge
+      if cc.value_type != 'percentage' or cc.value < 100
+        if cc.value_type == 'percentage'
+          assign due = alloc.price | times: cc.value | divided_by: 100
+        else
+          assign due = cc.value
+        endif
+        capture due_money
+          render 'mu-money', m: due
+        endcapture
+        assign note = 'products.pay_today' | t: amount: due_money
+      endif
+    endif
+  elsif pre_ok == 'true' and v.available and v.inventory_management == 'shopify' and v.inventory_policy == 'continue' and v.inventory_quantity <= 0
+    assign badge = label
+    assign note = settings.preorder_note | strip | escape
+  endif
+-%}
+{%- if part == 'tag' -%}
+  {%- if badge != blank %}{{ label | escape }}{% endif -%}
+{%- elsif part == 'label' -%}
+  {%- if badge != blank %}{{ label | escape }}{% else %}{{ fallback | t }}{% endif -%}
+{%- else -%}
+  <p class="mu-pp__pre" data-pre{% if badge == blank %} hidden{% endif %}>
+    <span class="mu-chip mu-pp__pre-badge" data-pre-badge>{{ badge | escape }}</span>
+    <span class="mu-pp__pre-note mu-muted" data-pre-note>{{ note }}</span>
+  </p>
+{%- endif -%}

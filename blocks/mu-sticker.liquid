@@ -1,0 +1,34 @@
+{% doc %}
+  A short sticker label. Place it on a stage, a numbered row section, or a bundle card.
+  Colour uses one of the three sticker scheme slots from Theme settings.
+{% enddoc %}
+{%- render 'mu-sticker', text: block.settings.text, slot: block.settings.slot, rotation: block.settings.rotation, position: block.settings.position, block: block -%}
+
+{% schema %}
+{
+  "name": "t:blocks.sticker.name",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "text", "label": "t:blocks.sticker.text", "default": "New" },
+    {
+      "type": "select", "id": "slot", "label": "t:blocks.sticker.slot", "default": "1",
+      "options": [
+        { "value": "1", "label": "t:blocks.sticker.slot_1" },
+        { "value": "2", "label": "t:blocks.sticker.slot_2" },
+        { "value": "3", "label": "t:blocks.sticker.slot_3" }
+      ]
+    },
+    {
+      "type": "select", "id": "position", "label": "t:blocks.sticker.position", "default": "top_right",
+      "options": [
+        { "value": "top_left", "label": "t:blocks.sticker.top_left" },
+        { "value": "top_right", "label": "t:blocks.sticker.top_right" },
+        { "value": "bottom_left", "label": "t:blocks.sticker.bottom_left" },
+        { "value": "bottom_right", "label": "t:blocks.sticker.bottom_right" }
+      ]
+    },
+    { "type": "range", "id": "rotation", "label": "t:blocks.sticker.rotation", "info": "t:blocks.sticker.rotation_info", "min": -12, "max": 12, "step": 1, "unit": "deg", "default": -4 }
+  ],
+  "presets": [{ "name": "t:blocks.sticker.name" }]
+}
+{% endschema %}

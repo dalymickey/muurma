@@ -1,0 +1,112 @@
+/* Engine product card. Level style: the card is its level's gradient, the product stands on it, and price and button
+   sit on a calm chip in the page colours. Plain style: the product on a soft band, text below. */
+.mu-card {
+  --cr: calc(var(--mu-radius, 16px) + 2px);
+  position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%;
+  border-radius: var(--cr); isolation: isolate;
+}
+.mu-card__media { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 5; }
+/* The link holds the inset (it was the image's padding) and centres the image; with --ar the image box is the photo
+   itself, so its rounded corners land on the picture, not on empty letterbox. --mu-media-r follows Theme settings > Shape. */
+.mu-card__img-link { position: relative; z-index: 1; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; width: 100%; height: 100%; padding: 10% 14% 2%; container-type: size; }
+.mu-card__img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; border-radius: var(--mu-media-r); transition: translate .45s cubic-bezier(.2, .8, .2, 1), rotate .45s cubic-bezier(.2, .8, .2, 1), opacity .35s ease; }
+.mu-card__img--alt { opacity: 0; }
+/* With the image's ratio (--ar, set on the tag) the box shrinks to the photo: as wide as fits, never taller than the tile. */
+@supports (width: 1cqh) {
+  .mu-card__img[style*="--ar"]:not(.mu-card__vid) { width: min(100cqw, 100cqh * var(--ar)); height: auto; aspect-ratio: var(--ar); }
+}
+.mu-card__vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
+.mu-card .mu-placeholder { width: 60%; height: auto; }
+.mu-card__body { position: relative; display: flex; flex-direction: column; gap: 6px; flex: 1; padding: 4px 14px 14px; }
+.mu-card__title { font-size: 1.125rem; line-height: 1.02; overflow-wrap: anywhere; }
+/* In rows (rails, collection bands) titles keep room for two lines so stars, prices and buttons line up. */
+:is(.mu-fc__item, .mu-band__item) .mu-card__title { min-height: 2.04em; min-height: 2lh; }
+.mu-card__title a::after { content: ""; position: absolute; inset: 0; z-index: 0; border-radius: var(--cr); }
+.mu-card__chip {
+  position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  margin-top: auto; padding: 8px 8px 8px 12px;
+  /* The price box wraps the button, so it follows the button shape: rounder for Pill, never past the card's corner. */
+  border-radius: clamp(calc(var(--cr) - 6px), calc(var(--mu-btn-r-s) + 6px), calc(var(--cr) + 2px)); background: var(--bg); color: var(--fg);
+}
+.mu-card__money { min-width: 0; }
+.mu-card__price { font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.mu-card__unit { font-size: .75rem; color: var(--mu); line-height: 1.2; }
+.mu-price--sale .mu-price__now { color: var(--sale); }
+.mu-price__was { margin-left: 5px; color: var(--mu); font-weight: var(--mu-font-body-weight); }
+.mu-card__qv { position: relative; z-index: 2; min-height: 38px; padding: 0 14px; font-size: .8125rem; border-radius: var(--mu-btn-r-s); }
+.mu-card__qv[aria-busy="true"] { opacity: .6; cursor: progress; }
+.mu-card__msg { flex-basis: 100%; font-size: .75rem; line-height: 1.3; }
+.mu-card__msg:empty { display: none; }
+.mu-card__msg.is-error { font-weight: var(--mu-font-body-bold); }
+.mu-card .mu-rung { position: relative; z-index: 2; }
+.mu-card__rating { position: relative; z-index: 2; }
+
+/* Level style */
+.mu-card--level.mu-card:not(.mu-card--unrated) { background: linear-gradient(170deg, var(--g1), var(--g2)); color: var(--g-fg); box-shadow: 0 22px 40px -28px var(--g2); }
+.mu-card--level .mu-card__img { filter: drop-shadow(0 16px 16px rgb(0 0 0 / .28)); }
+/* Safari (every iOS browser) can clip an image's drop-shadow to the image box when it paints inside a sideways
+   scroller, so a panel loses its shadow until the row repaints. In rails the shadowed images get their
+   own layer, which is sized to hold the shadow. Scoped to scrollers to keep layer memory down. */
+.mu-rail :is(.mu-card--level, .mu-card--label) .mu-card__img:not(.mu-card__img--fill, .mu-card__vid) { transform: translateZ(0); }
+.mu-card--level.mu-card--unrated, .mu-card--plain .mu-card__media { background: var(--band); }
+.mu-card--plain .mu-card__media { border-radius: var(--cr); }
+.mu-card--plain .mu-card__body { padding-inline: 2px; }
+.mu-card--plain .mu-card__chip { padding: 0; background: none; }
+
+/* Tags and dots */
+.mu-card__tags { position: absolute; z-index: 2; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 4px; pointer-events: none; }
+.mu-card__tag { display: inline-flex; align-items: center; min-height: 22px; padding: 0 9px; border-radius: 999px; background: var(--bg); color: var(--fg); font-size: .6875rem; font-weight: var(--mu-font-body-bold); letter-spacing: .06em; text-transform: uppercase; }
+.mu-card__tag--new { background: var(--mu-badge-new, var(--fg)); color: var(--mu-badge-new-fg, var(--bg)); }
+.mu-card__tag--sale { background: var(--mu-badge-sale, var(--sale)); color: var(--mu-badge-sale-fg, #fff); }
+.mu-card__tag--out { background: color-mix(in srgb, var(--bg) 80%, transparent); }
+.mu-card--b-title .mu-card__tags { position: static; }
+.mu-card__dots { position: relative; z-index: 2; display: flex; align-items: center; gap: 8px; padding: 0; list-style: none; }
+.mu-card__dot { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; background-size: cover; box-shadow: inset 0 0 0 1px rgb(0 0 0 / .2), 0 0 0 2px rgb(255 255 255 / .6); }
+.mu-card__dot a { position: absolute; inset: -6px; border-radius: 50%; }
+.mu-card__dot:focus-within { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+.mu-card__dot a:focus-visible { outline: 0; }
+.mu-card__more { font-size: .75rem; }
+
+.mu-card--t-small .mu-card__title { font-size: 1rem; }
+.mu-card--t-large .mu-card__title { font-size: 1.375rem; }
+@media (min-width: 990px) {
+  .mu-card__title { font-size: 1.375rem; }
+  .mu-card--t-small .mu-card__title { font-size: 1.125rem; }
+  .mu-card--t-large .mu-card__title { font-size: 1.75rem; }
+  .mu-card__body { padding: 6px 16px 16px; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .mu-card:hover .mu-card__img { translate: 0 -8px; rotate: -3deg; }
+  .mu-card:hover .mu-card__img--alt { opacity: 1; }
+  .mu-card:hover .mu-card__img:not(.mu-card__img--alt):has(+ .mu-card__img--alt) { opacity: 0; }
+  .mu-card:hover .mu-card__vid:not(.is-playing) { opacity: 0; }
+  .mu-card:hover .mu-card__img:not(.mu-card__img--alt):has(+ .mu-card__vid:not(.is-playing)) { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mu-card__img { transition: none; }
+  .mu-card:hover .mu-card__img { translate: none; rotate: none; }
+}
+
+/* Label style: the cut-out stands on a flat square panel, a printed strip under it carries the level, and the text
+   sits plainly below. Corners follow Theme settings > Shape. */
+.mu-card--label { --cr: var(--mu-radius, 0px); }
+.mu-card--label .mu-card__media { aspect-ratio: 1; overflow: hidden; border-radius: var(--cr) var(--cr) 0 0; background: var(--band); }
+.mu-card--label.mu-card--unrated .mu-card__media { border-radius: var(--cr); }
+.mu-card--label .mu-card__img-link { padding: 8% 10% 6%; }
+.mu-card--label .mu-card__img { border-radius: 0; filter: drop-shadow(0 14px 12px rgb(0 0 0 / .35)); }
+/* grid-area: auto: an absolute child placed in a grid area takes that area (inside the link's padding) as its box; auto makes it the link's full padding box, so the photo fills the panel edge to edge. */
+.mu-card--label .mu-card__img--fill { grid-area: auto; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: none; }
+.mu-card__label { position: relative; z-index: 2; display: flex; align-items: center; min-height: 34px; padding: 6px 12px; border-radius: 0 0 var(--cr) var(--cr); background: var(--fg); color: var(--bg); text-transform: uppercase; }
+.mu-card__label .mu-rung { font-size: .6875rem; letter-spacing: .1em; }
+/* Product colors only mode (mu-tone): the accent colour tints the plain band and the label panel, and the strip names the choice. */
+.mu-card--plain.mu-fl .mu-card__media, .mu-card--label.mu-fl .mu-card__media { background: color-mix(in srgb, var(--h) 45%, var(--band)); }
+.mu-card--label.mu-fl:not(:has(.mu-card__label)) .mu-card__media { border-radius: var(--cr); }
+.mu-fl .mu-card__label { background: var(--h); color: var(--h-fg); }
+.mu-card__accent { font-size: .6875rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; }
+.mu-card--label .mu-card__body { padding: 12px 2px 4px; }
+.mu-card--label .mu-card__chip { padding: 0; background: none; color: inherit; }
+@media (min-width: 990px) { .mu-card--label .mu-card__body { padding: 14px 2px 4px; } }
+@media (hover: hover) and (pointer: fine) {
+  .mu-card--label:hover .mu-card__img { translate: 0 -6px; rotate: none; }
+  .mu-card--label:hover .mu-card__img--fill { translate: none; }
+}

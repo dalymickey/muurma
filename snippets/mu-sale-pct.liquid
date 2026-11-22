@@ -1,0 +1,31 @@
+{%- comment -%}
+  Sale badge text as a percentage off, from each available variant's compare-at price.
+  Every available variant discounted by the same amount: "25% off". Otherwise the biggest discount: "Up to 25% off".
+  Outputs nothing when no available variant is discounted by at least 1%. Pass product.
+{%- endcomment -%}
+{%- liquid
+  assign hi = 0
+  assign lo = 100
+  for x in product.variants
+    unless x.available
+      continue
+    endunless
+    assign p = 0
+    if x.compare_at_price > x.price
+      assign p = x.compare_at_price | minus: x.price | times: 100.0 | divided_by: x.compare_at_price | round
+    endif
+    if p > hi
+      assign hi = p
+    endif
+    if p < lo
+      assign lo = p
+    endif
+  endfor
+  if hi > 0
+    if lo == hi
+      echo 'products.sale_percent' | t: amount: hi
+    else
+      echo 'products.sale_up_to' | t: amount: hi
+    endif
+  endif
+-%}

@@ -1,0 +1,179 @@
+{%- comment -%}
+  404: a dark panel from the deep end of the scale ramp, the 404 numeral filled with the full ramp, a short line and
+  one button. (The footer's rungs sit right below, so the panel carries no steps of its own.)
+{%- endcomment -%}
+{{ 'mu-pages.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign n = settings.scale_levels | default: 6
+-%}
+<div class="mu-sec mu-404 {% if s.style == 'scheme' %}mu-deep--scheme color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}{% else %}mu-deep mu-h-{{ n }}{% endif %}">
+  <p class="mu-404__num mu-display" aria-hidden="true">404</p>
+  <h1 class="mu-404__title mu-h2">{{ 'page404.title' | t }}</h1>
+  <p class="mu-404__text">{{ 'page404.text' | t }}</p>
+  <a class="mu-btn" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ 'page404.cta' | t }}{% render 'mu-icon', name: 'arrow' %}</a>
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_404.name",
+  "class": "mu-section",
+  "settings": [
+    {
+      "type": "select",
+      "id": "style",
+      "label": "t:sections.common.panel_style",
+      "info": "t:sections.common.panel_style_info",
+      "default": "ramp",
+      "options": [
+        {
+          "value": "ramp",
+          "label": "t:sections.common.panel_ramp"
+        },
+        {
+          "value": "scheme",
+          "label": "t:sections.common.panel_scheme"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.style == 'scheme' }}"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.hero.cta_link"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    }
+  ]
+}
+{% endschema %}

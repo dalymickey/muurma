@@ -1,0 +1,639 @@
+{%- comment -%}
+  Image gallery / Lookbook: photo (or muted looping video) tiles with an optional caption and link, and optional product
+  tags. Layouts: Grid (equal tiles, 2 to 5 across), Mosaic (a large tile beside four small ones, swapping sides every
+  group), Masonry (columns of photos at their own shape) and Carousel (a swipe rail with slider buttons on desktop).
+  Phones show one or two across, or swipe in Carousel.
+  Product tags: a tile's Tagged products show behind a "Shop the look" key on the photo (a native disclosure, so it
+  works without script), each with its price and quick add (assets/mu-quick-add.js).
+  A tile with nothing in it is skipped outside the editor; a gallery with no tiles shows nothing.
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign layout = s.layout | default: 'grid'
+  assign cols = s.columns | default: 3
+  if layout == 'mosaic'
+    assign cols = 4
+  endif
+  assign mcols = s.columns_mobile | default: '2' | plus: 0
+  assign carousel = false
+  if layout == 'carousel'
+    assign carousel = true
+  endif
+  assign ar = '1'
+  case s.ratio
+    when 'portrait'
+      assign ar = '4 / 5'
+    when 'landscape'
+      assign ar = '3 / 2'
+    when 'tall'
+      assign ar = '2 / 3'
+  endcase
+  assign n = 0
+  assign tagged = false
+  assign has_video = false
+  for block in section.blocks
+    assign b = block.settings
+    capture demo_probe
+      render 'mu-demo-image', asset: b.demo_image, class: 'mu-gal__img'
+    endcapture
+    assign demo_probe = demo_probe | strip
+    if b.image != blank or b.video != blank or b.caption != blank or demo_probe != '' or request.design_mode
+      assign n = n | plus: 1
+      if b.products != blank and b.products.size > 0
+        assign tagged = true
+      endif
+      if b.video != blank
+        assign has_video = true
+      endif
+    endif
+  endfor
+  assign d_f = 1.0 | divided_by: cols
+  assign d_sub = cols | minus: 1 | times: s.gap | plus: 96
+  assign m_sz = 'calc(100vw - 32px)'
+  if carousel
+    assign m_sz = 'calc(82vw - 24px)'
+  elsif mcols == 2
+    assign m_sz = 'calc(50vw - 24px)'
+  endif
+  capture sizes
+    render 'mu-sizes', sub: d_sub, f: d_f, tab: 'calc(50vw - 40px)', mob: m_sz
+  endcapture
+  if layout == 'mosaic'
+    capture big_sizes
+      render 'mu-sizes', sub: 96, f: 0.5, tab: 'calc(100vw - 60px)', mob: 'calc(100vw - 32px)'
+    endcapture
+  endif
+  assign heading_text = s.heading | strip_html | strip
+  assign tag = 'div'
+  if carousel
+    assign tag = 'mu-slider'
+  endif
+-%}
+{%- if n > 0 -%}
+{{ 'mu-sections.css' | asset_url | stylesheet_tag }}
+{{ 'mu-showcase.css' | asset_url | stylesheet_tag }}
+{%- if carousel -%}<script src="{{ 'mu-slider.js' | asset_url }}" defer></script>{%- endif -%}
+{%- if has_video -%}<script src="{{ 'mu-video.js' | asset_url }}" defer></script>{%- endif -%}
+<{{ tag }} class="mu-sec mu-fc mu-gal mu-gal--{{ layout }} mu-gal--cap-{{ s.caption_style | default: 'below' }} color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}" style="{% render 'mu-surface', s: s, part: 'style' %}--cols: {{ cols }}; --d-cols: {{ cols }}; --m-cols: {{ mcols }}; --gap: {{ s.gap }}px; --ar: {{ ar }}"{% render 'mu-anim', on: section.settings.animate, items: '.mu-fc__title, .mu-gal__tile, .mu-x__foot > *' %}>
+  {%- if s.heading != blank -%}
+    <div class="mu-fc__head">
+      {%- if s.eyebrow != blank -%}<p class="mu-eyebrow">{{ s.eyebrow | escape }}</p>{%- endif -%}
+      <h2 class="mu-fc__title">{{ s.heading | escape }}</h2>
+    </div>
+  {%- endif -%}
+  {%- if carousel -%}<div class="mu-cll__end">{%- render 'mu-slider-nav', label: heading_text -%}</div>{%- endif -%}
+  <ul class="mu-gal__grid{% if carousel %} mu-rail mu-rail--d-slider{% endif %}" role="list"{% if carousel %} data-rail{% endif %}>
+    {%- assign i = 0 -%}
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign b = block.settings
+        capture demo_tile
+          render 'mu-demo-image', asset: b.demo_image, class: 'mu-gal__img', sizes: sizes
+        endcapture
+        assign demo_tile = demo_tile | strip
+        unless b.image != blank or b.video != blank or b.caption != blank or demo_tile != '' or request.design_mode
+          continue
+        endunless
+        assign i = i | plus: 1
+        assign t_sizes = sizes
+        assign big = false
+        if layout == 'mosaic'
+          assign gpos = i | minus: 1 | modulo: 5
+          if gpos == 0
+            assign big = true
+            assign t_sizes = big_sizes
+          endif
+        endif
+        assign alt = b.image.alt | default: b.caption | strip_html
+        assign tile_id = 'G-' | append: section.id | append: '-' | append: block.id
+      -%}
+      <li class="mu-gal__tile{% if big %} mu-gal__tile--big{% endif %}" {{ block.shopify_attributes }}>
+        <div class="mu-gal__media{% if b.image != blank or demo_tile != '' %} mu-gal__media--img{% endif %}"{% if layout == 'masonry' and b.image != blank %} style="--tar: {{ b.image.aspect_ratio }}"{% endif %}>
+          {%- if b.video != blank -%}
+            {%- render 'mu-bgvideo', video: b.video, poster: b.image, class: 'mu-gal__video', media_class: 'mu-gal__img' -%}
+          {%- elsif b.image != blank -%}
+            {% render 'mu-img', image: b.image, class: 'mu-gal__img', sizes: t_sizes, alt: alt, max: 2000 %}
+          {%- elsif demo_tile != '' -%}
+            {{ demo_tile }}
+          {%- else -%}
+            {{ i | minus: 1 | modulo: 2 | plus: 1 | prepend: 'lifestyle-' | placeholder_svg_tag: 'mu-gal__img mu-placeholder' }}
+          {%- endif -%}
+          {%- if b.link != blank -%}
+            <a class="mu-gal__hit" href="{{ b.link }}"{% if b.caption == blank or s.caption_style == 'none' %} aria-label="{{ alt | default: heading_text | escape }}"{% else %} aria-labelledby="{{ tile_id }}-cap"{% endif %}></a>
+          {%- endif -%}
+          {%- if b.caption != blank and s.caption_style == 'overlay' -%}
+            <p class="mu-gal__cap mu-gal__cap--over" id="{{ tile_id }}-cap">{{ b.caption | escape }}</p>
+          {%- endif -%}
+          {%- if b.products != blank and b.products.size > 0 -%}
+            <details class="mu-gal__tags color-{{ s.tag_scheme }}">
+              <summary class="mu-gal__tagbtn">
+                {%- render 'mu-icon', name: 'tag' -%}
+                <span>{{ 'sections.gallery.shop_look' | t }}</span>
+                <span class="mu-gal__count" aria-hidden="true">{{ b.products.size }}</span>
+              </summary>
+              <ul class="mu-gal__plist" role="list">
+                {%- for p in b.products -%}
+                  <li class="mu-gal__p">
+                    <a class="mu-gal__plink" href="{{ p.url }}">
+                      <span class="mu-gal__pthumb">{%- if p.featured_media -%}{{ p.featured_media.preview_image | image_url: width: 180 | image_tag: loading: 'lazy', alt: '', width: 56, height: 56, widths: '56, 112, 180', sizes: '56px' }}{%- endif -%}</span>
+                      <span class="mu-gal__pinfo"><span class="mu-gal__pname">{{ p.title | escape }}</span><span class="mu-gal__pprice">{% render 'mu-price', product: p %}</span></span>
+                    </a>
+                    {%- if s.quick_add -%}{%- render 'mu-qa-btn', product: p, class: 'mu-gal__qa' -%}{%- endif -%}
+                  </li>
+                {%- endfor -%}
+              </ul>
+            </details>
+          {%- endif -%}
+        </div>
+        {%- if b.caption != blank and s.caption_style == 'below' -%}
+          <p class="mu-gal__cap" id="{{ tile_id }}-cap">{{ b.caption | escape }}</p>
+        {%- endif -%}
+      </li>
+    {%- endfor -%}
+  </ul>
+  {%- if s.text != blank or s.button_label != blank -%}
+    <div class="mu-x__foot">
+      {%- if s.text != blank -%}<div class="mu-rte mu-muted">{{ s.text }}</div>{%- endif -%}
+      {%- if s.button_label != blank and s.link != blank -%}<a class="mu-btn" href="{{ s.link }}">{{ s.button_label | escape }}</a>{%- endif -%}
+    </div>
+  {%- endif -%}
+</{{ tag }}>
+{%- if tagged and s.quick_add -%}{%- render 'mu-qa-host' -%}{%- endif -%}
+{%- endif -%}
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.gallery.name",
+  "class": "mu-section",
+  "max_blocks": 24,
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.common.bg_full",
+      "info": "t:sections.common.bg_full_info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_radius",
+      "label": "t:sections.common.custom_radius",
+      "info": "t:sections.common.custom_radius_info",
+      "default": false,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "t:sections.common.radius",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.full_width == false and section.settings.custom_radius }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tl",
+      "label": "t:sections.common.round_tl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tr",
+      "label": "t:sections.common.round_tr",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_bl",
+      "label": "t:sections.common.round_bl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_br",
+      "label": "t:sections.common.round_br",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.gallery.tiles"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.gallery.layout",
+      "default": "grid",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.gallery.layout_grid"
+        },
+        {
+          "value": "mosaic",
+          "label": "t:sections.gallery.layout_mosaic"
+        },
+        {
+          "value": "masonry",
+          "label": "t:sections.gallery.layout_masonry"
+        },
+        {
+          "value": "carousel",
+          "label": "t:sections.gallery.layout_carousel"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "t:sections.gallery.columns",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "default": 3,
+      "visible_if": "{{ section.settings.layout != 'mosaic' }}"
+    },
+    {
+      "type": "select",
+      "id": "columns_mobile",
+      "label": "t:sections.gallery.columns_mobile",
+      "default": "2",
+      "visible_if": "{{ section.settings.layout != 'carousel' }}",
+      "options": [
+        {
+          "value": "1",
+          "label": "t:sections.gallery.one"
+        },
+        {
+          "value": "2",
+          "label": "t:sections.gallery.two"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "ratio",
+      "label": "t:sections.gallery.ratio",
+      "default": "square",
+      "visible_if": "{{ section.settings.layout != 'masonry' }}",
+      "options": [
+        {
+          "value": "square",
+          "label": "t:sections.gallery.ratio_square"
+        },
+        {
+          "value": "portrait",
+          "label": "t:sections.gallery.ratio_portrait"
+        },
+        {
+          "value": "tall",
+          "label": "t:sections.gallery.ratio_tall"
+        },
+        {
+          "value": "landscape",
+          "label": "t:sections.gallery.ratio_landscape"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "t:sections.gallery.gap",
+      "min": 0,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "select",
+      "id": "caption_style",
+      "label": "t:sections.gallery.caption_style",
+      "default": "below",
+      "options": [
+        {
+          "value": "below",
+          "label": "t:sections.gallery.cap_below"
+        },
+        {
+          "value": "overlay",
+          "label": "t:sections.gallery.cap_overlay"
+        },
+        {
+          "value": "none",
+          "label": "t:sections.gallery.cap_none"
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "content": "t:sections.gallery.tags"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.gallery.tags_info"
+    },
+    {
+      "type": "color_scheme",
+      "id": "tag_scheme",
+      "label": "t:sections.hotspots.card_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "checkbox",
+      "id": "quick_add",
+      "label": "t:sections.hotspots.quick_add",
+      "info": "t:sections.hotspots.quick_add_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.before_after.content"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.common.eyebrow"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "default": "Gallery"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:sections.common.text"
+    },
+    {
+      "type": "text",
+      "id": "button_label",
+      "label": "t:sections.common.button_label"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "t:sections.common.link",
+      "visible_if": "{{ section.settings.button_label != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.animation"
+    },
+    {
+      "type": "checkbox",
+      "id": "animate",
+      "label": "t:sections.common.animate",
+      "info": "t:sections.common.animate_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "tile",
+      "name": "t:sections.gallery.tile",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.common.image"
+        },
+        {
+          "type": "text",
+          "id": "demo_image",
+          "label": "t:sections.common.demo_image",
+          "info": "t:sections.common.demo_image_info"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "t:sections.gallery.video",
+          "info": "t:sections.gallery.video_info"
+        },
+        {
+          "type": "text",
+          "id": "caption",
+          "label": "t:sections.gallery.caption"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.common.link"
+        },
+        {
+          "type": "product_list",
+          "id": "products",
+          "label": "t:sections.gallery.products",
+          "info": "t:sections.gallery.products_info",
+          "limit": 4
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.gallery.name",
+      "blocks": [
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile"
+        },
+        {
+          "type": "tile"
+        }
+      ]
+    },
+    {
+      "name": "t:sections.gallery.preset_lookbook",
+      "settings": {
+        "layout": "carousel",
+        "columns": 3,
+        "ratio": "portrait",
+        "caption_style": "overlay",
+        "eyebrow": "Lookbook",
+        "heading": "Get inspired"
+      },
+      "blocks": [
+        {
+          "type": "tile",
+          "settings": {
+            "caption": "Everyday"
+          }
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "caption": "Weekend"
+          }
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "caption": "Gifting"
+          }
+        },
+        {
+          "type": "tile",
+          "settings": {
+            "caption": "On the go"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

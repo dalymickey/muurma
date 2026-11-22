@@ -1,0 +1,219 @@
+{%- comment -%}
+  Article: the hero (snippets/mu-article-hero), the story at reading width, tags, older/newer links and the
+  comments with the comment form in a soft panel.
+{%- endcomment -%}
+{{ 'mu-pages.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign author = blank
+  if s.show_author
+    assign author = article.author
+  endif
+-%}
+<article class="mu-sec mu-article">
+  {%- render 'mu-article-hero', title: article.title, date: article.published_at, author: author, image: article.image, blog_title: blog.title, blog_url: blog.url, crumbs: s.show_breadcrumbs -%}
+
+  <div class="mu-article__body mu-rte">{{ article.content }}</div>
+
+  {%- if article.tags.size > 0 -%}
+    <ul class="mu-article__tags" role="list">
+      {%- for tag in article.tags -%}<li><a class="mu-pill" href="{{ blog.url }}/tagged/{{ tag | handleize }}">{{ tag | escape }}</a></li>{%- endfor -%}
+    </ul>
+  {%- endif -%}
+
+  {%- if blog.previous_article or blog.next_article -%}
+    <nav class="mu-article__nav" aria-label="{{ 'blogs.more' | t }}">
+      {%- if blog.next_article -%}<a class="mu-btn mu-btn--ghost mu-btn--sm" href="{{ blog.next_article.url }}" rel="next">{{ 'blogs.newer' | t }}</a>{%- endif -%}
+      {%- if blog.previous_article -%}<a class="mu-btn mu-btn--ghost mu-btn--sm" href="{{ blog.previous_article.url }}" rel="prev">{{ 'blogs.older' | t }}</a>{%- endif -%}
+    </nav>
+  {%- endif -%}
+
+  {%- if blog.comments_enabled? -%}
+    <section class="mu-comments color-{{ s.comments_scheme }}" aria-labelledby="MuComments-{{ section.id }}">
+      <h2 id="MuComments-{{ section.id }}" class="mu-h3">{{ 'blogs.comments' | t: count: article.comments_count }}</h2>
+      {%- if article.comments_count > 0 -%}
+        {%- paginate article.comments by 20 -%}
+          <ul class="mu-comments__list" role="list">
+            {%- for comment in article.comments -%}
+              <li class="mu-comment">
+                <div class="mu-rte">{{ comment.content }}</div>
+                <p class="mu-muted mu-comment__by">{{ comment.author | escape }} · <time datetime="{{ comment.created_at | date: '%Y-%m-%d' }}">{{ comment.created_at | time_tag: format: 'date' }}</time></p>
+              </li>
+            {%- endfor -%}
+          </ul>
+          {%- render 'mu-pagination', paginate: paginate -%}
+        {%- endpaginate -%}
+      {%- endif -%}
+      {%- liquid
+        assign cid = 'MuC-' | append: section.id
+        assign fclass = 'mu-comment-form color-' | append: settings.page_scheme
+      -%}
+      {%- form 'new_comment', article, class: fclass, id: cid -%}
+        <h3 class="mu-comment-form__title">{{ 'blogs.leave' | t }}</h3>
+        {%- if form.posted_successfully? -%}
+          <p class="mu-form-msg" role="status">{% render 'mu-icon', name: 'check' %}{% if blog.moderated? %}{{ 'blogs.moderated' | t }}{% else %}{{ 'blogs.posted' | t }}{% endif %}</p>
+        {%- elsif form.errors -%}
+          <div class="mu-form-msg mu-form-msg--error" role="alert" id="{{ cid }}-err">{{ form.errors | default_errors }}</div>
+        {%- endif -%}
+        <div class="mu-field"><label for="{{ cid }}-name">{{ 'blogs.name' | t }}</label><input class="mu-input" id="{{ cid }}-name" name="comment[author]" value="{{ form.author }}" required autocomplete="name"></div>
+        <div class="mu-field"><label for="{{ cid }}-email">{{ 'blogs.email' | t }}</label><input class="mu-input" id="{{ cid }}-email" type="email" name="comment[email]" value="{{ form.email }}" required autocomplete="email" spellcheck="false" autocapitalize="off"></div>
+        <div class="mu-field mu-field--wide"><label for="{{ cid }}-body">{{ 'blogs.message' | t }}</label><textarea class="mu-input mu-textarea" id="{{ cid }}-body" name="comment[body]" rows="5" required>{{ form.body }}</textarea></div>
+        {%- if blog.moderated? -%}<p class="mu-muted mu-contact__req">{{ 'blogs.moderated_note' | t }}</p>{%- endif -%}
+        <button class="mu-btn mu-comment-form__send" type="submit">{{ 'blogs.submit' | t }}</button>
+      {%- endform -%}
+    </section>
+  {%- endif -%}
+</article>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_article.name",
+  "class": "mu-section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "t:sections.main_article.show_author",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "t:sections.common.show_breadcrumbs",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "comments_scheme",
+      "label": "t:sections.main_article.comments_scheme",
+      "default": "scheme-5"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    }
+  ]
+}
+{% endschema %}

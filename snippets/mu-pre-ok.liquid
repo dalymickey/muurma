@@ -1,0 +1,24 @@
+{%- comment -%}
+  Outputs "true" when Theme settings > Pre-order > Out-of-stock pre-orders covers this product: "All products that keep
+  selling", or "Tagged products only" and the product has the pre-order tag. Tags match ignoring case, spaces, hyphens
+  and underscores, so "Pre Order", "pre-order" and "preorder" all match "pre-order". The variant checks (tracked, keeps
+  selling, no stock) are made where this is used. Purchase option (selling plan) pre-orders don't use this.
+  @param product {Product}
+{%- endcomment -%}
+{%- liquid
+  if settings.preorder_backorder_mode == 'all'
+    echo 'true'
+  elsif settings.preorder_backorder_mode == 'tagged'
+    assign want = settings.preorder_tag | default: 'pre-order' | downcase | remove: ' ' | remove: '-' | remove: '_'
+    if want == blank
+      assign want = 'preorder'
+    endif
+    for t in product.tags
+      assign tn = t | downcase | remove: ' ' | remove: '-' | remove: '_'
+      if tn == want
+        echo 'true'
+        break
+      endif
+    endfor
+  endif
+-%}

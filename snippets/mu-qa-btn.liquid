@@ -1,0 +1,28 @@
+{%- comment -%}
+  Quick add for a product outside a product card (Image hotspots, Image gallery product tags). A product with one
+  variant that can be bought outright adds straight to the bag (quick buy, with a status line); anything else opens
+  quick view (assets/mu-quick-add.js). Products that need a purchase option, or are sold out, get nothing.
+  The section that uses it brings the quick view dialog when the layout doesn't (see mu-qa-host).
+  @param product {Product}
+  @param class {String} extra classes for the button (optional)
+{%- endcomment -%}
+{%- liquid
+  assign v = product.selected_or_first_available_variant
+  assign qb = false
+  if product.variants.size == 1 and v.available and product.gift_card? == false and product.selling_plan_groups.size == 0
+    assign qb = true
+    if v.inventory_management == 'shopify' and v.inventory_policy == 'continue' and v.inventory_quantity <= 0
+      assign qb = false
+    endif
+  endif
+-%}
+{%- if product.available and product.requires_selling_plan == false -%}
+  <span class="mu-qab">
+    {%- if qb -%}
+      <button class="mu-btn mu-btn--sm {{ class }}" type="button" data-quick-add="{{ product.url }}" data-quick-buy="{{ v.id }}" data-qty="{{ v.quantity_rule.min | default: 1 }}">{% render 'mu-icon', name: 'plus' %}{{ 'products.add_short' | t }}<span class="visually-hidden">: {{ product.title | escape }}. {{ 'products.quick_buy_hint' | t }}</span></button>
+      <span class="mu-qab__msg" role="status" data-qb-msg></span>
+    {%- else -%}
+      <button class="mu-btn mu-btn--sm {{ class }}" type="button" data-quick-add="{{ product.url }}" aria-haspopup="dialog">{% render 'mu-icon', name: 'plus' %}{{ 'products.quick_view_button' | t }}<span class="visually-hidden">: {{ product.title | escape }}</span></button>
+    {%- endif -%}
+  </span>
+{%- endif -%}

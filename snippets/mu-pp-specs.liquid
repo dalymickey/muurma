@@ -1,0 +1,41 @@
+{%- comment -%}
+  Spec tiles block: up to four value and label tiles. An empty value falls back to the product metafield
+  named in the block (namespace.key). Each tile can show an icon above the value, an uploaded image or a theme icon
+  (snippets/mu-icon-pick, the same picker as Feature icons and the Spec tiles section); the default is none.
+  @param block {Block}
+  @param product {Product}
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign isz = b.icon_size | default: 24
+-%}
+{%- capture tiles -%}
+  {%- for i in (1..4) -%}
+    {%- liquid
+      assign vk = 'value_' | append: i
+      assign mk = 'metafield_' | append: i
+      assign lk = 'label_' | append: i
+      assign ik = 'image_' | append: i
+      assign nk = 'icon_' | append: i
+      assign value = b[vk] | strip
+      assign key = b[mk] | strip
+      if value == blank and key != blank and product != blank
+        assign parts = key | split: '.'
+        if parts.size == 2
+          assign mf = product.metafields[parts[0]][parts[1]]
+          if mf != blank
+            assign value = mf | metafield_text | strip
+          endif
+        endif
+      endif
+    -%}
+    {%- if value != blank -%}
+      <li class="mu-pp__spec">{% render 'mu-icon-pick', image: b[ik], icon: b[nk], tint: b.tint, size: isz, cls: 'mu-pp__spec', join: '-' %}<b>{{ value | escape }}</b>{% if b[lk] != blank %}<span>{{ b[lk] | escape }}</span>{% endif %}</li>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+{%- if tiles != blank -%}
+  <ul class="mu-pp__specs" role="list" style="--mu-spec-icon: {{ isz }}px;" {{ block.shopify_attributes }}>{{ tiles }}</ul>
+{%- elsif request.design_mode -%}
+  <p class="mu-pp__hint" {{ block.shopify_attributes }}>{{ 'products.specs_empty' | t }}</p>
+{%- endif -%}

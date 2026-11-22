@@ -1,0 +1,16 @@
+{%- comment -%}
+  Complementary products block (product page and featured product): an empty shell that assets/mu-product.js fills
+  from the product recommendations endpoint (sections/mu-complementary). Hidden until it has products; the theme
+  editor shows a hint instead.
+  @param block {Block}
+  @param product {Product}
+  @param ph {Boolean} placeholder (featured product with no product): renders nothing
+{%- endcomment -%}
+{%- unless ph -%}
+  <div class="mu-pp__comp" data-comp data-source="{{ block.settings.source }}" data-url="{{ routes.product_recommendations_url }}?product_id={{ product.id }}&limit={{ block.settings.limit }}&section_id=mu-complementary"{% unless request.design_mode %} hidden{% endunless %} {{ block.shopify_attributes }}>
+    {%- if block.settings.heading != blank -%}<h2 class="mu-pp__comp-head">{{ block.settings.heading | escape }}</h2>{%- endif -%}
+    <div data-comp-list>
+      {%- if request.design_mode -%}<p class="mu-pp__hint">{{ 'products.comp_empty' | t }}</p>{%- endif -%}
+    </div>
+  </div>
+{%- endunless -%}

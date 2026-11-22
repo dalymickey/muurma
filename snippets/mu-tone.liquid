@@ -1,0 +1,88 @@
+{%- comment -%}
+  A product's colour hook for cards, slides and panels. Prints "class|style" with no whitespace:
+    {% capture t %}{% render 'mu-tone', product: p %}{% endcapture %}{% assign t = t | split: '|' %}
+  Levels mode (Theme settings > Scale > Mode): class is "mu-h-N" (plus "mu-s2" on the second scale), style is empty.
+  Product colors only mode: the product's accent colour (mu-accent-color: custom.accent_color, then custom.stage_color, then the
+  swatch of the first option value that has one, then a tag like "color:#F7B6C2") sets the same tokens a
+  level would (--h, --h-fg, --g1, --g2, --g-fg) inline, with class "mu-fl"; the gradient follows Colors > Gradient style
+  and the text colour is whichever of the page scheme's text or background reads best on it (black or white when
+  neither reaches 4.5:1).
+  Both are empty when there's nothing to show, so callers fall back to the scheme.
+  Pass level: to skip the product read in levels mode (for a variant's own level).
+{%- endcomment -%}
+{%- liquid
+  assign cls = ''
+  assign sty = ''
+  if settings.scale_mode == 'colors'
+    capture c
+      render 'mu-accent-color', product: product
+    endcapture
+    assign c = c | strip
+    if c != blank
+      assign c = c | append: ''
+      assign pg = settings.page_scheme.settings
+      assign ink = pg.text | default: '#1A0F12'
+      assign paper = pg.background | default: '#FFFFFF'
+      case settings.gradient_style
+        when 'soft'
+          assign g = c | color_mix: paper, 55
+          assign g2 = c | color_mix: paper, 80
+        when 'off'
+          assign g = c
+          assign g2 = c
+        else
+          assign g = c
+          assign g2 = c | color_darken: 12
+      endcase
+      assign a1 = ink | color_contrast: c
+      assign a2 = paper | color_contrast: c
+      assign fg = paper
+      if a1 >= a2
+        assign fg = ink
+      endif
+      if a1 < 4.5 and a2 < 4.5
+        assign b1 = '#000000' | color_contrast: c
+        assign b2 = '#FFFFFF' | color_contrast: c
+        assign fg = '#FFFFFF'
+        if b1 >= b2
+          assign fg = '#000000'
+        endif
+      endif
+      assign a1 = ink | color_contrast: g
+      assign a2 = paper | color_contrast: g
+      assign gfg = paper
+      if a1 >= a2
+        assign gfg = ink
+      endif
+      if a1 < 4.5 and a2 < 4.5
+        assign b1 = '#000000' | color_contrast: g
+        assign b2 = '#FFFFFF' | color_contrast: g
+        assign gfg = '#FFFFFF'
+        if b1 >= b2
+          assign gfg = '#000000'
+        endif
+      endif
+      assign cls = 'mu-fl'
+      assign sty = '--h: ' | append: c | append: '; --h-fg: ' | append: fg | append: '; --g1: ' | append: g | append: '; --g2: ' | append: g2 | append: '; --g-fg: ' | append: gfg | append: ';'
+    endif
+  else
+    if level != blank
+      assign lv = level | plus: 0
+      assign sc = scale | default: 1 | plus: 0
+    else
+      capture hs
+        render 'mu-level', product: product
+      endcapture
+      assign hp = hs | split: '|'
+      assign lv = hp[0] | plus: 0
+      assign sc = hp[4] | plus: 0
+    endif
+    if lv > 0
+      assign cls = 'mu-h-' | append: lv
+      if sc == 2
+        assign cls = cls | append: ' mu-s2'
+      endif
+    endif
+  endif
+-%}
+{{- cls }}|{{ sty -}}

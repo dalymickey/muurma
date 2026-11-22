@@ -1,0 +1,8 @@
+{%- comment -%}
+  Previous / next buttons for a desktop slider (mu-slider.js). Shown on desktop only; phones swipe.
+  @param label {String} what the slider holds, for the buttons' accessible names
+{%- endcomment -%}
+<div class="mu-slider-nav">
+  <button type="button" class="mu-iconbtn mu-slider-nav__btn mu-slider-nav__btn--prev" data-prev aria-label="{{ 'general.slider_prev' | t: label: label }}">{% render 'mu-icon', name: 'arrow-right' %}</button>
+  <button type="button" class="mu-iconbtn mu-slider-nav__btn" data-next aria-label="{{ 'general.slider_next' | t: label: label }}">{% render 'mu-icon', name: 'arrow-right' %}</button>
+</div>

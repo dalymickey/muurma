@@ -1,0 +1,46 @@
+{%- comment -%}
+  Gift card recipient (inside the product form on gift card products): send the gift card to someone by email,
+  with an optional name, message and send date. The fields stay disabled (not sent) until the box is ticked;
+  assets/mu-product.js toggles them and fills the timezone offset Shopify uses for the send date.
+  @param form {Form} the product form
+  @param uid {String}
+{%- endcomment -%}
+{%- liquid
+  assign open = false
+  if form.errors
+    assign open = true
+  endif
+-%}
+<div class="mu-gcr" data-recipient>
+  <label class="mu-gcr__toggle">
+    <input type="checkbox" name="properties[__shopify_send_gift_card_to_recipient]" value="on" data-recipient-box{% if open %} checked{% endif %}>
+    <span>{{ 'products.gcr_toggle' | t }}</span>
+  </label>
+  <div class="mu-gcr__fields" data-recipient-fields{% unless open %} hidden{% endunless %}>
+    {%- if form.errors -%}
+      <p class="mu-gcr__err" role="alert">
+        {{- 'products.gcr_error' | t -}}
+        {%- for field in form.errors -%}<br>{{ form.errors.translated_fields[field] | capitalize }} {{ form.errors.messages[field] }}{%- endfor -%}
+      </p>
+    {%- endif -%}
+    <label class="mu-gcr__field">
+      <span>{{ 'products.gcr_email' | t }} <span aria-hidden="true">*</span></span>
+      <input type="email" name="properties[Recipient email]" value="{{ form.email }}" autocomplete="email" required data-recipient-input{% unless open %} disabled{% endunless %}>
+    </label>
+    <label class="mu-gcr__field">
+      <span>{{ 'products.gcr_name' | t }}</span>
+      <input type="text" name="properties[Recipient name]" value="{{ form.name }}" autocomplete="name" data-recipient-input{% unless open %} disabled{% endunless %}>
+    </label>
+    <label class="mu-gcr__field">
+      <span>{{ 'products.gcr_message' | t }}</span>
+      <textarea name="properties[Message]" rows="3" maxlength="200" aria-describedby="MuGcrMsg-{{ uid }}" data-recipient-input{% unless open %} disabled{% endunless %}>{{ form.message }}</textarea>
+      <small class="mu-muted" id="MuGcrMsg-{{ uid }}">{{ 'products.gcr_message_info' | t: max: 200 }}</small>
+    </label>
+    <label class="mu-gcr__field">
+      <span>{{ 'products.gcr_send_on' | t }}</span>
+      <input type="date" name="properties[Send on]" value="{{ form.send_on }}" min="{{ 'now' | date: '%Y-%m-%d' }}" pattern="\d{4}-\d{2}-\d{2}" aria-describedby="MuGcrSend-{{ uid }}" data-recipient-input{% unless open %} disabled{% endunless %}>
+      <small class="mu-muted" id="MuGcrSend-{{ uid }}">{{ 'products.gcr_send_on_info' | t }}</small>
+    </label>
+    <input type="hidden" name="properties[__shopify_offset]" value="" data-recipient-offset data-recipient-input{% unless open %} disabled{% endunless %}>
+  </div>
+</div>

@@ -1,0 +1,101 @@
+{%- comment -%}
+  Cookie banner (Theme settings > Cookie banner): the theme's own consent banner, driven by Shopify's Customer Privacy
+  API. It loads the API, and shows only where Shopify says a banner is needed (shouldShowBanner) and the visitor
+  hasn't decided yet. Accept or decline sets all four consent purposes (analytics, marketing, preferences, sale of
+  data) through setTrackingConsent, and the banner closes once Shopify has saved the choice; the theme itself stores
+  nothing. Bottom bar and corner cards are a non-modal dialog (the page stays usable and scrollable); the centered
+  modal is a native modal dialog (focus stays inside, focus goes back after, the page can't scroll, Esc does nothing).
+  Order: it waits for age verification to pass, and the popup waits for it (window.kzConsentWait + ks:consent-done).
+  In the theme editor it shows on every load with "Show in theme editor" on, and the buttons only close it.
+{%- endcomment -%}
+{%- liquid
+  assign s = settings
+  assign pos = s.cookie_position | default: 'left'
+  assign uid = 'MuCookie'
+-%}
+{%- comment -%} The banner is a closed dialog until the script opens it, so its styles never hold up the first paint. {%- endcomment -%}
+<link rel="stylesheet" href="{{ 'mu-cookie.css' | asset_url }}" media="print" onload="this.media='all'">
+<dialog
+  class="mu-ck mu-ck--{{ pos }} color-{{ s.cookie_scheme | default: 'scheme-3' }}{% if pos == 'modal' and s.cookie_blur %} mu-ck--blur{% endif %}"
+  id="{{ uid }}"
+  data-mu-cookie
+  tabindex="-1"
+  {%- if pos == 'modal' %} data-modal{% endif %}
+  {%- if request.design_mode %} data-design{% endif %}
+  {%- if s.cookie_heading != blank %} aria-labelledby="{{ uid }}-title"{% else %} aria-label="{{ 'cookie.label' | t }}"{% endif %}
+  {%- if s.cookie_text != blank %} aria-describedby="{{ uid }}-text"{% endif %}
+>
+  <div class="mu-ck__panel">
+    <div class="mu-ck__copy">
+      {%- if s.cookie_heading != blank -%}<h2 class="mu-ck__title" id="{{ uid }}-title">{{ s.cookie_heading | escape }}</h2>{%- endif -%}
+      {%- if s.cookie_text != blank -%}<div class="mu-ck__text mu-rte" id="{{ uid }}-text">{{ s.cookie_text }}</div>{%- endif -%}
+    </div>
+    <div class="mu-ck__btns">
+      <button type="button" class="mu-btn mu-ck__btn" data-ck="1">{% if s.cookie_accept != blank %}{{ s.cookie_accept | escape }}{% else %}{{ 'cookie.accept' | t }}{% endif %}</button>
+      <button type="button" class="mu-btn mu-btn--ghost mu-ck__btn" data-ck="0">{% if s.cookie_decline != blank %}{{ s.cookie_decline | escape }}{% else %}{{ 'cookie.decline' | t }}{% endif %}</button>
+    </div>
+  </div>
+</dialog>
+<script>
+  (() => {
+    const d = document.getElementById('{{ uid }}');
+    if (!d) return;
+    const design = d.hasAttribute('data-design'), modal = d.hasAttribute('data-modal') && typeof d.showModal === 'function';
+    let shown = false, done = false, back = null;
+    window.kzConsentWait = true;
+    const finish = () => {
+      if (!window.kzConsentWait) return;
+      window.kzConsentWait = false;
+      document.dispatchEvent(new CustomEvent('ks:consent-done'));
+    };
+    const hide = () => {
+      done = true;
+      if (d.open) d.close();
+      d.remove();
+      if (back && back.isConnected && back !== document.body) back.focus({ preventScroll: true });
+      finish();
+    };
+    const show = () => {
+      if (shown || !d.isConnected) return;
+      shown = true;
+      back = document.activeElement;
+      if (modal) { d.showModal(); d.focus({ preventScroll: true }); } else d.setAttribute('open', '');
+    };
+    /* Only a choice closes it: Esc is ignored, and another script closing open dialogs just gets it back. */
+    d.addEventListener('cancel', (e) => e.preventDefault());
+    d.addEventListener('close', () => { if (!done && d.isConnected) { if (modal) d.showModal(); else d.setAttribute('open', ''); } });
+    const decided = (cp) => {
+      try {
+        const c = cp.currentVisitorConsent && cp.currentVisitorConsent();
+        return !!c && ['analytics', 'marketing', 'preferences'].some((k) => c[k] === 'yes' || c[k] === 'no');
+      } catch (e) { return false; }
+    };
+    d.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ck]');
+      if (!b || b.disabled) return;
+      const yes = b.dataset.ck === '1';
+      const cp = window.Shopify && window.Shopify.customerPrivacy;
+      if (design || !cp || typeof cp.setTrackingConsent !== 'function') { hide(); return; }
+      d.querySelectorAll('[data-ck]').forEach((x) => { x.disabled = true; });
+      d.setAttribute('aria-busy', 'true');
+      let closed = false;
+      const end = () => { if (!closed) { closed = true; hide(); } };
+      try {
+        cp.setTrackingConsent({ analytics: yes, marketing: yes, preferences: yes, sale_of_data: yes }, end);
+      } catch (err) { end(); }
+      setTimeout(end, 6000);
+    });
+    const start = () => {
+      if (design) { show(); return; }
+      const S = window.Shopify;
+      if (!S || typeof S.loadFeatures !== 'function') { hide(); return; }
+      S.loadFeatures([{ name: 'consent-tracking-api', version: '0.1' }], (err) => {
+        const cp = window.Shopify.customerPrivacy;
+        if (err || !cp || typeof cp.shouldShowBanner !== 'function' || !cp.shouldShowBanner() || decided(cp)) { hide(); return; }
+        show();
+      });
+    };
+    if (document.querySelector('dialog[data-mu-age]')) document.addEventListener('ks:age-pass', start, { once: true });
+    else start();
+  })();
+</script>

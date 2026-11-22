@@ -1,0 +1,51 @@
+{%- comment -%}
+  Star rating. With Theme settings > Product cards > Review namespace blank, this reads reviews.rating
+  and reviews.rating_count. A namespace reads rating and rating_count from that namespace instead.
+  Five stars fill to the rating (any scale). Renders nothing when the product has no rating or no reviews,
+  or when show is false; with empty (cards: Show empty ratings) such a product gets five empty stars and
+  "No reviews" instead.
+  @param product {Product}
+  @param show {Boolean} the "Show rating" setting (cards: Theme settings > Cards; product page: Title block)
+  @param empty {Boolean} optional: show empty stars and "No reviews" when there is no rating
+  @param class {String} optional extra class
+  @param el {String} optional wrapper element, default 'p' ('span' inside a button)
+{%- endcomment -%}
+{%- liquid
+  assign ns = settings.reviews_namespace | strip
+  if ns != blank
+    assign r = product.metafields[ns].rating.value
+    assign n = product.metafields[ns].rating_count.value | plus: 0
+  else
+    assign r = product.metafields.reviews.rating.value
+    assign n = product.metafields.reviews.rating_count.value | plus: 0
+  endif
+  assign on = true
+  assign el = el | default: 'p'
+  if show == false or r == blank or n < 1
+    assign on = false
+  endif
+-%}
+{%- if on -%}
+  {%- liquid
+    assign max = r.scale_max | plus: 0
+    if max <= 0
+      assign max = 5
+    endif
+    assign val = r.rating | plus: 0
+    assign pct = val | times: 100.0 | divided_by: max | round: 1
+    assign shown = val | round: 1
+    assign max_label = max | round: 1 | append: '' | remove_last: '.0'
+  -%}
+  <{{ el }} class="mu-rating{% if class != blank %} {{ class }}{% endif %}" style="--mu-r: {{ pct }}%;">
+    <span class="mu-rating__stars" aria-hidden="true"></span>
+    <span class="visually-hidden">{{ 'products.rating_label' | t: rating: shown, max: max_label, count: n }}</span>
+    <span class="mu-rating__val mu-num" aria-hidden="true">{{ shown }}</span>
+    <span class="mu-rating__count mu-muted" aria-hidden="true">({{ n }})</span>
+  </{{ el }}>
+{%- elsif show != false and empty -%}
+  <{{ el }} class="mu-rating mu-rating--none{% if class != blank %} {{ class }}{% endif %}" style="--mu-r: 0%;">
+    <span class="mu-rating__stars" aria-hidden="true"></span>
+    <span class="visually-hidden">{{ 'products.no_reviews' | t }}</span>
+    <span class="mu-rating__count mu-muted" aria-hidden="true">{{ 'products.no_reviews' | t }}</span>
+  </{{ el }}>
+{%- endif -%}

@@ -1,0 +1,84 @@
+{%- comment -%}
+  Product badges, shared by product cards (snippets/mu-card), Mix and match: one status tag (coming soon,
+  from custom.release_date / sold out / pre-order, see mu-pp-pre / sale, or % off with Cards > Sale badge, see
+  mu-sale-pct / new, from a "new" product tag), then up to 2 tags that start with Cards > Badge prefix (default
+  "badge:", e.g. "badge:Staff pick"), skipping one that repeats the status tag. New and Sale take Cards > Badge colours
+  when set. Prints nothing when there is no badge.
+  @param product {Product}
+  @param coming {Boolean} optional: the caller's coming-soon result, so it isn't worked out twice
+  @param class {String} optional extra class on the wrapper
+{%- endcomment -%}
+{%- liquid
+  assign tag = blank
+  assign v = product.selected_or_first_available_variant
+  if coming == nil
+    assign coming = false
+    assign release = product.metafields.custom.release_date.value
+    if release != blank
+      assign release_s = release | date: '%s' | plus: 0
+      assign now_s = 'now' | date: '%s' | plus: 0
+      if release_s > now_s
+        assign coming = true
+      endif
+    endif
+  endif
+  if coming
+    assign tag = 'products.coming_soon' | t
+  elsif product.available == false
+    assign tag = 'products.sold_out' | t
+  else
+    capture tag
+      render 'mu-pp-pre', product: product, v: v, part: 'tag'
+    endcapture
+    assign tag = tag | strip
+  endif
+  assign tag_kind = blank
+  if tag != blank
+  elsif product.compare_at_price_max > product.price_min and settings.card_sale_badge == 'percent'
+    capture tag
+      render 'mu-sale-pct', product: product
+    endcapture
+    assign tag = tag | strip
+    if tag == blank and v.compare_at_price > v.price
+      assign tag = 'products.sale' | t
+    endif
+    if tag != blank
+      assign tag_kind = 'sale'
+    endif
+  elsif v.compare_at_price > v.price
+    assign tag = 'products.sale' | t
+    assign tag_kind = 'sale'
+  else
+    assign tags_down = product.tags | join: ',' | downcase | split: ','
+    if tags_down contains 'new'
+      assign tag = 'products.new' | t
+      assign tag_kind = 'new'
+    endif
+  endif
+  assign badges = ''
+  assign prefix = settings.card_badge_prefix | strip | downcase
+  assign tag_key = tag | downcase | remove: ' ' | remove: '-'
+  if prefix != blank
+    assign plen = prefix | size
+    for t in product.tags
+      assign tl = t | downcase
+      if tl.size > plen and tl contains prefix
+        assign head = t | slice: 0, plen | downcase
+        if head == prefix
+          assign label = t | slice: plen, 60 | strip
+          assign label_key = label | downcase | remove: ' ' | remove: '-'
+          if label != blank and label_key != tag_key
+            assign badges = badges | append: label | append: '|||'
+          endif
+        endif
+      endif
+    endfor
+  endif
+  assign badges = badges | split: '|||'
+-%}
+{%- if tag != blank or badges.size > 0 -%}
+  <span class="mu-card__tags{% if class != blank %} {{ class }}{% endif %}">
+    {%- if tag != blank -%}<span class="mu-card__tag{% unless product.available or coming %} mu-card__tag--out{% endunless %}{% if tag_kind != blank %} mu-card__tag--{{ tag_kind }}{% endif %}">{{ tag }}</span>{%- endif -%}
+    {%- for b in badges limit: 2 -%}<span class="mu-card__tag mu-card__tag--custom">{{ b | escape }}</span>{%- endfor -%}
+  </span>
+{%- endif -%}

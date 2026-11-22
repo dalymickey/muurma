@@ -1,0 +1,58 @@
+{%- comment -%}
+  Section surface: one shared "Section layout" group (Full-width background, Custom corner radius, Corner radius and
+  the four Round corner toggles) for every section that sits on a colour-scheme panel.
+  - part 'class' (default): classes for the panel element.
+      mu-sf--full   background runs to the screen edges, the content stays at page width.
+      mu-sf--page   the panel sits in the page column, inset by the gutter, with the chosen corners rounded.
+      mu-sf--plain  the panel uses the page's own scheme, so there is nothing to inset or round.
+      mu-sf--round  a contained panel whose corner radius is above 0. assets/mu-base.css then keeps a minimum
+                    vertical margin so the rounded edge does not sit flush against the next section.
+  - part 'attr': a style attribute carrying the custom radius (nothing when the theme's radius applies).
+  - part 'style': the same CSS variable alone, for an element that already has a style attribute.
+  Usage: class="…{% render 'mu-surface', s: section.settings %}"{% render 'mu-surface', s: section.settings, part: 'attr' %}
+{%- endcomment -%}
+{%- liquid
+  assign sf_scheme = s.color_scheme.id | default: s.color_scheme
+  assign sf_page = settings.page_scheme.id | default: settings.page_scheme
+  if part == 'style' or part == 'attr'
+    if s.full_width != true and s.custom_radius
+      if part == 'attr'
+        echo ' style="--sf-r: ' | append: s.radius | append: 'px;"'
+      else
+        echo '--sf-r: ' | append: s.radius | append: 'px;'
+      endif
+    endif
+  else
+    if sf_scheme == sf_page
+      echo ' mu-sf--plain'
+    endif
+    if s.full_width
+      echo ' mu-sf mu-sf--full'
+    else
+      echo ' mu-sf mu-sf--page'
+      if s.round_tl == false
+        echo ' mu-sf--no-tl'
+      endif
+      if s.round_tr == false
+        echo ' mu-sf--no-tr'
+      endif
+      if s.round_bl == false
+        echo ' mu-sf--no-bl'
+      endif
+      if s.round_br == false
+        echo ' mu-sf--no-br'
+      endif
+      assign sf_r = settings.radius | default: 0
+      if s.custom_radius
+        assign sf_r = s.radius | default: 0
+      endif
+      assign sf_corners = true
+      if s.round_tl == false and s.round_tr == false and s.round_bl == false and s.round_br == false
+        assign sf_corners = false
+      endif
+      if sf_scheme != sf_page and sf_r > 0 and sf_corners
+        echo ' mu-sf--round'
+      endif
+    endif
+  endif
+-%}

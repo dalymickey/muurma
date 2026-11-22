@@ -1,0 +1,455 @@
+/* Engine product page. The stage glows with the product's level (.mu-pp carries .mu-h-N from the Scale metafield),
+   the panel wears a ramp edge, options are ramp chips and the gallery is steered from a floating tray. */
+.mu-pp { --pp-r: var(--mu-radius-lg); --pp-pad: 20px; display: block; margin-top: 6px; }
+
+/* ================= Stage ================= */
+/* The frame takes the media ratio (--mu-ar); Adapt follows the first image and caps at the viewport, letterboxing
+   rather than cropping. A soft level glow sits under the product at the level's colour. */
+.mu-pp__stage {
+  --contour-o: .2; position: relative; isolation: isolate; min-width: 0; min-height: 280px; margin-inline: var(--gutter);
+  aspect-ratio: var(--mu-ar, 1); border-radius: var(--pp-r); background: var(--bg); color: var(--fg);
+}
+.mu-pp__stage::before {
+  content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit; pointer-events: none;
+  background: radial-gradient(70% 55% at 50% 92%, color-mix(in srgb, var(--h, transparent) 34%, transparent), transparent 72%);
+}
+.mu-pp__stage--adapt { max-height: 76svh; }
+.mu-pp__slides {
+  position: absolute; inset: 0; display: flex; border-radius: inherit;
+  overflow: auto hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none;
+}
+.mu-pp__slides::-webkit-scrollbar { display: none; }
+.mu-pp__slides:focus-visible { outline-offset: -5px; }
+.mu-pp__slide { position: relative; display: grid; place-items: center; flex: 0 0 100%; block-size: 100%; overflow: hidden; scroll-snap-align: start; }
+/* Media sit in an inset box (--it/--ir/--ib/--il) instead of a percentage-height grid cell, which WebKit can fail to
+   resolve (the image then overflows at its natural height). */
+.mu-pp__slide > .mu-pp__img {
+  position: absolute; inset: var(--it, 0px) auto auto var(--il, 0px);
+  width: calc(100% - var(--il, 0px) - var(--ir, 0px)); height: calc(100% - var(--it, 0px) - var(--ib, 0px));
+}
+.mu-pp__slide--fill > .mu-pp__img { object-fit: cover; }
+:is(.mu-pp__stage--adapt .mu-pp__slide > .mu-pp__img, .mu-pp__stage--adapt .mu-pp__defer > .mu-pp__poster) { object-fit: contain; }
+/* Fit shows the whole image in a padded box; Floating does the same, lifted over a soft ground shadow. */
+:is(.mu-pp__slide--fit, .mu-pp__slide--floating) { container-type: size; --it: 8cqh; --ib: 12cqh; --il: 7cqw; --ir: 7cqw; }
+:is(.mu-pp__slide--fit, .mu-pp__slide--floating) > .mu-pp__img { object-fit: contain; object-position: center !important; }
+.mu-pp__slide--floating > .mu-pp__img { translate: 0 -3%; rotate: -2deg; filter: drop-shadow(0 28px 24px color-mix(in srgb, var(--fg) 26%, transparent)); }
+.mu-pp__ground { position: absolute; inset: auto 24% 16% 24%; block-size: 6%; border-radius: 50%; background: color-mix(in srgb, var(--fg) 24%, transparent); filter: blur(16px); }
+/* Keep the ground under the drawn image at any frame shape: --mu-mr (the image ratio) gives its drawn size in the slide's container units. */
+@supports (width: 1cqw) {
+  :is(.mu-pp__slide--fit, .mu-pp__slide--floating) {
+    --bw: calc(100cqw - var(--il) - var(--ir)); --bh: calc(100cqh - var(--it) - var(--ib));
+    --dw: min(var(--bw), var(--bh) * var(--mu-mr, 1)); --dh: min(var(--bh), var(--bw) / var(--mu-mr, 1));
+  }
+  .mu-pp__slide--floating > .mu-pp__ground {
+    inset: auto auto calc(var(--ib) + (var(--bh) - var(--dh)) / 2 - var(--dh) * .03) calc(var(--il) + var(--bw) / 2 - var(--dw) * .3);
+    inline-size: calc(var(--dw) * .6); block-size: max(12px, var(--dh) * .08);
+  }
+  /* Inset styles: size the image to its drawn box (centred in the inset) so it takes the media corner radius,
+     like the cards; Floating keeps its tilt. */
+  :is(.mu-pp__slide--fit, .mu-pp__slide--floating) > img.mu-pp__img {
+    inset: calc(var(--it) + (var(--bh) - var(--dh)) / 2) auto auto calc(var(--il) + (var(--bw) - var(--dw)) / 2);
+    width: var(--dw); height: var(--dh); border-radius: var(--mu-media-r);
+  }
+}
+.mu-pp__slide .mu-placeholder { inline-size: 64%; block-size: 64%; opacity: .35; }
+
+/* Video: the theme's own play and sound buttons replace the native chrome once the script runs. */
+.mu-pp__vid { cursor: pointer; }
+.mu-pp__vid::-webkit-media-controls { display: none !important; }
+.mu-pp__vctl, .mu-pp__xr { position: absolute; z-index: 2; inset: auto auto 56px 14px; display: flex; gap: 6px; }
+.mu-pp__xr[data-shopify-xr-hidden] { display: none; }
+.mu-pp__vbtn { background: var(--fg); color: var(--bg); }
+.mu-pp__vbtn .mu-icon { inline-size: 18px; block-size: 18px; }
+.mu-pp__vbtn.is-playing .mu-pp__vi-play, .mu-pp__vbtn:not(.is-playing) .mu-pp__vi-pause,
+.mu-pp__vbtn.is-sound .mu-pp__vi-muted, .mu-pp__vbtn:not(.is-sound) .mu-pp__vi-sound { display: none; }
+/* YouTube, Vimeo and 3D: a poster with a big play button until the player loads into the slide. */
+.mu-pp__defer { position: absolute; inset: 0; display: grid; place-items: center; }
+.mu-pp__defer > .mu-pp__poster { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; object-fit: cover; translate: none; rotate: none; filter: none; }
+.mu-pp__defer.is-loaded > :is(.mu-pp__poster, .mu-pp__bigplay) { visibility: hidden; }
+.mu-pp__frame, .mu-pp__model, .mu-pp__defer > .shopify-model-viewer-ui { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; background: var(--bg); }
+.mu-pp__defer > .shopify-model-viewer-ui > .mu-pp__model { position: static; display: block; }
+.mu-pp__bigplay {
+  position: relative; z-index: 1; display: grid; place-items: center; inline-size: 80px; block-size: 80px; border-radius: 30%;
+  background: var(--fg); color: var(--bg); box-shadow: 0 0 0 6px color-mix(in srgb, var(--bg) 55%, transparent), 0 16px 34px -12px color-mix(in srgb, var(--fg) 60%, transparent);
+}
+.mu-pp__bigplay .mu-icon { inline-size: 30px; block-size: 30px; }
+.mu-pp__bigplay:not(.mu-pp__bigplay--3d) .mu-icon, .mu-pp__badge--play .mu-icon { fill: currentColor; }
+.mu-pp__badge { position: absolute; inset: auto 4px 4px auto; display: grid; place-items: center; inline-size: 22px; block-size: 22px; border-radius: 7px; background: var(--fg); color: var(--bg); pointer-events: none; }
+.mu-pp__badge .mu-icon { inline-size: 12px; block-size: 12px; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mu-pp__bigplay { transition: rotate .3s var(--mu-spring), scale .3s var(--mu-spring); }
+  .mu-pp__bigplay:hover { rotate: -8deg; scale: 1.05; }
+}
+
+/* Breadcrumb: a slim row above the gallery, lined up with the stage's left edge. */
+.mu-pp__crumb { display: block; margin: 10px var(--gutter) 0; padding-inline: 4px; overflow: hidden; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .06em; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.mu-pp__crumb a:hover { text-decoration: underline 2px; text-underline-offset: 3px; }
+
+/* Gallery position: thin segments along the bottom of the frame; the current one stretches and fills with the ramp.
+   Video and 3D segments are hollow until chosen. Each button keeps a 44px tap height. */
+.mu-pp__dots { position: absolute; z-index: 2; inset: auto 0 4px; display: flex; justify-content: center; padding-inline: 16px; }
+.mu-pp__dot { display: grid; place-items: center; inline-size: 28px; block-size: 44px; color: inherit; }
+.mu-pp__dot i { display: block; inline-size: 16px; block-size: 4px; border-radius: 4px; background: color-mix(in srgb, var(--fg) 30%, transparent); transition: inline-size .3s var(--mu-spring); }
+:is(.mu-pp__dot--video, .mu-pp__dot--external-video, .mu-pp__dot--model) i { background: none; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 45%, transparent); block-size: 6px; }
+.mu-pp__dot[aria-current="true"] { inline-size: 48px; }
+.mu-pp__dot[aria-current="true"] i { inline-size: 40px; block-size: 4px; background: var(--mu-g-hero); box-shadow: none; }
+.mu-pp__stage > .mu-pp__thumbs, .mu-pp__count { display: none; }
+
+/* ================= Buy panel ================= */
+/* Phones: on the page colours, edge padded. Desktop turns it into a card (below). */
+.mu-pp__panel { position: relative; padding: 22px var(--pp-pad) 8px; }
+.mu-pp__below { padding: 0 var(--pp-pad) 8px; }
+.mu-pp__below[hidden] { display: none; }
+.mu-pp__eyebrow { display: inline-flex; margin: 0 0 12px; padding: 6px 10px; border-radius: var(--mu-chip-r); background: color-mix(in srgb, var(--h, var(--fg)) 16%, transparent); color: var(--fg); }
+.mu-pp__head { display: grid; gap: 10px; }
+.mu-pp__title { font-size: calc(clamp(2.1rem, 1.6rem + 2vw, 3.4rem) * var(--mu-heading-scale)); line-height: .95; overflow-wrap: anywhere; }
+.mu-pp__title a:hover { text-decoration: underline 3px; text-underline-offset: .12em; }
+.mu-pp__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 1.6rem; font-weight: var(--mu-font-body-bold); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.mu-pp__price .mu-price__was { font-size: .6em; font-weight: var(--mu-font-body-weight); color: var(--mu); }
+.mu-pp .mu-price--sale .mu-price__now { color: var(--sale); }
+.mu-pp__sub { margin-top: 10px; font-size: .9375rem; line-height: 1.5; }
+.mu-pp__pricebox { margin-top: 16px; }
+.mu-pp__unit, .mu-pp__tax { margin-top: 6px; font-size: .8125rem; color: var(--mu); }
+.mu-pp__unit[hidden], .mu-pp__pre[hidden] { display: none; }
+.mu-pp__pre { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; font-size: .8125rem; }
+.mu-pp__pre-badge { padding: 5px 9px; font-size: .6875rem; }
+.mu-pp__pre-note:empty, .mu-pp__terms:empty, .mu-pp__terms form:empty { display: none; }
+.mu-pp__terms { margin-top: 10px; font-size: .8125rem; color: var(--mu); }
+.mu-pp__terms shopify-payment-terms { display: block; }
+
+/* ---------- Options ---------- */
+.mu-pp__opt { position: relative; min-width: 0; margin: 22px 0 0; padding: 0; border: 0; }
+.mu-pp__legend { display: block; padding: 0; margin-bottom: 10px; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; text-transform: uppercase; }
+/* Ramp chips: tinted rounded boxes that wrap. The chosen one goes dark with a strip of the scale ramp along its foot. */
+.mu-opt__rail { display: flex; flex-wrap: wrap; gap: 6px; }
+.mu-opt__rail:has(.mu-opt__tip) { padding-top: 22px; }
+.mu-opt__pill { position: relative; cursor: pointer; }
+.mu-opt__pill > span {
+  display: inline-flex; align-items: center; min-height: 46px; padding: 0 18px; border-radius: var(--mu-btn-r-s);
+  background: color-mix(in srgb, var(--fg) 7%, var(--bg)) no-repeat 0 100% / 100% 0; font-size: .875rem; font-weight: var(--mu-font-body-bold);
+  transition: background-size .25s var(--mu-glide), background-color .15s, color .15s;
+}
+.mu-opt__rail--w1 .mu-opt__pill > span { min-width: 64px; justify-content: center; }
+.mu-opt__pill > span { background-image: var(--mu-g-hero); }
+.mu-opt__pill:has(:checked) > span { background-color: var(--fg); background-size: 100% 5px; color: var(--bg); }
+.mu-opt__pill.is-out > span { background-color: transparent; color: var(--mu); box-shadow: inset 0 0 0 1.5px var(--bd); text-decoration: line-through 1.5px; }
+.mu-opt__pill:has(:focus-visible) > span { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .mu-opt__pill:not(.is-out, :has(:checked)):hover > span { background-size: 100% 3px; } }
+/* Low stock tip over the chosen chip. */
+.mu-opt__tip { position: absolute; inset: auto auto calc(100% + 5px) 0; padding: 3px 8px; border-radius: 6px; background: var(--sale); color: var(--bg); font-size: .6875rem; font-style: normal; font-weight: var(--mu-font-body-bold); white-space: nowrap; pointer-events: none; }
+
+/* Colour tiles: rounded squares in a sideways row; the chosen one gets a ring standing off the tile. */
+.mu-pp__colour-row { display: flex; gap: 12px; margin: -4px; padding: 4px; overflow: auto hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+.mu-pp__colour-row::-webkit-scrollbar { display: none; }
+.mu-pp__colour { flex: none; display: grid; justify-items: center; gap: 8px; inline-size: 64px; cursor: pointer; }
+.mu-pp__tile { position: relative; display: grid; place-items: center; inline-size: 64px; block-size: 64px; overflow: hidden; border-radius: var(--mu-field-r); background: var(--band); transition: box-shadow .15s; }
+.mu-pp__tile img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.mu-pp__tile i:not(.mu-sw) { inline-size: 100%; block-size: 100%; background-size: cover; }
+.mu-pp__tile b { font-size: .875rem; letter-spacing: .04em; text-transform: uppercase; }
+.mu-pp__colour-name { font-size: .6875rem; line-height: 1.2; text-align: center; color: var(--mu); }
+.mu-pp__colour:has(:checked) .mu-pp__tile { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg); }
+.mu-pp__colour:has(:checked) .mu-pp__colour-name { color: var(--fg); font-weight: var(--mu-font-body-bold); }
+.mu-pp__colour.is-out .mu-pp__tile { opacity: .45; }
+.mu-pp__colour:has(:focus-visible) .mu-pp__tile { outline: 2px solid var(--focus); outline-offset: 5px; }
+
+/* ---------- Buy ---------- */
+.mu-pp__buy { margin-top: 20px; }
+.mu-pp__add { inline-size: 100%; min-height: 58px; font-size: 1.0625rem; }
+.mu-pp__add:disabled { --b-bg: color-mix(in srgb, var(--fg) 7%, transparent); --b-fg: var(--mu); --b-ring: transparent; cursor: not-allowed; translate: none; }
+.mu-pp__soon { margin-top: 20px; }
+.mu-pp__add--soon { cursor: default; --b-bg: var(--band); --b-fg: var(--fg); --b-ring: transparent; --b-drop: transparent; --b-line: transparent; translate: none; }
+.mu-pp__msg { margin-top: 10px; font-size: .8125rem; text-align: center; }
+.mu-pp__msg:empty { display: none; }
+.mu-pp__noscript { inline-size: 100%; min-height: var(--mu-ctl); margin-bottom: 10px; }
+
+/* Quantity: a filled rounded stepper; beside the buy button when it comes right before it. */
+.mu-pp__qtyrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.mu-qty { flex: none; display: inline-flex; align-items: center; block-size: 58px; padding: 0 4px; border-radius: var(--mu-btn-radius, 999px); background: color-mix(in srgb, var(--fg) 7%, var(--bg)); }
+.mu-qty__btn { display: grid; place-items: center; inline-size: 44px; block-size: 44px; border-radius: var(--mu-btn-r-s); }
+.mu-qty__btn .mu-icon { inline-size: 18px; block-size: 18px; }
+.mu-qty__btn:disabled { color: var(--mu); cursor: not-allowed; }
+.mu-qty__btn:focus-visible, .mu-qty__input:focus-visible { outline-offset: -2px; }
+.mu-qty__input { inline-size: 44px; block-size: 44px; border: 0; background: none; text-align: center; font-size: 1.0625rem; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; -moz-appearance: textfield; appearance: textfield; }
+.mu-qty__input::-webkit-inner-spin-button, .mu-qty__input::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
+@media (hover: hover) and (pointer: fine) { .mu-qty__btn:not(:disabled):hover { background: var(--bg); } }
+.mu-pp__qtyrule { flex-basis: 100%; margin-top: 4px; font-size: .75rem; color: var(--mu); }
+.mu-pp__qtyrule[hidden], .mu-pp__breaks[hidden] { display: none; }
+.mu-pp__buyrow.has-qty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mu-pp__buyrow.has-qty .mu-pp__add { flex: 1; inline-size: auto; min-width: 0; }
+.mu-pp__buyrow.has-qty .mu-pp__qtyrule { order: 3; }
+.mu-pp__buyrow.has-qty .mu-pp__breaks { order: 4; }
+/* Volume pricing (snippets/mu-pp-breaks). */
+.mu-pp__breaks { flex-basis: 100%; margin-top: 10px; }
+.mu-breaks { inline-size: 100%; max-inline-size: 440px; border-collapse: separate; border-spacing: 0 3px; font-size: .8125rem; font-variant-numeric: tabular-nums; }
+.mu-breaks__cap { padding-bottom: 4px; font-weight: var(--mu-font-body-bold); text-align: start; }
+.mu-breaks :is(th, td) { padding: 7px 12px; text-align: start; }
+.mu-breaks th { font-weight: inherit; color: var(--mu); }
+.mu-breaks td { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-breaks td:first-child { border-radius: 8px 0 0 8px; }
+.mu-breaks td:last-child { border-radius: 0 8px 8px 0; }
+.mu-breaks :is(th, td):last-child { text-align: end; }
+.mu-breaks tr.is-on td { background: var(--fg); color: var(--bg); font-weight: var(--mu-font-body-bold); }
+
+/* Dynamic checkout. Branded wallets (Shop Pay and the others) keep Shopify's own button: min-height, overflow and
+   border-radius on .shopify-payment-button__button clip it, so those apply only to the unbranded button. */
+.mu-pp__dyn { margin-top: 8px; }
+.mu-pp__dyn[hidden] { display: none; }
+.mu-pp__dyn .shopify-payment-button__button--unbranded { min-height: 58px; overflow: hidden; border-radius: var(--mu-btn-radius, 999px); }
+.mu-pp__dyn .shopify-payment-button__button--unbranded,
+.mu-pp__dyn .shopify-payment-button__button--unbranded:is(:hover:not([disabled]), :focus, :active) {
+  background: transparent; color: var(--fg); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--fg) 28%, transparent); font: inherit; font-size: 1rem; font-weight: var(--mu-font-body-bold);
+}
+.mu-pp__dyn .shopify-payment-button__button--unbranded:active:not([disabled]) { background: color-mix(in srgb, var(--fg) 9%, transparent); }
+.mu-pp__dyn .shopify-payment-button__button--unbranded:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+.mu-pp__dyn .shopify-payment-button__more-options { inline-size: 100%; margin-top: 10px; border: 0; background: none; color: var(--fg); font-size: .8125rem; text-decoration: underline; cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .mu-pp__dyn .shopify-payment-button__button--unbranded:hover:not([disabled]) { box-shadow: inset 0 0 0 2px var(--fg); } }
+
+/* ---------- Notify me ---------- */
+.mu-pp__notify { margin-top: 16px; padding: 18px; border-radius: var(--mu-radius); background: var(--band); box-shadow: inset 4px 0 0 var(--h, var(--fg)); scroll-margin-top: calc(var(--mu-sticky-h, 0px) + 24px); }
+.mu-pp__notify[hidden] { display: none; }
+.mu-pp__notify-head { margin-bottom: 12px; font-size: .9375rem; font-weight: var(--mu-font-body-bold); }
+.mu-pp__notify-row { display: flex; gap: 6px; }
+.mu-pp__notify-input { flex: 1; min-width: 0; block-size: var(--mu-ctl); padding: 0 16px; border: 0; border-radius: var(--mu-field-r); background: var(--bg); color: var(--fg); font-size: .9375rem; }
+.mu-pp__notify-input::placeholder { color: var(--mu); opacity: 1; }
+.mu-pp__notify-input:focus-visible { outline-offset: -2px; }
+@media (pointer: coarse), (max-width: 989px) { .mu-pp__notify-input { font-size: 16px; } }
+.mu-pp__notify-btn { min-height: var(--mu-ctl); }
+.mu-pp__notify-note { margin-top: 10px; font-size: .75rem; }
+.mu-pp__notify-err { margin-top: 8px; font-size: .8125rem; color: var(--sale); }
+.mu-pp__notify-done { font-weight: var(--mu-font-body-bold); }
+.mu-pp__notify-done:focus { outline: 2px solid var(--focus, currentColor); outline-offset: 3px; }
+.mu-pp__ship-est { margin-top: 10px; font-weight: var(--mu-font-body-bold); color: var(--fg); }
+.mu-pp__ship-policy { margin-top: 12px; }
+.mu-pp__ship-policy a { font-weight: var(--mu-font-body-bold); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ---------- Accordion and tabs ---------- */
+/* Each row is its own tinted box; the mark is a chevron in a round well that turns over when open. */
+.mu-pp__acc { display: grid; gap: 6px; margin-top: 22px; }
+.mu-pp__acc + .mu-pp__acc { margin-top: 6px; }
+.mu-pp__acc-item { border-radius: var(--mu-field-r); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-pp__acc-item summary { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 56px; padding: 8px 10px 8px 18px; font-size: .9375rem; font-weight: var(--mu-font-body-bold); list-style: none; cursor: pointer; }
+.mu-pp__copy-head { display: flex; align-items: center; min-height: 56px; margin: 0; padding: 8px 18px; font-family: inherit; font-size: .9375rem; font-weight: var(--mu-font-body-bold); line-height: inherit; }
+.mu-pp__acc-item summary::-webkit-details-marker { display: none; }
+.mu-pp__acc-mark { position: relative; flex: none; inline-size: 32px; block-size: 32px; border-radius: 50%; background: var(--bg); transition: rotate .3s var(--mu-spring), background-color .15s; }
+.mu-pp__acc-mark::before { content: ""; position: absolute; inset: 0; margin: auto; inline-size: 8px; block-size: 8px; border: solid currentColor; border-width: 0 2px 2px 0; translate: 0 -2px; rotate: 45deg; }
+.mu-pp__acc-item[open] .mu-pp__acc-mark { rotate: 180deg; background: var(--fg); color: var(--bg); }
+.mu-pp__acc-body { padding: 0 18px 18px; font-size: .9375rem; color: var(--mu); }
+.mu-pp__acc-body > :first-child { margin-top: 0; }
+.mu-pp__acc-body:focus-visible { outline-offset: -2px; border-radius: var(--mu-field-r); }
+/* Tabs layout (750px and up): a segmented control over one open panel. */
+.mu-pp__acc.is-tabs { gap: 0; }
+.mu-pp__acc.is-tabs > .mu-pp__acc-item { background: none; }
+.mu-pp__acc.is-tabs > .mu-pp__acc-item > summary { display: none; }
+.mu-pp__acc.is-tabs .mu-pp__acc-body { padding: 18px 2px 0; }
+.mu-pp__tabs { display: flex; gap: 2px; padding: 4px; overflow-x: auto; border-radius: calc(var(--mu-btn-r-s) + 4px); background: color-mix(in srgb, var(--fg) 7%, transparent); scrollbar-width: none; }
+.mu-pp__tabs::-webkit-scrollbar { display: none; }
+.mu-pp__tab { flex: 1 0 auto; min-height: 44px; padding: 0 16px; border-radius: var(--mu-btn-r-s); color: var(--mu); font-size: .875rem; font-weight: var(--mu-font-body-bold); white-space: nowrap; -webkit-appearance: none; appearance: none; }
+.mu-pp__tab[aria-selected="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--fg) 35%, transparent); }
+.mu-pp__tab:hover { color: var(--fg); }
+.mu-pp__tab:focus-visible { outline-offset: -2px; }
+
+/* ---------- Stock level ---------- */
+/* A scale-ramp gauge that drains as stock runs low. */
+.mu-pp__stock { margin-top: 16px; }
+.mu-pp__stock[hidden] { display: none; }
+.mu-pp__stock-text { font-size: .875rem; font-weight: var(--mu-font-body-bold); }
+.mu-pp__stock-bar { display: block; block-size: 8px; margin-top: 8px; padding: 2px; border-radius: 8px; background: color-mix(in srgb, var(--fg) 10%, transparent); }
+.mu-pp__stock-bar > i { display: block; inline-size: var(--fill, 100%); block-size: 100%; border-radius: 4px; background: var(--mu-g-hero); }
+@media (prefers-reduced-motion: no-preference) { .mu-pp__stock-bar > i { transition: inline-size .4s var(--mu-glide); } }
+
+/* ---------- Phone add bar ---------- */
+/* Rises in as a card once the buy button scrolls away; the tab bar steps aside for it (mu-tabbar.css). */
+.mu-pp-bar { display: none; }
+@media (max-width: 749px) {
+  .mu-pp-bar {
+    position: fixed; z-index: 31; inset: auto 8px calc(10px + env(safe-area-inset-bottom)); display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px 10px 12px; overflow: hidden; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg);
+    box-shadow: 0 0 0 1px var(--bd), 0 18px 40px -14px color-mix(in srgb, var(--fg) 55%, transparent);
+    translate: 0 calc(100% + 24px); visibility: hidden;
+  }
+  .mu-pp-bar::before { content: ""; position: absolute; inset: 0 0 auto; block-size: 4px; background: var(--mu-g-hero); }
+  .mu-bar-on .mu-pp-bar { translate: none; visibility: visible; }
+  .mu-pp-bar__img { flex: none; inline-size: 44px; block-size: 44px; border-radius: var(--mu-field-r); background: var(--band); object-fit: contain; }
+  .mu-pp-bar__text { flex: 1; display: grid; min-width: 0; line-height: 1.25; }
+  .mu-pp-bar__text :is(b, span) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mu-pp-bar__text b { font-size: .875rem; }
+  .mu-pp-bar__text span { font-size: .8125rem; font-variant-numeric: tabular-nums; }
+  .mu-pp-bar__btn { flex: none; min-height: var(--mu-ctl); padding: 0 18px; }
+  .mu-pp-bar__btn:disabled { --b-bg: var(--band); --b-fg: var(--mu); --b-ring: transparent; }
+}
+@media (max-width: 749px) and (prefers-reduced-motion: no-preference) {
+  .mu-pp-bar { transition: translate .35s var(--mu-spring), visibility 0s .35s; }
+  .mu-bar-on .mu-pp-bar { transition: translate .35s var(--mu-spring); }
+}
+
+/* ================= Desktop ================= */
+@media (min-width: 990px) {
+  .mu-pp { --pp-r: var(--mu-radius-lg); --pp-pad: 34px; display: grid; grid-template-columns: minmax(0, 7fr) minmax(420px, 5fr); align-items: start; gap: 28px; margin-top: 14px; padding-inline: var(--gutter); }
+  .mu-pp__stage { inline-size: 100%; min-height: 460px; margin: 0; }
+  .mu-pp__stage--adapt { max-height: max(620px, calc(100svh - 120px)); }
+  .mu-pp__crumb { margin-top: 16px; font-size: .8125rem; }
+  :is(.mu-pp__slide--fit, .mu-pp__slide--floating) { --it: 10cqh; --il: 12cqw; --ir: 12cqw; --ib: 12cqh; }
+  /* With the tray showing, the image clears it at the foot of the frame. */
+  .mu-pp__stage:has(> .mu-pp__thumbs) :is(.mu-pp__slide--fit, .mu-pp__slide--floating) { --ib: max(12cqh, 112px); }
+  .mu-pp__stage:has(> .mu-pp__thumbs) > .mu-pp__dots { display: none; }
+  /* Thumbnail tray: frosted, floating at the bottom centre of the frame. */
+  .mu-pp__stage > .mu-pp__thumbs {
+    position: absolute; z-index: 2; inset: auto 50% 18px auto; translate: 50% 0; display: flex; gap: 6px; padding: 6px;
+    border-radius: calc(var(--mu-field-r) + 6px); background: color-mix(in srgb, var(--bg) 88%, transparent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent), 0 14px 30px -14px color-mix(in srgb, var(--fg) 45%, transparent);
+  }
+  .mu-pp__thumb { position: relative; display: block; inline-size: 60px; block-size: 60px; overflow: hidden; border-radius: var(--mu-field-r); background: var(--band); opacity: .62; transition: opacity .15s, translate .25s var(--mu-spring); }
+  .mu-pp__thumb img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .mu-pp__thumb::after { content: ""; position: absolute; inset: auto 8px 4px; block-size: 3px; border-radius: 3px; background: var(--mu-g-hero); scale: 0 1; transition: scale .25s var(--mu-glide); }
+  .mu-pp__thumb[aria-current="true"] { opacity: 1; translate: 0 -3px; }
+  .mu-pp__thumb[aria-current="true"]::after { scale: 1; }
+  .mu-pp__thumb:hover { opacity: 1; }
+  .mu-pp__count { position: absolute; z-index: 2; inset: auto 28px 32px auto; display: block; margin: 0; font-size: .8125rem; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; letter-spacing: .08em; }
+  .mu-pp__zoom { inset: 14px 16px auto auto; }
+
+  /* The panel becomes a card with the scale ramp along its top edge. */
+  .mu-pp__panel { min-height: clamp(560px, calc(100svh - 120px), 760px); padding: 40px var(--pp-pad) 30px; overflow: clip; border-radius: var(--pp-r); }
+  .mu-pp__panel::before { content: ""; position: absolute; inset: 0 0 auto; block-size: 6px; background: var(--mu-g-hero); }
+  .mu-pp__title { font-size: calc(clamp(2.75rem, 1.5rem + 2vw, 3.75rem) * var(--mu-heading-scale)); }
+  .mu-pp__price { font-size: 1.875rem; }
+  .mu-pp__pricebox { margin-top: 18px; }
+  .mu-pp__opt { margin-top: 26px; }
+  .mu-pp__colour, .mu-pp__tile { inline-size: 72px; }
+  .mu-pp__tile { block-size: 72px; }
+  .mu-pp__buy, .mu-pp__soon { margin-top: 24px; }
+  .mu-pp__acc { margin-top: 26px; }
+
+  /* Below media: once it has content it sits under the stage while the panel spans both rows. The second row
+     flexes, so a tall panel never opens a gap between the stage and the card. */
+  .mu-pp:has(> .mu-pp__below:not([hidden])) { grid-template-rows: auto 1fr; }
+  .mu-pp:has(> .mu-pp__below:not([hidden])) > .mu-pp__stage { grid-area: 1 / 1; }
+  .mu-pp:has(> .mu-pp__below:not([hidden])) > .mu-pp__panel { grid-area: 1 / 2 / span 2; }
+  .mu-pp__below { grid-area: 2 / 1; padding: var(--below-pad, 34px); border-radius: var(--pp-r); }
+  .mu-pp__below > :first-child { margin-top: 0; }
+
+  /* Pinning: stage and panel both stick under the header (--mu-sticky-h, from mu-header.js), so the shorter column
+     holds still. A column taller than the screen gets a negative offset from its measured height (mu-product.js)
+     and pins once its end is in view. */
+  .mu-pp { --pp-t: calc(var(--mu-sticky-h, 0px) + 18px); }
+  body:has(.mu-header--sd) .mu-pp { --pp-t: calc(var(--mu-sticky-h, 76px) + 18px); }
+  .mu-pp > .mu-pp__stage { position: sticky; inset-block-start: min(var(--pp-t), 100vh - var(--pp-media-h, 0px) - 18px); }
+  .mu-pp > .mu-pp__panel { position: sticky; inset-block-start: min(var(--pp-t), 100vh - var(--pp-panel-h, 0px) - 18px); }
+  /* With the card under the stage they travel as one: the stage's bottom margin spans the card so both let go together. */
+  .mu-pp:has(> .mu-pp__below:not([hidden])):not(.is-pin-media) > .mu-pp__stage { position: relative; inset-block-start: auto; }
+  .mu-pp.is-pin-media > .mu-pp__stage { margin-block-end: var(--pp-below-m, 0px); }
+  .mu-pp.is-pin-media > .mu-pp__below { position: sticky; margin-block-start: calc(var(--pp-below-m, 0px) * -1); inset-block-start: calc(min(var(--pp-t), 100vh - var(--pp-media-h, 0px) - 18px) + var(--pp-below-at, 0px)); }
+}
+@media (min-width: 1400px) { .mu-pp { grid-template-columns: minmax(0, 3fr) minmax(500px, 2fr); gap: 36px; } }
+@media (prefers-reduced-motion: reduce) { .mu-pp-bar, .mu-pp__dot i, .mu-pp__thumb, .mu-pp__thumb::after, .mu-pp__acc-mark, .mu-opt__pill > span { transition: none !important; } }
+
+/* ================= Sheet (store pickup) ================= */
+/* A centred card that pops up over the page, with a ramp-headed table for any rich text inside. */
+.mu-sg { inline-size: min(760px, 100% - 24px); max-inline-size: none; max-block-size: min(86svh, 920px); margin: auto; padding: 0; overflow: auto; border: 0; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); overscroll-behavior: contain; }
+.mu-sg::backdrop { background: color-mix(in srgb, #000 50%, transparent); }
+@media (prefers-reduced-motion: no-preference) { .mu-sg[open] { animation: mu-sg-pop .35s var(--mu-spring); } }
+@keyframes mu-sg-pop { from { opacity: 0; scale: .94; translate: 0 18px; } }
+.mu-sg__top { position: sticky; z-index: 1; inset-block-start: 0; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 22px 16px 14px 24px; background: var(--bg); box-shadow: 0 1px 0 var(--bd); }
+.mu-sg__top::before { content: ""; position: absolute; inset: 0 0 auto; block-size: 5px; background: var(--mu-g-hero); }
+.mu-sg__title { font-family: var(--mu-font-heading); font-size: calc(1.75rem * var(--mu-heading-scale)); font-weight: var(--mu-font-heading-weight); line-height: 1; }
+.mu-sg__close { flex: none; background: color-mix(in srgb, var(--fg) 8%, transparent); }
+.mu-sg__body { padding: 18px 24px 32px; overflow-x: auto; }
+.mu-sg__body > * + * { margin-top: 14px; }
+.mu-sg table { inline-size: 100%; min-width: 320px; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.mu-sg :is(th, td) { padding: 11px 12px; border-bottom: 1px solid var(--bd); text-align: center; }
+.mu-sg :is(thead th, table:not(:has(thead)) tr:first-child > *) { border-bottom: 3px solid; border-image: var(--mu-g-hero) 1; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .08em; text-transform: uppercase; }
+.mu-sg :is(tbody th, td:first-child) { font-weight: var(--mu-font-body-bold); text-align: start; }
+.mu-sg tbody tr:hover > * { background: color-mix(in srgb, var(--fg) 5%, transparent); }
+@media (min-width: 990px) {
+  .mu-sg__top { padding: 26px 20px 16px 34px; }
+  .mu-sg__body { padding: 22px 34px 40px; }
+  .mu-sg__title { font-size: calc(2.25rem * var(--mu-heading-scale)); }
+}
+
+/* ================= Purchase options and gift card recipient ================= */
+.mu-plans__list { clear: both; display: grid; gap: 6px; padding-top: 4px; }
+.mu-plans__card { display: grid; gap: 3px; padding: 14px 18px; border-radius: var(--mu-field-r); background: color-mix(in srgb, var(--fg) 5%, transparent); cursor: pointer; }
+.mu-plans__card:has(:checked) { background: var(--bg); box-shadow: inset 0 0 0 2px var(--fg), inset 7px 0 0 var(--h, var(--fg)); }
+.mu-plans__card:has(:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mu-plans__card .mu-save { justify-self: start; }
+.mu-plans__row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.mu-plans__name { font-size: .9375rem; font-weight: var(--mu-font-body-bold); }
+.mu-plans__price { display: inline-flex; align-items: baseline; gap: 8px; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; }
+.mu-plans__price s { font-size: .8125rem; font-weight: 400; }
+.mu-plans__price s[hidden] { display: none; }
+.mu-plans__desc { font-size: .8125rem; color: var(--mu); }
+.mu-plans__freq { padding: 10px 0 2px; }
+.mu-plans__freq[hidden] { display: none; }
+
+.mu-gcr { margin-bottom: 16px; }
+.mu-gcr__toggle { display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: .9375rem; cursor: pointer; }
+.mu-gcr__toggle input { inline-size: 20px; block-size: 20px; accent-color: var(--fg); }
+.mu-gcr__fields { display: grid; gap: 14px; padding: 16px; border-radius: var(--mu-radius); background: var(--band); }
+.mu-gcr__fields[hidden] { display: none; }
+.mu-gcr__field { display: grid; gap: 6px; font-size: .8125rem; font-weight: var(--mu-font-body-bold); }
+.mu-gcr__field small { font-size: .75rem; font-weight: var(--mu-font-body-weight); color: var(--mu); }
+.mu-gcr__field :is(input, textarea) { inline-size: 100%; min-height: 48px; padding: 11px 14px; border: 0; border-radius: var(--mu-field-r); background: var(--bg); color: var(--fg); font-size: .9375rem; font-weight: var(--mu-font-body-weight); box-shadow: inset 0 -2px 0 var(--bd); }
+@media (pointer: coarse), (max-width: 989px) { .mu-gcr__field :is(input, textarea) { padding-block: 10px; font-size: 16px; } }
+.mu-gcr__field :is(input, textarea):focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+.mu-gcr__err { font-size: .8125rem; color: var(--sale); }
+
+/* ================= Content blocks ================= */
+.mu-pp__desc { margin-top: 18px; font-size: .9375rem; }
+.mu-pp__text { margin-top: 16px; font-size: .9375rem; }
+.mu-pp__text--muted { color: var(--mu); }
+.mu-pp__text--small { margin-top: 12px; font-size: .8125rem; text-align: center; color: var(--mu); }
+.mu-pp__text > :first-child { margin-top: 0; }
+.mu-pp__text > :last-child { margin-bottom: 0; }
+.mu-pp__liquid, .mu-pp__app { margin-top: 16px; }
+.mu-pp__liquid:empty { display: none; }
+.mu-pp__hint { margin-top: 16px; padding: 12px 16px; border-radius: var(--mu-field-r); background: var(--band); box-shadow: inset 3px 0 0 var(--h, var(--fg)); font-size: .8125rem; }
+/* Spec tiles: two up, the value big over a small label. */
+.mu-pp__specs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 18px 0 0; padding: 0; list-style: none; }
+.mu-pp__spec { display: grid; gap: 4px; padding: 14px 16px; border-radius: var(--mu-field-r); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-pp__spec b { font-size: 1.125rem; line-height: 1.1; }
+.mu-pp__spec span { order: -1; font-size: .6875rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; text-transform: uppercase; color: var(--mu); }
+
+/* Complementary products: rows with a round add button. */
+.mu-pp__comp { margin-top: 22px; }
+.mu-pp__comp[hidden] { display: none; }
+.mu-pp__comp-head { margin-bottom: 10px; font-family: inherit; font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; text-transform: uppercase; }
+.mu-comp { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mu-comp__item { display: flex; align-items: center; gap: 12px; padding: 6px 8px 6px 6px; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-comp__img { flex: none; display: block; inline-size: 60px; block-size: 60px; overflow: hidden; border-radius: calc(var(--mu-radius) - 6px); background: var(--bg); }
+.mu-comp__img :is(img, svg) { inline-size: 100%; block-size: 100%; object-fit: cover; }
+.mu-comp__info { flex: 1; display: grid; gap: 2px; min-width: 0; font-size: .875rem; }
+.mu-comp__title { overflow: hidden; font-weight: var(--mu-font-body-bold); text-overflow: ellipsis; white-space: nowrap; }
+.mu-comp__form { margin: 0; }
+.mu-comp__add { flex: none; display: grid; place-items: center; inline-size: 44px; block-size: 44px; min-height: 44px; padding: 0; }
+.mu-comp__add .mu-icon { inline-size: 18px; block-size: 18px; }
+
+/* Share: tinted chips; on narrow rows the network links shrink to icons so the row stays on one line. */
+.mu-pp__share { container: mu-share / inline-size; display: grid; gap: 8px; margin-top: 16px; }
+.mu-share { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.mu-share li[hidden], .mu-share__link [hidden] { display: none; }
+.mu-share__link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px 0 12px; border-radius: var(--mu-btn-r-s); background: color-mix(in srgb, var(--fg) 6%, transparent); font-size: .875rem; font-weight: var(--mu-font-body-bold); cursor: pointer; }
+.mu-share__link .mu-icon { inline-size: 18px; block-size: 18px; }
+.mu-share__link :is([data-share-icon], [data-copy-icon]) { display: inline-grid; }
+@container mu-share (max-width: 429px) {
+  .mu-share { flex-wrap: nowrap; }
+  .mu-share > li { min-width: 0; }
+  .mu-share__link--net { justify-content: center; inline-size: 44px; padding: 0; }
+  .mu-share__name { display: none; }
+}
+.mu-pp__share-msg { font-size: .8125rem; }
+.mu-pp__sku, .mu-pp__vendor { margin-top: 12px; font-size: .8125rem; color: var(--mu); }
+.mu-pp__sku[hidden] { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .mu-comp__title:hover { text-decoration: underline; }
+  .mu-share__link:hover { background: var(--fg); color: var(--bg); }
+}
+
+/* ================= Featured product section ================= */
+.mu-section--fp { padding-block: 14px; }
+.mu-pp--feature { margin-top: 0; }
+.mu-pp--feature .mu-pp__stage { margin-inline: 0; }
+.mu-pp--feature .mu-pp__panel { padding-inline: 2px; }
+@media (min-width: 990px) {
+  .mu-pp--feature { padding-inline: 0; }
+  /* Adapt never crops, so here the frame stretches to the card's height. */
+  .mu-pp--feature .mu-pp__stage--adapt { align-self: stretch; max-height: none; }
+  .mu-section--fp .mu-pp--feature .mu-pp__panel { min-height: 620px; padding-inline: var(--pp-pad); }
+}

@@ -1,0 +1,91 @@
+{%- comment -%}
+  Section base: renders the shared Margins / Padding / Background settings that build/partials/section-base.json adds
+  to each section's schema (by profile: full, spacing, margins, none). Replaces mu-space and the per-section
+  --mu-pt / --x-pt / --pr-pt padding variables.
+  - default part: one style block, scoped to the section, with only what differs from the theme's defaults.
+      Margins     Top / Bottom margin as --mu-mt / --mu-mb on Shopify's section wrapper. assets/mu-base.css
+                  turns those into padding (no background, so the gap shows the page behind it), added on top of
+                  the theme's section gap, and raises each side to the rounded-panel floor when the section is
+                  mu-sf--round. Phones get "Margins on phones" percent of each slider value.
+      Padding     with Custom padding on, the section's own padding (four sides, plus phone values) is replaced on its
+                  .mu-sec root, so nothing changes until the toggle is turned on.
+  - part 'bg': the background image layer for the .mu-sec root, painted under the content with an overlay in the colour
+      scheme's background colour (--bg). Nothing is output without an image or a packaged asset.
+  - Edges (full and margins profiles): when a top or bottom edge is not None, the section background is painted on a
+      layer and clipped. The content is not clipped. None on both edges leaves the section as it was.
+  Usage: {%- render 'mu-section-style', s: section.settings, id: section.id -%} (once per section) and
+         {%- render 'mu-section-style', s: section.settings, part: 'bg' -%} as the first child of the .mu-sec root.
+  @param s {Object} section.settings  @param id {String} section.id  @param part {String} optional 'bg'
+{%- endcomment -%}
+{%- if part == 'bg' -%}
+  {%- if s.bg_image != blank -%}
+    {%- liquid
+      assign ov = s.bg_overlay | default: 0 | divided_by: 100.0
+      assign focal = s.bg_image.presentation.focal_point | default: 'center'
+      assign pos = 'object-position: ' | append: focal
+    -%}
+    <div class="mu-secbg" aria-hidden="true" style="--sec-ov: {{ ov }}">
+      {{- s.bg_image | image_url: width: 3000 | image_tag: class: 'mu-secbg__img', alt: '', loading: 'lazy', sizes: '100vw', widths: '750, 1100, 1500, 2200, 3000', style: pos -}}
+    </div>
+  {%- else -%}
+    {%- capture demo_bg -%}
+      {%- render 'mu-demo-image', asset: s.demo_bg_image, class: 'mu-secbg__img', sizes: '100vw', alt: '', loading: 'lazy' -%}
+    {%- endcapture -%}
+    {%- assign demo_bg = demo_bg | strip -%}
+    {%- if demo_bg != '' -%}
+      <div class="mu-secbg" aria-hidden="true" style="--sec-ov: {{ s.bg_overlay | default: 0 | divided_by: 100.0 }}">{{ demo_bg }}</div>
+    {%- endif -%}
+  {%- endif -%}
+{%- else -%}
+  {%- liquid
+    assign mt = s.margin_top | default: 0
+    assign mb = s.bottom_spacing | default: 0
+    assign pct = s.margin_mobile
+    if pct == nil
+      assign pct = 67
+    endif
+    assign mt_m = mt | times: pct | divided_by: 100
+    assign mb_m = mb | times: pct | divided_by: 100
+    assign pad = false
+    if s.custom_padding
+      assign pad = true
+    endif
+    assign e_top = s.edge_top | default: 'none'
+    assign e_bot = s.edge_bottom | default: 'none'
+    assign edged = false
+    if e_top != 'none' or e_bot != 'none'
+      assign edged = true
+    endif
+    assign depth = s.edge_depth | default: 40
+  -%}
+  {%- if mt > 0 or mb > 0 or pad or edged -%}
+    {%- style -%}
+      {%- if mt > 0 or mb > 0 %}
+      #shopify-section-{{ id }} { {% if mt > 0 %}--mu-mt: {{ mt_m }}px; {% endif %}{% if mb > 0 %}--mu-mb: {{ mb_m }}px; {% endif %}}
+      @media (min-width: 750px) { #shopify-section-{{ id }} { {% if mt > 0 %}--mu-mt: {{ mt }}px; {% endif %}{% if mb > 0 %}--mu-mb: {{ mb }}px; {% endif %}} }
+      {%- endif -%}
+      {%- if pad %}
+      #shopify-section-{{ id }} .mu-sec { padding: {{ s.padding_top_mobile }}px {{ s.padding_x_mobile }}px {{ s.padding_bottom_mobile }}px; }
+      @media (min-width: 750px) { #shopify-section-{{ id }} .mu-sec { padding: {{ s.padding_top }}px {{ s.padding_right }}px {{ s.padding_bottom }}px {{ s.padding_left }}px; } }
+      {%- endif %}
+      {%- if edged %}
+      #shopify-section-{{ id }} .mu-sec { position: relative; z-index: 0; background-color: transparent; }
+      #shopify-section-{{ id }} .mu-sec::before {
+        content: ""; position: absolute; z-index: -1; inset: 0; background: var(--bg); pointer-events: none;
+        clip-path: polygon(
+          0 {% if e_top == 'up' %}{{ depth }}px{% else %}0{% endif %},
+          100% {% if e_top == 'down' %}{{ depth }}px{% else %}0{% endif %},
+          100% {% if e_bot == 'up' %}calc(100% - {{ depth }}px){% else %}100%{% endif %},
+          0 {% if e_bot == 'down' %}calc(100% - {{ depth }}px){% else %}100%{% endif %}
+        );
+      }
+      {%- unless s.edge_mobile %}
+      @media (max-width: 749px) {
+        #shopify-section-{{ id }} .mu-sec { background-color: var(--bg); }
+        #shopify-section-{{ id }} .mu-sec::before { content: none; }
+      }
+      {%- endunless -%}
+      {%- endif %}
+    {%- endstyle -%}
+  {%- endif -%}
+{%- endif -%}

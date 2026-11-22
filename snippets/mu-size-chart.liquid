@@ -1,0 +1,83 @@
+{%- comment -%}
+  Size chart for the variant picker. The product's custom.size_chart metafield wins (a page, rich text, or lines of
+  comma- or bar-separated cells whose first line is the header row); otherwise the block's page. part 'link' prints the
+  opener (a link to the page, so it still works without JS) and part 'dialog' the popup or side drawer
+  (assets/mu-size-chart.js). Prints nothing when there is no chart.
+  @param product {Product}
+  @param block {Block} variant picker block (size_chart, size_label, size_style)
+  @param uid {String} section id
+  @param part {String} 'link' or 'dialog'
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign mf = product.metafields.custom.size_chart
+  assign sc_page = b.size_chart
+  assign sc_html = ''
+  if mf != blank
+    case mf.type
+      when 'page_reference'
+        assign sc_page = mf.value
+      when 'rich_text_field'
+        assign sc_html = mf | metafield_tag
+      when 'multi_line_text_field', 'single_line_text_field'
+        assign rows = mf.value | strip | newline_to_br | split: '<br />'
+        capture sc_html
+          echo '<table><thead>'
+          for row in rows
+            assign line = row | strip
+            if line == blank
+              continue
+            endif
+            assign cells = line | replace: '|', ',' | split: ','
+            echo '<tr>'
+            for cell in cells
+              assign c = cell | strip | escape
+              if forloop.parentloop.first
+                echo '<th scope="col">' | append: c | append: '</th>'
+              else
+                echo '<td>' | append: c | append: '</td>'
+              endif
+            endfor
+            echo '</tr>'
+            if forloop.first
+              echo '</thead><tbody>'
+            endif
+          endfor
+          echo '</tbody></table>'
+        endcapture
+    endcase
+  endif
+  if sc_html == blank and sc_page != blank
+    assign sc_html = sc_page.content
+  endif
+  assign label = 'products.size_chart' | t
+  if b.size_label != blank
+    assign label = b.size_label
+  endif
+  assign id = 'MuSc-' | append: uid
+-%}
+{%- if sc_html != blank -%}
+  {%- if part == 'link' -%}
+    {{ 'mu-size-chart.css' | asset_url | stylesheet_tag }}
+    {%- if sc_page != blank and sc_page.url != blank -%}
+      <a class="mu-sc__link" href="{{ sc_page.url }}" data-sc-open aria-controls="{{ id }}" aria-haspopup="dialog">{% render 'mu-icon', name: 'ruler' %}{{ label | escape }}</a>
+    {%- else -%}
+      <button class="mu-sc__link" type="button" data-sc-open aria-controls="{{ id }}" aria-haspopup="dialog">{% render 'mu-icon', name: 'ruler' %}{{ label | escape }}</button>
+    {%- endif -%}
+  {%- else -%}
+    <dialog class="mu-sg mu-sc{% if b.size_style == 'drawer' %} mu-sg--drawer{% endif %} color-{{ settings.page_scheme }}" id="{{ id }}" aria-labelledby="{{ id }}-t">
+      <div class="mu-sg__top">
+        <div>
+          <p class="mu-muted mu-sc__for">{{ product.title | escape }}</p>
+          <h2 class="mu-sg__title" id="{{ id }}-t">{{ label | escape }}</h2>
+        </div>
+        <button type="button" class="mu-iconbtn mu-sg__close" data-sc-close>
+          {%- render 'mu-icon', name: 'close' -%}
+          <span class="visually-hidden">{{ 'general.close' | t }}</span>
+        </button>
+      </div>
+      <div class="mu-sg__body mu-rte">{{ sc_html }}</div>
+    </dialog>
+    <script src="{{ 'mu-size-chart.js' | asset_url }}" defer></script>
+  {%- endif -%}
+{%- endif -%}

@@ -1,0 +1,347 @@
+{%- comment -%}
+  One block of the product buy area, shared by main-product and the featured product section (app blocks are
+  rendered by the sections themselves). Neighbours matter in three places:
+  - title followed by price: the price sits beside the title in one row, as on the original page;
+  - quantity followed by buy buttons: the stepper sits in the button row;
+  - collapsible rows next to each other share one accordion.
+  @param block {Block}
+  @param product {Product} blank in the featured product placeholder
+  @param v {Variant} selected or first available variant
+  @param uid {String} section id
+  @param s {Object} section settings
+  @param form_id {String} id of the product form (quantity, purchase options and app inputs join it with form="")
+  @param colour_index {Number} colour option index or -1
+  @param coming {Boolean} release date is in the future
+  @param release_s {Number} release time (Unix seconds)
+  @param prev_block {Block} block before, if any
+  @param next_block {Block} block after, if any
+  @param plans_auto {Boolean} the product has purchase options and the section has no Purchase options block: buy buttons show them
+  @param feature {Boolean} rendered in the featured product section
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign low = s.low_stock | plus: 0
+  assign tip_label = s.low_stock_label | strip
+  assign ph = false
+  if product == blank
+    assign ph = true
+  endif
+-%}
+{%- case block.type -%}
+  {%- when 'title' -%}
+    {%- liquid
+      assign eyebrow = b.eyebrow | default: product.type
+      assign with_price = false
+      if next_block.type == 'price'
+        assign with_price = true
+        assign pb = next_block.settings
+      endif
+    -%}
+    {%- if eyebrow != blank -%}<p class="mu-eyebrow mu-muted mu-pp__eyebrow">{{ eyebrow | escape }}</p>{%- endif -%}
+    <div class="mu-pp__head" {{ block.shopify_attributes }}>
+      {%- if feature -%}
+        <h2 class="mu-pp__title">
+          {%- if ph -%}{{ 'products.placeholder_title' | t }}{%- else -%}<a href="{{ product.url }}">{{ product.title | escape }}</a>{%- endif -%}
+        </h2>
+      {%- else -%}
+        <h1 class="mu-pp__title">{{ product.title | escape }}</h1>
+      {%- endif -%}
+      {%- if with_price -%}
+        <p class="mu-pp__price" data-price-wrap>{%- if ph -%}{% render 'mu-money', m: 1999 %}{%- else -%}{% render 'mu-price', product: product, variant: v %}{%- endif -%}</p>
+      {%- endif -%}
+    </div>
+    {%- render 'mu-rating', product: product, show: b.show_rating, class: 'mu-pp__rating' -%}
+    {%- if with_price and ph == false -%}
+      {%- render 'mu-pp-price-extras', product: product, v: v, pb: pb, uid: uid -%}
+    {%- endif -%}
+    {%- if b.subtitle != blank -%}<p class="mu-pp__sub mu-muted">{{ b.subtitle | escape }}</p>{%- endif -%}
+
+  {%- when 'price' -%}
+    {%- unless prev_block.type == 'title' -%}
+      <div class="mu-pp__pricebox" {{ block.shopify_attributes }}>
+        <p class="mu-pp__price" data-price-wrap>{%- if ph -%}{% render 'mu-money', m: 1999 %}{%- else -%}{% render 'mu-price', product: product, variant: v %}{%- endif -%}</p>
+        {%- unless ph -%}{%- render 'mu-pp-price-extras', product: product, v: v, pb: b, uid: uid -%}{%- endunless -%}
+      </div>
+    {%- endunless -%}
+
+  {%- when 'variant_picker' -%}
+    {%- unless ph or product.has_only_default_variant -%}
+      {%- liquid
+        assign last_index = product.options.size | minus: 1
+        assign tip_count = 0
+        if coming == false and low > 0 and v.inventory_management == 'shopify' and v.inventory_policy == 'deny' and v.inventory_quantity > 0 and v.inventory_quantity <= low
+          assign tip_count = v.inventory_quantity
+        endif
+        # Low stock tip label: [count] is the number; empty uses the locale's "Last N".
+        assign tip_text = 'products.last' | t: count: tip_count
+        assign tip_text = tip_label | escape | replace: '[count]', tip_count | default: tip_text
+        # Size chart opener: beside the option named in the block (Size by default), or under the options.
+        capture sc_link
+          render 'mu-size-chart', product: product, block: block, uid: uid, part: 'link'
+        endcapture
+        assign sc_at = -1
+        if sc_link != blank
+          assign sc_name = b.size_option | default: 'Size' | strip | downcase
+          for option in product.options_with_values
+            assign on = option.name | strip | downcase
+            if on == sc_name and forloop.index0 != colour_index
+              assign sc_at = forloop.index0
+              break
+            endif
+          endfor
+        endif
+      -%}
+      <div class="mu-pp__opts" {{ block.shopify_attributes }}>
+        {%- for option in product.options_with_values -%}
+          {%- assign oi = forloop.index0 -%}
+          {%- if oi == colour_index -%}
+            <fieldset class="mu-pp__opt mu-pp__colours">
+              <legend class="visually-hidden">{{ option.name | escape }}</legend>
+              <div class="mu-pp__colour-row">
+                {%- for value in option.values -%}
+                  {%- liquid
+                    assign cv = value.variant
+                    if cv == blank
+                      for variant in product.variants
+                        if variant.options[oi] == value
+                          assign cv = variant
+                          break
+                        endif
+                      endfor
+                    endif
+                    assign thumb = cv.featured_media
+                    if thumb == blank
+                      assign needle = value | downcase
+                      for media in product.media
+                        assign alt_l = media.alt | downcase
+                        if alt_l contains needle
+                          assign thumb = media
+                          break
+                        endif
+                      endfor
+                    endif
+                  -%}
+                  <label class="mu-pp__colour{% unless value.available %} is-out{% endunless %}">
+                    <input type="radio" class="visually-hidden" name="mu-{{ uid }}-o{{ oi }}" value="{{ value | escape }}" data-option="{{ oi }}" data-value-id="{{ value.id }}" data-product-url="{{ value.product_url }}"{% if value.selected %} checked{% endif %}{% unless value.available %} aria-label="{{ 'products.value_sold_out' | t: value: value }}"{% endunless %}>
+                    <span class="mu-pp__tile" aria-hidden="true">
+                      {%- if thumb != blank -%}
+                        {%- liquid
+                          assign tw = 70
+                          if thumb.preview_image.aspect_ratio > 1
+                            assign tw = thumb.preview_image.aspect_ratio | times: 70 | ceil
+                          endif
+                        -%}
+                        <img src="{{ thumb.preview_image | image_url: width: 220 }}" srcset="{{ thumb.preview_image | image_url: width: 140 }} 140w, {{ thumb.preview_image | image_url: width: 220 }} 220w, {{ thumb.preview_image | image_url: width: 320 }} 320w, {{ thumb.preview_image | image_url: width: 440 }} 440w" sizes="{{ tw }}px" alt="" loading="lazy" width="66" height="66" style="object-position: {{ thumb.preview_image.presentation.focal_point }}">
+                        {%- render 'mu-swatch-dot', value: value, class: 'mu-sw--corner' -%}
+                      {%- elsif value.swatch.image -%}
+                        <i style="background-image: url({{ value.swatch.image | image_url: width: 80 }})"></i>
+                      {%- elsif value.swatch.color -%}
+                        <i style="background-color: {{ value.swatch.color }}"></i>
+                      {%- else -%}
+                        {%- render 'mu-swatch-fallback', value: value -%}
+                      {%- endif -%}
+                    </span>
+                    <span class="mu-pp__colour-name">{{ value | escape }}</span>
+                  </label>
+                {%- endfor -%}
+              </div>
+            </fieldset>
+          {%- else -%}
+            <fieldset class="mu-pp__opt">
+              <legend class="mu-pp__legend">{{ option.name | escape }}</legend>
+              {%- if oi == sc_at -%}{{ sc_link }}{%- endif -%}
+              {%- liquid
+                # Words, not sizes: w1 when values average more than four characters ("150 ml kit", not "10.5").
+                assign all_v = option.values | join: ''
+                assign cap_v = option.values.size | times: 4
+                assign wide = all_v.size | minus: cap_v | at_least: 0 | at_most: 1
+              -%}
+              <div class="mu-opt" data-scroller>
+                <div class="mu-opt__rail mu-opt__rail--w{{ wide }}">
+                  {%- for value in option.values -%}
+                    <label class="mu-opt__pill{% unless value.available %} is-out{% endunless %}">
+                      <input type="radio" class="visually-hidden" name="mu-{{ uid }}-o{{ oi }}" value="{{ value | escape }}" data-option="{{ oi }}" data-value-id="{{ value.id }}" data-product-url="{{ value.product_url }}"{% if value.selected %} checked{% endif %}{% unless value.available %} aria-label="{{ 'products.value_sold_out' | t: value: value }}"{% endunless %}>
+                      <span>{%- render 'mu-swatch-dot', value: value -%}{{ value | escape }}</span>
+                      {%- if oi == last_index and value.selected and tip_count > 0 -%}<em class="mu-opt__tip" aria-hidden="true">{{ tip_text }}</em>{%- endif -%}
+                    </label>
+                  {%- endfor -%}
+                </div>
+              </div>
+            </fieldset>
+          {%- endif -%}
+        {%- endfor -%}
+        <p class="visually-hidden" role="status" data-stock>{% if tip_count > 0 %}{{ 'products.low_stock' | t: count: tip_count }}{% endif %}</p>
+        {%- if sc_link != blank -%}
+          {%- if sc_at < 0 -%}{{ sc_link }}{%- endif -%}
+          {%- render 'mu-size-chart', product: product, block: block, uid: uid, part: 'dialog' -%}
+        {%- endif -%}
+      </div>
+    {%- endunless -%}
+
+  {%- when 'quantity' -%}
+    {%- unless ph or next_block.type == 'buy_buttons' -%}
+      <div class="mu-pp__qtyrow" {{ block.shopify_attributes }}>
+        <span class="mu-pp__legend" id="MuQtyLabel-{{ uid }}" aria-hidden="true">{{ 'products.quantity' | t }}</span>
+        {%- render 'mu-pp-qty', v: v, uid: uid, form_id: form_id -%}
+      </div>
+    {%- endunless -%}
+
+  {%- when 'buy_buttons' -%}
+    {%- if ph -%}
+      <div class="mu-pp__buy" {{ block.shopify_attributes }}>
+        <button type="button" class="mu-btn mu-pp__add" disabled>{{ 'products.add' | t }}</button>
+      </div>
+    {%- else -%}
+      {%- liquid
+        assign inline_qty = false
+        if prev_block.type == 'quantity'
+          assign inline_qty = true
+        endif
+      -%}
+      {%- render 'mu-pp-plans', product: product, v: v, uid: uid, form_id: form_id, show: plans_auto, wrap: true -%}
+      <div class="mu-pp__buy" data-buy{% if coming %} hidden{% endif %} {{ block.shopify_attributes }}>
+        {%- form 'product', product, id: form_id, class: 'mu-pp__form', data-form: '', novalidate: 'novalidate' -%}
+          <input type="hidden" name="id" value="{{ v.id }}" data-id>
+          <noscript>
+            {%- unless product.has_only_default_variant -%}
+              <select name="id" class="mu-pp__noscript" aria-label="{{ 'products.variant' | t }}">
+                {%- for variant in product.variants -%}
+                  <option value="{{ variant.id }}"{% if variant == v %} selected{% endif %}{% unless variant.available %} disabled{% endunless %}>{{ variant.title | escape }}</option>
+                {%- endfor -%}
+              </select>
+            {%- endunless -%}
+          </noscript>
+          {%- if b.show_gift_card_recipient and product.gift_card? -%}
+            {%- render 'mu-pp-recipient', form: form, uid: uid -%}
+          {%- endif -%}
+          <div class="mu-pp__buyrow{% if inline_qty %} has-qty{% endif %}">
+            {%- if inline_qty -%}
+              <span class="visually-hidden" id="MuQtyLabel-{{ uid }}">{{ 'products.quantity' | t }}</span>
+              {%- render 'mu-pp-qty', v: v, uid: uid, form_id: form_id, attrs: prev_block.shopify_attributes -%}
+            {%- endif -%}
+            <button type="submit" name="add" class="mu-btn mu-pp__add" data-add{% unless v.available %} disabled{% endunless %}>
+              <span data-add-label>
+                {%- if v.available -%}
+                  {%- render 'mu-pp-pre', product: product, v: v, part: 'label', fallback: 'products.add' -%}{% if s.price_in_button %} · {% render 'mu-money', m: v.price %}{% endif %}
+                {%- else -%}
+                  {{ 'products.sold_out' | t }}
+                {%- endif -%}
+              </span>
+            </button>
+          </div>
+          {%- if b.show_dynamic_checkout -%}
+            <div class="mu-pp__dyn" data-dyn{% unless v.available %} hidden{% endunless %}>{{ form | payment_button }}</div>
+          {%- endif -%}
+          <p class="mu-pp__msg" role="status" data-msg></p>
+        {%- endform -%}
+      </div>
+      {%- if coming -%}
+        <div class="mu-pp__soon" data-soon>
+          {%- assign release = product.metafields.custom.release_date.value -%}
+          <p class="mu-btn mu-pp__add mu-pp__add--soon">{%- assign release_label = release | date: format: 'month_day' -%}{{ 'products.coming_on' | t: date: release_label }}</p>
+        </div>
+      {%- endif -%}
+      {%- if s.notify -%}
+        {%- liquid
+          assign notify_open = false
+          if coming or v.available == false
+            assign notify_open = true
+          endif
+        -%}
+        <div class="mu-pp__notify" role="region" aria-labelledby="MuNotifyTitle-{{ uid }}"{% unless feature %} id="notify"{% endunless %} data-notify{% unless notify_open %} hidden{% endunless %}>
+          {%- assign notify_id = 'MuNotify-' | append: uid -%}
+          {%- form 'customer', id: notify_id, class: 'mu-pp__notify-form' -%}
+            {%- if form.posted_successfully? -%}
+              <p class="mu-pp__notify-done" id="MuNotifyTitle-{{ uid }}" role="status" tabindex="-1">{% if coming %}{{ 'products.notify_done_soon' | t: product: product.title }}{% else %}{{ 'products.notify_done' | t: product: product.title }}{% endif %}</p>
+            {%- else -%}
+              <p class="mu-pp__notify-head" id="MuNotifyTitle-{{ uid }}">{% if coming %}{{ 'products.notify_lands' | t }}{% else %}{{ 'products.notify_back' | t }}{% endif %}</p>
+              <input type="hidden" name="contact[tags]" value="notify-me, notify-{{ product.handle }}, notify-variant-{{ v.id }}" data-notify-tags>
+              <div class="mu-pp__notify-row">
+                <label class="visually-hidden" for="MuNotifyEmail-{{ uid }}">{{ 'products.email' | t }}</label>
+                <input type="email" id="MuNotifyEmail-{{ uid }}" name="contact[email]" required autocomplete="email" placeholder="{{ 'products.email' | t }}" class="mu-pp__notify-input" aria-describedby="MuNotifyNote-{{ uid }}{% if form.errors %} MuNotifyErr-{{ uid }}{% endif %}"{% if form.errors %} aria-invalid="true"{% endif %}>
+                <button type="submit" class="mu-btn mu-btn--sm mu-pp__notify-btn">{{ 'products.notify' | t }}</button>
+              </div>
+              {%- if form.errors -%}<p class="mu-pp__notify-err" id="MuNotifyErr-{{ uid }}" role="alert">{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>{%- endif -%}
+              <p class="mu-pp__notify-note mu-muted" id="MuNotifyNote-{{ uid }}">{{ 'products.notify_note' | t }}</p>
+            {%- endif -%}
+          {%- endform -%}
+        </div>
+      {%- endif -%}
+      {%- if b.show_pickup -%}
+        {{ 'mu-pickup.css' | asset_url | stylesheet_tag }}
+        <div class="mu-pp__pickup" data-pickup data-url="{{ product.url }}"{% if coming %} hidden{% endif %}>{%- render 'mu-pickup', variant: v -%}</div>
+        {%- if request.design_mode -%}
+          {%- assign pick_spots = v.store_availabilities | where: 'pick_up_enabled', true -%}
+          {%- if pick_spots.size == 0 -%}<p class="mu-pp__hint">{{ 'products.pickup_empty' | t }}</p>{%- endif -%}
+        {%- endif -%}
+      {%- endif -%}
+    {%- endif -%}
+
+  {%- when 'selling_plan' -%}
+    {%- unless ph -%}
+      {%- if product.selling_plan_groups.size > 0 -%}
+        <div class="mu-pp__plans-wrap" {{ block.shopify_attributes }}>{%- render 'mu-pp-plans', product: product, v: v, uid: uid, form_id: form_id -%}</div>
+      {%- elsif request.design_mode -%}
+        <p class="mu-pp__hint" {{ block.shopify_attributes }}>{{ 'products.plans_empty' | t }}</p>
+      {%- endif -%}
+    {%- endunless -%}
+
+  {%- when 'tiers' -%}
+    {%- render 'mu-pp-tiers', block: block, product: product, v: v, uid: uid -%}
+
+  {%- when 'description' -%}
+    {%- if product.description != blank -%}
+      <div class="mu-rte mu-pp__desc" {{ block.shopify_attributes }}>{{ product.description }}</div>
+    {%- endif -%}
+
+  {%- when 'collapsible' -%}
+    {%- liquid
+      assign body = b.content
+      if b.source == 'description'
+        assign body = product.description
+      elsif b.source == 'page' and b.page != blank
+        assign body = b.page.content
+      endif
+    -%}
+    {%- comment -%} Product page > Collapsible rows layout: Tabs turns the group into a tablist from 750px (assets/mu-product.js). The wrapper opens on the first row of a run and closes on the last, so the tags sit in different branches. {%- endcomment -%}
+    {%- # theme-check-disable UnclosedHTMLElement -%}
+    {%- unless prev_block.type == 'collapsible' -%}<div class="mu-pp__acc" data-rows="{{ s.rows_layout | default: 'accordion' }}">{%- endunless -%}
+    {%- if body != blank and b.heading != blank -%}
+      <details class="mu-pp__acc-item" {{ block.shopify_attributes }}>
+        <summary>{{ b.heading | escape }}<span class="mu-pp__acc-mark" aria-hidden="true"></span></summary>
+        <div class="mu-rte mu-pp__acc-body">{{ body }}</div>
+      </details>
+    {%- endif -%}
+    {%- unless next_block.type == 'collapsible' -%}</div>{%- endunless -%}
+    {%- # theme-check-enable UnclosedHTMLElement -%}
+
+  {%- when 'stock_level' -%}
+    {%- render 'mu-pp-stock', b: b, v: v, coming: coming, ph: ph, attrs: block.shopify_attributes -%}
+
+  {%- when 'spec_tiles' -%}
+    {%- render 'mu-pp-specs', block: block, product: product -%}
+
+  {%- when 'complementary' -%}
+    {%- render 'mu-pp-comp', block: block, product: product, ph: ph -%}
+
+  {%- when 'text' -%}
+    {%- if b.text != blank -%}
+      <div class="mu-rte mu-pp__text mu-pp__text--{{ b.style }}" {{ block.shopify_attributes }}>{{ b.text }}</div>
+    {%- endif -%}
+
+  {%- when 'ticker' -%}
+    {%- capture tk_class -%}mu-pp__ticker mu-pp__ticker--{{ b.style }}{%- endcapture -%}
+    {%- render 'mu-ticker', lines: b.items, icon: b.icon, speed: b.speed, reverse: b.reverse, hover: b.pause_hover, sep: b.separator, size: b.size, button: b.pause_button, class: tk_class, attrs: block.shopify_attributes, rk: b.radius -%}
+
+  {%- when 'custom_liquid' -%}
+    <div class="mu-pp__liquid" {{ block.shopify_attributes }}>{{ b.custom_liquid }}</div>
+
+  {%- when 'share' -%}
+    {%- render 'mu-pp-share', block: block, product: product -%}
+
+  {%- when 'sku', 'vendor' -%}
+    {%- render 'mu-pp-meta', block: block, product: product, v: v, ph: ph -%}
+
+  {%- else -%}
+    {%- render 'mu-pp-info', block: block -%}
+{%- endcase -%}

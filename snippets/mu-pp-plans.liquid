@@ -1,0 +1,122 @@
+{%- comment -%}
+  Purchase options (selling plans, for example subscriptions from a subscription app). One-time purchase (unless the
+  product requires a plan) and one card per plan group, each with its price for the current variant and what it saves.
+  A group with two to four plans shows them as frequency chips, more than four as a styled select; every control is a
+  native radio or select, so keys and screen readers work as usual. The hidden selling_plan input joins the product
+  form; it stays disabled for one-time purchase. assets/mu-product.js keeps it in step, repaints the prices for the
+  picked variant and writes ?selling_plan= to the address on the product page.
+  @param product {Product}
+  @param v {Variant}
+  @param uid {String}
+  @param form_id {String}
+  @param show {Boolean} optional: false renders nothing (the buy buttons pass it, for sections without a Purchase options block)
+  @param wrap {Boolean} optional: add the block wrapper
+{%- endcomment -%}
+{%- if show != false -%}
+{{ 'mu-subs.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign alloc = v.selected_selling_plan_allocation
+  if alloc == blank and product.requires_selling_plan
+    assign alloc = v.selling_plan_allocations.first
+  endif
+  assign sel_plan = alloc.selling_plan.id
+  assign sel_group = alloc.selling_plan.group_id
+  assign save_tpl = 'products.plan_save' | t: pct: '[p]'
+-%}
+{%- if wrap %}<div class="mu-pp__plans-wrap">{% endif -%}
+<fieldset class="mu-pp__opt mu-plans" data-plans data-save="{{ save_tpl | escape }}">
+  <legend class="mu-pp__legend">{{ 'products.plans' | t }}</legend>
+  <div class="mu-plans__list">
+    {%- unless product.requires_selling_plan -%}
+      <label class="mu-plans__card">
+        <input type="radio" class="visually-hidden" name="mu-{{ uid }}-plan" value="" data-plan-group{% if alloc == blank %} checked{% endif %}>
+        <span class="mu-plans__row">
+          <span class="mu-plans__name">{{ 'products.plan_once' | t }}</span>
+          <span class="mu-plans__price" data-plan-once>{% render 'mu-money', m: v.price %}</span>
+        </span>
+      </label>
+    {%- endunless -%}
+    {%- for group in product.selling_plan_groups -%}
+      {%- liquid
+        assign gplan = group.selling_plans.first.id
+        if group.id == sel_group
+          assign gplan = sel_plan
+        endif
+        assign ga = nil
+        for a in v.selling_plan_allocations
+          if a.selling_plan.id == gplan
+            assign ga = a
+            break
+          endif
+        endfor
+        assign gpct = 0
+        if ga and v.price > 0 and ga.price < v.price
+          assign gpct = v.price | minus: ga.price | times: 100.0 | divided_by: v.price | round
+        endif
+        assign n_plans = group.selling_plans.size
+        assign fl = group.options.first.name | default: ''
+        if fl == blank
+          assign fl = 'products.plan_frequency' | t
+        endif
+      -%}
+      <div class="mu-plans__group">
+        <label class="mu-plans__card">
+          <input type="radio" class="visually-hidden" name="mu-{{ uid }}-plan" value="{{ gplan }}" data-plan-group="{{ group.id }}"{% if group.id == sel_group %} checked{% endif %}>
+          <span class="mu-plans__row">
+            <span class="mu-plans__name">{{ group.name | escape }}</span>
+            <span class="mu-plans__price">
+              <s class="mu-muted" data-plan-gwas="{{ group.id }}"{% if gpct == 0 %} hidden{% endif %}>{% render 'mu-money', m: v.price %}</s>
+              <span data-plan-gprice="{{ group.id }}">{% if ga %}{% render 'mu-money', m: ga.price %}{% endif %}</span>
+            </span>
+          </span>
+          <span class="mu-save" data-plan-gsave="{{ group.id }}"{% if gpct == 0 %} hidden{% endif %}>{{ 'products.plan_save' | t: pct: gpct }}</span>
+          {%- if n_plans == 1 and group.selling_plans.first.description != blank -%}<span class="mu-plans__desc mu-muted">{{ group.selling_plans.first.description | escape }}</span>{%- endif -%}
+        </label>
+        {%- if n_plans > 4 -%}
+          <div class="mu-plans__freq" data-plan-freq="{{ group.id }}"{% unless group.id == sel_group %} hidden{% endunless %}>
+            <label class="mu-fchips__legend" for="MuPlan-{{ uid }}-{{ forloop.index }}">{{ fl | escape }}</label>
+            <div class="mu-fsel">
+              <select class="mu-select" id="MuPlan-{{ uid }}-{{ forloop.index }}" data-plan-choice data-plan-sel>
+                {%- for plan in group.selling_plans -%}
+                  <option value="{{ plan.id }}"{% if plan.id == gplan %} selected{% endif %}>{{ plan.name | escape }}</option>
+                {%- endfor -%}
+              </select>
+              {%- render 'mu-icon', name: 'chevron' -%}
+            </div>
+            <p class="mu-fsel__meta" data-plan-selmeta></p>
+          </div>
+        {%- elsif n_plans > 1 -%}
+          <fieldset class="mu-fchips-set mu-plans__freq" data-plan-freq="{{ group.id }}"{% unless group.id == sel_group %} hidden{% endunless %}>
+            <legend class="mu-fchips__legend">{{ fl | escape }}</legend>
+            <div class="mu-fchips">
+              {%- for plan in group.selling_plans -%}
+                {%- liquid
+                  assign pa = nil
+                  for a in v.selling_plan_allocations
+                    if a.selling_plan.id == plan.id
+                      assign pa = a
+                      break
+                    endif
+                  endfor
+                  assign ppct = 0
+                  if pa and v.price > 0 and pa.price < v.price
+                    assign ppct = v.price | minus: pa.price | times: 100.0 | divided_by: v.price | round
+                  endif
+                  assign plabel = plan.options.first.value | default: plan.name
+                -%}
+                <label class="mu-fchip"{% unless pa %} hidden{% endunless %}>
+                  <input type="radio" class="visually-hidden" name="mu-{{ uid }}-freq-{{ forloop.parentloop.index }}" value="{{ plan.id }}" data-plan-choice{% if plan.id == gplan %} checked{% endif %}>
+                  <span class="mu-fchip__name">{{ plabel | escape }}</span>
+                  <span class="mu-fchip__meta" data-plan-meta="{{ plan.id }}">{% if pa %}{% render 'mu-money', m: pa.price %}{% if ppct > 0 %} · {{ 'products.plan_save' | t: pct: ppct }}{% endif %}{% endif %}</span>
+                </label>
+              {%- endfor -%}
+            </div>
+          </fieldset>
+        {%- endif -%}
+      </div>
+    {%- endfor -%}
+  </div>
+  <input type="hidden" name="selling_plan" form="{{ form_id }}" value="{{ sel_plan }}" data-plan-input{% if sel_plan == blank %} disabled{% endif %}>
+</fieldset>
+{%- if wrap %}</div>{% endif -%}
+{%- endif -%}

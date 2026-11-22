@@ -1,0 +1,503 @@
+{%- comment -%}
+  Collection page: a gradient title band, then a bar with the count, active filter chips and the "Filter & sort"
+  button (a sheet on phones, a sticky rail on desktop). Results group by level, mildest first, while the sort is the
+  collection's default (Group by level); other sorts show one grid. Promo blocks sit after the first level.
+  Banner colours: Auto paints the scale gradient (--mu-g-hero, built in mu-scale-vars from the scale colours and
+  Gradient style) with --mu-g-hero-fg-aa, a text colour that clears 4.5:1 on every stop. In Product colors only mode Auto runs
+  through this collection's own accent colours instead (mu-accent-ramp, set as --mu-g-hero / --mu-g-band /
+  --mu-g-hero-fg-aa on the page root so the accents inside follow), falling back to the store's accent colours (mu-scale-vars).
+  Colour scheme paints the chosen scheme, with the title colour picked by contrast (mu-pick-fg: the scheme's own text
+  first, then black or white). The results area below uses the section's colour scheme.
+{%- endcomment -%}
+{{ 'mu-collection.css' | asset_url | stylesheet_tag }}
+{{ 'mu-grid.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-collection.js' | asset_url }}" defer></script>
+{%- liquid
+  assign s = section.settings
+  assign fid = 'MuFilters-' | append: section.id
+  assign active_count = 0
+  assign single_value = blank
+  for filter in collection.filters
+    assign active_count = active_count | plus: filter.active_values.size
+    if filter.active_values.size == 1 and single_value == blank
+      assign single_value = filter.active_values.first.label
+    endif
+    if filter.type == 'price_range'
+      if filter.min_value.value != nil or filter.max_value.value != nil
+        assign active_count = active_count | plus: 1
+      endif
+    endif
+  endfor
+  assign clear_url = collection.url
+  if collection.sort_by != blank and collection.sort_by != collection.default_sort_by
+    assign clear_url = collection.url | append: '?sort_by=' | append: collection.sort_by
+  endif
+  assign noun = 'products'
+  assign count_key = 'collections.count_' | append: noun
+  assign img = blank
+  if s.show_image
+    assign img = collection.image
+  endif
+  assign has_filters = false
+  if collection.filters.size > 0
+    assign has_filters = true
+  endif
+  assign eyebrow = s.eyebrow
+  # Banner colours (see the comment above). b_cls/b_sty go on the banner.
+  assign mode = s.banner_colors | default: 'auto'
+  assign b_cls = 'mu-fill-hero'
+  assign b_sty = ''
+  assign r_sty = ''
+  if mode == 'auto' and settings.scale_mode == 'colors'
+    capture fr
+      render 'mu-accent-ramp', products: collection.products
+    endcapture
+    assign fr = fr | strip | split: '~'
+    if fr.size == 3
+      assign r_sty = '--mu-g-hero: ' | append: fr[0] | append: '; --mu-g-band: ' | append: fr[2] | append: '; --mu-g-hero-fg-aa: ' | append: fr[1] | append: ';'
+    endif
+  endif
+  if mode == 'scheme'
+    assign b_cls = 'color-' | append: s.banner_scheme
+    assign bs = s.banner_scheme.settings
+    assign pref = bs.text | append: ''
+    assign bg1 = bs.background | append: ''
+    capture fg
+      render 'mu-pick-fg', bgs: bg1, prefer: pref
+    endcapture
+    assign b_sty = 'color: ' | append: fg
+  endif
+  if active_count == 1 and single_value != blank
+    if eyebrow != blank
+      assign eyebrow = eyebrow | append: ' · ' | append: single_value
+    else
+      assign eyebrow = single_value
+    endif
+  endif
+-%}
+{%- capture chips -%}
+  {%- for filter in collection.filters -%}
+    {%- for value in filter.active_values -%}
+      <li><a class="mu-cl__chip" href="{{ value.url_to_remove }}" data-ajax>{{ value.label | escape }}{% render 'mu-icon', name: 'close' %}<span class="visually-hidden">{{ 'collections.remove' | t }}</span></a></li>
+    {%- endfor -%}
+    {%- if filter.type == 'price_range' -%}
+      {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
+        <li><a class="mu-cl__chip" href="{{ filter.url_to_remove }}" data-ajax><span class="mu-num">{%- assign mu_lo = filter.min_value.value | default: 0 -%}{%- assign mu_hi = filter.max_value.value | default: filter.range_max -%}{%- render 'mu-money', m: mu_lo, trim: true -%}–{%- render 'mu-money', m: mu_hi, trim: true -%}</span>{% render 'mu-icon', name: 'close' %}<span class="visually-hidden">{{ 'collections.remove' | t }}</span></a></li>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+<mu-results class="mu-cl color-{{ s.color_scheme | default: settings.page_scheme }}{% if has_filters %} mu-cl--rail{% endif %}" data-section="{{ section.id }}"{% if s.load_auto %} data-auto-load{% endif %}{% if r_sty != blank %} style="{{ r_sty }}"{% endif %}>
+  <p class="visually-hidden" role="status" data-more-status data-msg="{{ 'collections.loaded' | t: shown: '__N__', total: '__T__' }}"></p>
+  <header class="mu-cl__stage mu-bleed {{ b_cls }}{% if img != blank %} mu-cl__stage--img{% endif %}"{% if b_sty != blank %} style="{{ b_sty | strip }}"{% endif %}>
+    <div class="mu-in mu-cl__stage-in">
+      <div class="mu-cl__head">
+        {%- if s.show_breadcrumbs -%}{%- render 'mu-crumbs', current: collection.title -%}{%- endif -%}
+        {%- if eyebrow != blank -%}<p class="mu-kicker" data-part="eyebrow">{{ eyebrow | escape }}</p>{%- else -%}<p class="mu-kicker" data-part="eyebrow" hidden></p>{%- endif -%}
+        <h1 class="mu-cl__title mu-title-xl">{{ collection.title | escape }}</h1>
+        {%- if s.show_description and collection.description != blank -%}<div class="mu-cl__desc mu-rte">{{ collection.description }}</div>{%- endif -%}
+        {%- comment -%} Collection links (the Collection links menu): a row of chips, the current collection marked. {%- endcomment -%}
+        {%- if s.nav_menu != blank and s.nav_menu.links.size > 0 -%}
+          <nav class="mu-cl__nav" aria-label="{{ s.nav_menu.title | escape }}">
+            <ul class="mu-cl__navlist" role="list">
+              {%- for link in s.nav_menu.links -%}
+                {%- liquid
+                  assign on = false
+                  if link.current or link.url == collection.url
+                    assign on = true
+                  elsif link.type == 'collection_link' and link.object.id == collection.id
+                    assign on = true
+                  endif
+                -%}
+                <li><a class="mu-cl__chip mu-cl__navlink{% if on %} is-on{% endif %}" href="{{ link.url }}"{% if on %} aria-current="page"{% endif %}>{{ link.title | escape }}</a></li>
+              {%- endfor -%}
+            </ul>
+          </nav>
+        {%- endif -%}
+      </div>
+      {%- if img != blank -%}
+        <div class="mu-cl__img">
+          {%- comment -%} Shown from 990px only (mu-collection.css): below that a 1×1 blank source wins, so phones and tablets never fetch it. {%- endcomment -%}
+          {%- capture cl_sizes -%}{% render 'mu-sizes', sub: 40, f: 0.4, tab: '1px', mob: '1px' %}{%- endcapture -%}
+          <picture><source media="(max-width: 989px)" srcset="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="1" height="1">{% render 'mu-img', image: img, max: 1600, sizes: cl_sizes, fp: 'high', class: 'mu-cl__img-el' %}</picture>
+        </div>
+      {%- endif -%}
+    </div>
+  </header>
+
+  <div class="mu-in mu-cl__bar">
+    <p class="mu-cl__count mu-num" data-part="count" role="status">{{ count_key | t: count: collection.products_count }}</p>
+    <ul class="mu-cl__chips" role="list" data-part="chips-tab">{{ chips }}</ul>
+    {%- if collection.products_count > 0 or active_count > 0 -%}
+      <button class="mu-btn mu-btn--secondary mu-cl__tab" type="button" data-tab aria-controls="{{ fid }}-panel" aria-expanded="{% if has_filters %}true{% else %}false{% endif %}">
+        {%- render 'mu-icon', name: 'filter' -%}
+        <span>{% if has_filters %}{{ 'collections.filter_sort' | t }}{% else %}{{ 'collections.sort' | t }}{% endif %}</span>
+        <span class="mu-num" data-part="tab-count">{% if active_count > 0 %} · {{ active_count }}{% endif %}</span>
+      </button>
+    {%- endif -%}
+  </div>
+
+  <div class="mu-in mu-cl__body">
+    {%- if collection.products_count > 0 or active_count > 0 -%}
+      {%- render 'mu-filters', results: collection, id: fid, action: collection.url, clear_url: clear_url, count: collection.products_count, noun: noun, active_count: active_count, scheme: s.rail_scheme -%}
+    {%- endif -%}
+    <div class="mu-cl__results" data-part="results">
+      {%- paginate collection.products by s.per_page -%}
+        {%- if collection.products.size > 0 -%}
+          {%- liquid
+            assign group = false
+          -%}
+          {%- if s.card_layout == 'lineup' -%}
+            {{ 'mu-card-lineup.css' | asset_url | stylesheet_tag }}
+            <ol class="mu-lineup" role="list">
+              {%- for product in collection.products -%}
+                <li class="mu-lineup__row">
+                  {%- assign lineup_n = paginate.current_offset | plus: forloop.index -%}
+                  {%- render 'mu-card', product: product, layout: 'lineup', lineup_index: lineup_n, lineup_numbers: s.lineup_numbers, show_sub: true, eager: forloop.first -%}
+                </li>
+              {%- endfor -%}
+            </ol>
+            {%- liquid
+              assign start = paginate.current_offset
+              assign left = collection.products_count | minus: start | minus: collection.products.size
+            -%}
+            {%- if paginate.next and left > 0 -%}
+              <div class="mu-band__more"><a class="mu-btn mu-btn--secondary" href="{{ paginate.next.url }}" data-more>{{ 'collections.load_more' | t: count: left }}</a></div>
+            {%- endif -%}
+          {%- else -%}
+            {%- render 'mu-grid', items: collection.products, paginate: paginate, next_url: paginate.next.url, total: collection.products_count, cols: s.columns, blocks: section.blocks, group: group -%}
+          {%- endif -%}
+        {%- elsif active_count > 0 -%}
+          <div class="mu-cl__empty">
+            <p>{{ 'collections.no_match' | t }}</p>
+            <a class="mu-btn" href="{{ clear_url }}" data-ajax>{{ 'collections.clear_all' | t }}</a>
+          </div>
+        {%- else -%}
+          <div class="mu-cl__empty">
+            <p>{{ 'collections.empty' | t }}</p>
+            <a class="mu-btn" href="{{ routes.all_products_collection_url }}">{{ 'collections.shop_all' | t }}</a>
+          </div>
+        {%- endif -%}
+      {%- endpaginate -%}
+    </div>
+  </div>
+  <div class="mu-cl__scrim" data-close hidden></div>
+</mu-results>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_collection.name",
+  "class": "mu-main-collection",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.main_collection.header_stage"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.main_collection.eyebrow",
+      "default": "Shop"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "label": "t:sections.main_collection.show_image",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "banner_colors",
+      "label": "t:sections.main_collection.banner_colors",
+      "info": "t:sections.main_collection.banner_colors_info",
+      "default": "auto",
+      "options": [
+        {
+          "value": "auto",
+          "label": "t:sections.main_collection.banner_auto"
+        },
+        {
+          "value": "scheme",
+          "label": "t:sections.main_collection.banner_scheme"
+        }
+      ]
+    },
+    {
+      "type": "color_scheme",
+      "id": "banner_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-1",
+      "visible_if": "{{ section.settings.banner_colors == 'scheme' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "t:sections.main_collection.show_description",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "t:sections.common.show_breadcrumbs",
+      "default": false
+    },
+    {
+      "type": "link_list",
+      "id": "nav_menu",
+      "label": "t:sections.main_collection.nav_menu",
+      "info": "t:sections.main_collection.nav_menu_info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.main_collection.header_results"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.main_collection.results_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "color_scheme",
+      "id": "rail_scheme",
+      "label": "t:sections.main_collection.rail_scheme",
+      "default": "scheme-5"
+    },
+    {
+      "type": "select",
+      "id": "card_layout",
+      "label": "t:sections.main_collection.card_layout",
+      "default": "grid",
+      "options": [
+        {
+          "value": "grid",
+          "label": "t:sections.main_collection.card_grid"
+        },
+        {
+          "value": "lineup",
+          "label": "t:sections.main_collection.card_lineup"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "lineup_numbers",
+      "label": "t:sections.featured_collection.lineup_numbers",
+      "default": "outline",
+      "options": [
+        {
+          "value": "outline",
+          "label": "t:sections.featured_collection.lineup_outline"
+        },
+        {
+          "value": "solid",
+          "label": "t:sections.featured_collection.lineup_solid"
+        }
+      ],
+      "visible_if": "{{ section.settings.card_layout == 'lineup' }}"
+    },
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "t:sections.main_collection.columns",
+      "default": "3",
+      "options": [
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "per_page",
+      "label": "t:sections.main_collection.per_page",
+      "min": 3,
+      "max": 48,
+      "step": 3,
+      "default": 48
+    },
+    {
+      "type": "checkbox",
+      "id": "load_auto",
+      "label": "t:sections.main_collection.load_auto",
+      "info": "t:sections.main_collection.load_auto_info",
+      "default": false
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.main_collection.filters_info"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "promo",
+      "name": "t:sections.main_collection.promo",
+      "settings": [
+        {
+          "type": "color_scheme",
+          "id": "color_scheme",
+          "label": "t:settings.colors.scheme",
+          "default": "scheme-1"
+        },
+        {
+          "type": "range",
+          "id": "rows",
+          "label": "t:sections.main_collection.promo_rows",
+          "min": 1,
+          "max": 8,
+          "step": 1,
+          "default": 2,
+          "info": "t:sections.main_collection.promo_rows_info"
+        },
+        {
+          "type": "text",
+          "id": "eyebrow",
+          "label": "t:sections.common.eyebrow",
+          "default": "Start here"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.common.heading",
+          "default": "Not sure where to start?"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "t:sections.common.text",
+          "default": "Our best sellers, all in one place."
+        },
+        {
+          "type": "product",
+          "id": "product",
+          "label": "t:sections.main_collection.promo_product"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "t:sections.common.image"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "t:sections.common.button_label",
+          "default": "Shop best sellers"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "t:sections.common.link"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

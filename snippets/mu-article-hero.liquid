@@ -1,0 +1,24 @@
+{%- comment -%}
+  Article hero: the back link, the date and author, a large centered title over a short scale-ramp rule, then the
+  lead image wide with rounded corners. Phones: the title, then the image (one visual). Params: title, date,
+  author, image, blog_title, blog_url, crumbs (bool: show the breadcrumb trail).
+{%- endcomment -%}
+<header class="mu-ah{% if image == blank %} mu-ah--text{% endif %}">
+  <div class="mu-ah__copy">
+    <a class="mu-ah__back mu-pill" href="{{ blog_url }}"><span class="mu-ah__arrow" aria-hidden="true">{% render 'mu-icon', name: 'arrow-right' %}</span>{{ blog_title | escape }}</a>
+    {%- if crumbs -%}{%- render 'mu-crumbs', mid_title: blog_title, mid_url: blog_url, current: title -%}{%- endif -%}
+    <p class="mu-kicker"><time datetime="{{ date | date: '%Y-%m-%d' }}">{{ date | time_tag: format: 'date' }}</time>{% if author != blank %} · {{ author | escape }}{% endif %}</p>
+    <h1 class="mu-ah__title">{{ title | escape }}</h1>
+  </div>
+  {%- if image != blank -%}
+    {%- assign image_alt = image.alt | default: title -%}
+    <div class="mu-ah__media">
+      {%- liquid
+        assign cf = image.aspect_ratio | divided_by: 1.3333 | at_least: 1 | round: 3
+        assign h_m = 'calc((100vw - 20px) * ' | append: cf | append: ')'
+      -%}
+      {%- capture h_sizes -%}{% render 'mu-sizes', sub: 80, f: 0.8, mob: h_m %}{%- endcapture -%}
+      {% render 'mu-img', image: image, sizes: h_sizes, fp: 'high', alt: image_alt %}
+    </div>
+  {%- endif -%}
+</header>

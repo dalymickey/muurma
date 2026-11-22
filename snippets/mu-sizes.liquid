@@ -1,0 +1,28 @@
+{%- comment -%}
+  A sizes attribute for a slot that takes a share of the page: on desktop (vw - sub) * f, held at its width on the
+  page-width cap; then the tablet and phone values as given.
+  @param sub {Number} px the slot loses on desktop (gutters, gaps, panels; default 40)
+  @param f {Number} the slot's share of what's left (e.g. 0.3333 for a third; default 1)
+  @param tab {String} the 750–989px value (optional)
+  @param mob {String} the phone value (default 100vw)
+  @param nocap {Boolean} the slot runs full width past the page-width cap
+{%- endcomment -%}
+{%- liquid
+  assign d_sub = sub | default: 40
+  assign d_f = f | default: 1 | times: 1.0 | round: 4
+  assign out = ''
+  if settings.page_width != 'full' and nocap != true
+    assign pw = settings.page_width | default: 1600 | plus: 0
+    if pw > 0
+      assign at = pw | plus: 40
+      assign px = pw | plus: 40 | minus: d_sub | times: d_f | ceil
+      assign out = '(min-width: ' | append: at | append: 'px) ' | append: px | append: 'px, '
+    endif
+  endif
+  assign out = out | append: '(min-width: 990px) calc((100vw - ' | append: d_sub | append: 'px) * ' | append: d_f | append: '), '
+  if tab != blank
+    assign out = out | append: '(min-width: 750px) ' | append: tab | append: ', '
+  endif
+  assign out = out | append: mob | default: '100vw'
+  echo out
+-%}

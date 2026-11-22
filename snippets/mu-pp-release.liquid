@@ -1,0 +1,18 @@
+{%- comment -%}
+  Prints the release time (Unix seconds) when the product metafield custom.release_date (date or date and time) is
+  in the future, otherwise 0. Used by the product page, the featured product section and the countdown.
+  Capture it: {% capture rs %}{% render 'mu-pp-release', product: product %}{% endcapture %}
+  @param product {Product}
+{%- endcomment -%}
+{%- liquid
+  assign out = 0
+  assign release = product.metafields.custom.release_date.value
+  if release != blank
+    assign release_s = release | date: '%s' | plus: 0
+    assign now_s = 'now' | date: '%s' | plus: 0
+    if release_s > now_s
+      assign out = release_s
+    endif
+  endif
+  echo out
+-%}

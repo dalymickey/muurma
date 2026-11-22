@@ -1,0 +1,22 @@
+/* Feature icons product block (snippets/mu-pp-features). Split from mu-product.css; loaded by the block. */
+/* A wrapping row or a 2 or 3 column grid; phones use the block's own column count. */
+.mu-pp__feat { margin-top: 20px; }
+.mu-pp__feat-list { display: flex; flex-wrap: wrap; gap: 14px 26px; margin: 0; padding: 0; list-style: none; }
+:is(.mu-pp__feat--grid2, .mu-pp__feat--grid3) .mu-pp__feat-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
+.mu-pp__feat--grid3 .mu-pp__feat-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mu-pp__feat-item { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.mu-pp__feat-icon { flex: none; display: grid; place-items: center; inline-size: var(--mu-feat-icon); block-size: var(--mu-feat-icon); }
+.mu-pp__feat-icon .mu-icon { inline-size: 100%; block-size: 100%; stroke-width: 1.6; }
+/* "Circle" style: the icon sits in a level-tinted squircle. */
+.mu-pp__feat--circle .mu-pp__feat-icon { box-sizing: content-box; padding: calc(var(--mu-feat-icon) * .3); border-radius: 34%; background: color-mix(in srgb, var(--h, var(--fg)) 16%, transparent); }
+.mu-pp__feat-mask { display: block; inline-size: 100%; block-size: 100%; background: currentColor; -webkit-mask: var(--mu-mask) center / contain no-repeat; mask: var(--mu-mask) center / contain no-repeat; }
+.mu-pp__feat-text { display: grid; gap: 2px; min-width: 0; }
+.mu-pp__feat-label { font-size: .9375rem; font-weight: var(--mu-font-body-bold); line-height: 1.25; overflow-wrap: anywhere; }
+.mu-pp__feat-sub { font-size: .75rem; line-height: 1.4; color: var(--mu); }
+.mu-pp__feat--tsm .mu-pp__feat-label { font-size: .8125rem; }
+.mu-pp__feat--tlg .mu-pp__feat-label { font-size: 1.0625rem; }
+.mu-pp__feat--tlg .mu-pp__feat-sub { font-size: .8125rem; }
+@media (max-width: 749px) {
+  :is(.mu-pp__feat-list, .mu-pp__feat--grid2 .mu-pp__feat-list, .mu-pp__feat--grid3 .mu-pp__feat-list) { display: grid; grid-template-columns: repeat(var(--mu-feat-m), minmax(0, 1fr)); gap: 12px; }
+  .mu-pp__feat-item { gap: 10px; }
+}

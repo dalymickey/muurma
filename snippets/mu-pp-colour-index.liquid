@@ -1,0 +1,28 @@
+{%- comment -%}
+  Prints the index of the colour option (found by its name in any of the five languages, or by swatches), or -1.
+  Capture it: {% capture ci %}{% render 'mu-pp-colour-index', product: product %}{% endcapture %}
+  @param product {Product}
+{%- endcomment -%}
+{%- liquid
+  assign colour_names = 'colour,color,farbe,couleur,colore,colores,couleurs,farben,colori' | split: ','
+  assign found = -1
+  unless product.has_only_default_variant
+    for option in product.options_with_values
+      assign oname = option.name | downcase | strip
+      if colour_names contains oname
+        assign found = forloop.index0
+        break
+      endif
+      for value in option.values
+        if value.swatch.color or value.swatch.image
+          assign found = forloop.parentloop.index0
+          break
+        endif
+      endfor
+      if found > -1
+        break
+      endif
+    endfor
+  endunless
+  echo found
+-%}

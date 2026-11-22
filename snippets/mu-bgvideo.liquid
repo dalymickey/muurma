@@ -1,0 +1,23 @@
+{%- comment -%}
+  A muted, looping, inline Shopify-hosted video that fills its box (Image gallery tiles, hero slides), with the pause
+  button every moving picture needs. assets/mu-video.js plays it only on screen and only when motion is allowed, and
+  shows the poster when it won't play. The section loads mu-video.js.
+  @param video {Video} @param class {String} classes for <mu-video> @param media_class {String} class for the <video>
+  @param poster {Image} optional: an image to show until the video plays (else the video's own first frame)
+  @param ctl {String} optional class for the button's holder
+{%- endcomment -%}
+{%- assign vtag = video | video_tag: muted: true, loop: true, playsinline: true, preload: 'none', image_size: '1600x', class: media_class -%}
+<mu-video class="{{ class }}">
+  {%- if poster != blank -%}
+    {%- assign purl = poster | image_url: width: 1600 -%}
+    {%- render 'mu-video-bare', html: vtag, poster: purl, first_frame: true -%}
+  {%- else -%}
+    {%- render 'mu-video-bare', html: vtag, keep: true, first_frame: true -%}
+  {%- endif -%}
+  <div class="mu-bgv__ctl {{ ctl }}">
+    <button class="mu-btn mu-btn--ghost mu-btn--icon" type="button" data-toggle aria-label="{{ 'sections.rich_text.pause' | t }}" data-pause="{{ 'sections.rich_text.pause' | t }}" data-play="{{ 'sections.rich_text.play' | t }}">
+      <svg class="mu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-icon-pause><path d="M9 6v12M15 6v12"/></svg>
+      <svg class="mu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-icon-play hidden><path d="M8 5.5v13l10-6.5z"/></svg>
+    </button>
+  </div>
+</mu-video>

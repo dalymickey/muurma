@@ -1,0 +1,239 @@
+/* Bag: shared by the drawer and the cart page. Lines are open rows with a cover thumb (level tint only without an image) and an inline
+   stepper; free shipping fills with the scale ramp; "Upsell" sits in a ramp-edged card; the summary opens
+   with the subtotal over a thin ramp line. */
+.mu-cart { display: grid; gap: 16px; }
+.mu-cart__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mu-cart__title { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); line-height: 1; letter-spacing: -0.02em; font-size: calc(30px * var(--mu-heading-scale)); }
+.mu-cart__count { font-family: var(--mu-font-body); font-weight: var(--mu-font-body-weight); font-size: 16px; letter-spacing: 0; color: var(--mu); }
+.mu-cart__close { display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--mu-btn-radius, 999px); background: color-mix(in srgb, var(--fg) 8%, transparent); color: var(--fg); flex: none; }
+@media (hover: hover) and (pointer: fine) { .mu-cart__close:hover { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 30%, transparent); } }
+.mu-cart__status { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mu-cart__form { display: grid; gap: 22px; }
+.mu-cart__main { display: grid; gap: 16px; align-content: start; }
+.mu-cart__lines { display: grid; border-top: 1px solid var(--bd); }
+
+/* Line row */
+.mu-line {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; grid-template-rows: auto 1fr; column-gap: 14px; row-gap: 10px;
+  padding: 16px 0; border-bottom: 1px solid var(--bd); color: var(--fg);
+}
+.mu-line[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+.mu-line__thumb {
+  grid-row: 1 / 3; align-self: start; aspect-ratio: 1; border-radius: min(var(--mu-radius), 16px); overflow: hidden; display: grid; place-items: center;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+}
+.mu-line__thumb[class*="mu-h-"] { background: linear-gradient(160deg, var(--g1), var(--g2)); }
+.mu-line__thumb img, .mu-pair__thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center; border-radius: inherit; }
+.mu-line__info { grid-column: 2; grid-row: 1; display: grid; align-content: start; gap: 3px; }
+.mu-line__title, .mu-pair__title, .mu-pairs__title { font-family: var(--mu-font-body); letter-spacing: 0; }
+.mu-line__title { font-size: 16px; font-weight: var(--mu-font-body-bold); line-height: 1.25; }
+.mu-line__level { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: var(--mu-font-body-medium); }
+.mu-line__level span { width: 9px; height: 9px; border-radius: 50%; background: var(--h); box-shadow: 0 0 0 2px color-mix(in srgb, var(--h) 25%, transparent); }
+.mu-line__opts { font-size: 14px; }
+.mu-line__disc { font-size: 13px; color: var(--sale); }
+.mu-line__remove { justify-self: start; margin-top: 4px; font-size: 13px; color: var(--mu); text-decoration: underline; text-underline-offset: 3px; min-height: 24px; }
+.mu-line__price { grid-column: 3; grid-row: 1; display: grid; justify-items: end; gap: 2px; font-size: 16px; font-weight: var(--mu-font-body-bold); }
+.mu-line__price s, .mu-line__price small { font-size: 13px; font-weight: var(--mu-font-body-weight); }
+.mu-line__qty { grid-column: 2; grid-row: 2; align-self: end; justify-self: start; }
+.mu-stepper { display: flex; align-items: center; height: 40px; padding: 0 2px; border-radius: var(--mu-btn-r-s); background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.mu-stepper__btn { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: calc(var(--mu-btn-r-s) - 2px); color: var(--fg); }
+.mu-stepper__btn .mu-icon { width: 16px; height: 16px; }
+.mu-stepper__btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.mu-stepper__val { min-width: 24px; text-align: center; font-weight: var(--mu-font-body-bold); font-size: 15px; }
+
+/* Gift wrap: a soft row with a square tick, and the optional message under it. The gift wrap line has no stepper. */
+.mu-gift { display: grid; gap: 10px; padding: 4px; border-radius: min(calc(var(--mu-btn-r-s) + 4px), 28px); background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-gift__row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 14px 0 10px; font-size: 14px; font-weight: var(--mu-font-body-bold); cursor: pointer; border-radius: min(var(--mu-btn-r-s), 24px); }
+.mu-gift__check { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.mu-gift__box { display: grid; place-items: center; width: 26px; height: 26px; flex: none; border-radius: 8px; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 50%, transparent); color: var(--btn-fg, var(--bg)); }
+.mu-gift__box .mu-icon { width: 15px; height: 15px; opacity: 0; }
+.mu-gift__check:checked + .mu-gift__box { background: var(--btn, var(--fg)); box-shadow: none; }
+.mu-gift__check:checked + .mu-gift__box .mu-icon { opacity: 1; }
+.mu-gift__check:focus-visible + .mu-gift__box { outline: 2px solid var(--focus); outline-offset: 3px; }
+.mu-gift__text { flex: 1; }
+.mu-gift__price { font-weight: var(--mu-font-body-weight); color: var(--mu); }
+.mu-gift[aria-busy="true"] { opacity: 0.6; pointer-events: none; }
+.mu-gift__msg { display: grid; gap: 6px; padding: 0 6px 6px; }
+.mu-gift__label { font-size: 13px; font-weight: var(--mu-font-body-bold); padding-inline: 4px; }
+.mu-line--gift { grid-template-rows: auto; }
+.mu-line--gift .mu-line__thumb { grid-row: 1; }
+
+/* Free shipping: the fill shows as much of the scale ramp as you've climbed (--p is the percentage). */
+.mu-ship { display: grid; gap: 10px; }
+.mu-ship__text { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; font-weight: var(--mu-font-body-bold); }
+.mu-ship__text > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
+.mu-ship__text .mu-icon { width: 18px; height: 18px; color: var(--mu-h-mid); stroke-width: 2.6; }
+.mu-ship__text .mu-muted { font-weight: var(--mu-font-body-weight); white-space: nowrap; }
+.mu-ship__bar { height: 10px; border-radius: 999px; background: color-mix(in srgb, var(--fg) 10%, transparent); overflow: hidden; }
+.mu-ship__bar span { display: block; height: 100%; border-radius: inherit; background: var(--mu-g-hero) 0 0 / calc(100% * 100 / var(--p, 100)) 100% no-repeat; transition: width 0.4s ease; }
+@media (prefers-reduced-motion: reduce) { .mu-ship__bar span { transition: none; } }
+
+/* Upsell */
+.mu-upsell {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 12px 12px 12px 14px;
+  border: 2px solid transparent; border-radius: 20px;
+  background: linear-gradient(var(--bg), var(--bg)) padding-box, var(--mu-g-hero) border-box;
+}
+.mu-upsell__steps { display: flex; align-items: end; gap: 3px; height: 34px; }
+.mu-upsell__steps span { width: 8px; border-radius: 3px 3px 1px 1px; background: var(--h); }
+.mu-upsell__steps span:nth-child(1) { height: 40%; }
+.mu-upsell__steps span:nth-child(2) { height: 70%; }
+.mu-upsell__steps span:nth-child(3) { height: 100%; }
+.mu-upsell__thumb { display: none; }
+.mu-upsell__add { grid-column: 2 / -1; justify-self: start; }
+.mu-upsell__info { display: grid; gap: 2px; }
+.mu-upsell__kicker { font-size: 12px; font-weight: var(--mu-font-body-bold); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mu); }
+.mu-upsell__title { font-size: 16px; font-weight: var(--mu-font-body-bold); line-height: 1.25; }
+.mu-upsell__text { font-size: 14px; }
+.mu-upsell__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 14px; }
+.mu-upsell__price > span:first-child { font-weight: var(--mu-font-body-bold); }
+.mu-upsell__save { padding: 1px 8px; border-radius: 999px; background: var(--mu-h-mid); color: var(--mu-h3-fg, #fff); font-size: 12px; font-weight: var(--mu-font-body-bold); }
+.mu-upsell__add[aria-busy="true"] { opacity: 0.6; }
+@media (min-width: 750px) {
+  .mu-upsell { grid-template-columns: auto 64px minmax(0, 1fr) auto; }
+  .mu-upsell__add { grid-column: auto; }
+  .mu-upsell__thumb { display: grid; place-items: center; aspect-ratio: 1; border-radius: 14px; overflow: hidden; background: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
+  .mu-upsell__thumb img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+/* Perks (page) */
+.mu-cart .mu-perks { display: flex; flex-wrap: wrap; gap: 14px 44px; padding: 20px 4px; border-top: 1px solid var(--bd); }
+.mu-perks li { min-width: 120px; display: grid; gap: 2px; font-size: 13px; }
+.mu-perks strong { font-size: 14px; }
+.mu-perks span { color: var(--mu); }
+
+/* Pairs well row (drawer) */
+.mu-pairs { display: grid; gap: 10px; }
+.mu-pairs__title { font-size: 15px; font-weight: var(--mu-font-body-bold); }
+.mu-pair { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 8px 10px 8px 8px; border-radius: 16px; background: color-mix(in srgb, var(--fg) 4%, var(--bg)); box-shadow: inset 0 0 0 1px var(--bd); }
+.mu-pair__thumb { aspect-ratio: 1; border-radius: min(var(--mu-radius), 12px); background: color-mix(in srgb, var(--fg) 6%, var(--bg)); overflow: hidden; display: grid; place-items: center; }
+.mu-pair__title { font-size: 15px; font-weight: var(--mu-font-body-bold); }
+.mu-pair .mu-muted { font-size: 14px; }
+.mu-pair__add { display: grid; place-items: center; width: 40px; height: 40px; border-radius: var(--mu-btn-r-s); background: var(--btn, var(--fg)); color: var(--btn-fg, var(--bg)); }
+
+/* Summary */
+.mu-sum { position: relative; display: grid; gap: 14px; padding: 20px; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); box-shadow: inset 0 0 0 1px var(--bd); align-content: start; overflow: hidden; }
+.mu-cart--page .mu-sum::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: var(--mu-g-hero); }
+.mu-sum__sub { position: relative; padding-bottom: 14px; }
+.mu-sum__sub::after { content: ""; position: absolute; inset: auto 0 0; height: 4px; border-radius: 999px; background: var(--mu-g-hero); }
+.mu-sum__sub p { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 15px; font-weight: var(--mu-font-body-medium); }
+.mu-sum__sub strong { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: 26px; letter-spacing: -0.01em; }
+.mu-sum__title { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: calc(22px * var(--mu-heading-scale)); line-height: 1.1; }
+.mu-sum__rows > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--bd); font-size: 14px; }
+.mu-sum__rows dt { color: var(--mu); }
+.mu-sum__rows .mu-sum__total { align-items: baseline; padding-top: 14px; border-bottom: 0; font-size: 20px; }
+.mu-sum__total dt { color: var(--fg); font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); }
+.mu-sum__total dd { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: 26px; }
+.mu-sum__total small { font-family: var(--mu-font-body); font-weight: var(--mu-font-body-weight); font-size: 12px; color: var(--mu); }
+/* Discount rows between Subtotal and Total: one per discount, codes as a chip. */
+.mu-sum__rows .mu-sum__disc { align-items: center; }
+.mu-sum__disc dt { display: flex; align-items: center; gap: 8px; min-width: 0; color: var(--fg); }
+.mu-sum__disc .mu-icon { flex: none; width: 16px; height: 16px; }
+.mu-sum__disc-name { min-width: 0; overflow-wrap: anywhere; }
+.mu-sum__disc--code .mu-sum__disc-name { padding: 2px 8px; border-radius: 999px; background: color-mix(in srgb, var(--fg) 7%, var(--bg)); font-size: 12px; font-weight: var(--mu-font-body-bold); letter-spacing: 0.04em; }
+.mu-sum__disc dd { flex: none; font-weight: var(--mu-font-body-bold); }
+.mu-sum__rows--drawer > div { padding: 8px 0; }
+.mu-sum__rows--drawer > div:last-child { border-bottom: 0; }
+.mu-sum__taxes { text-align: center; font-size: 13px; color: var(--mu); }
+.mu-sum__checkout { width: 100%; min-height: 54px; gap: 10px; font-size: 16px; }
+.mu-sum__keep { justify-self: center; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; min-height: 32px; display: inline-flex; align-items: center; }
+.mu-sum__pay { text-align: center; font-size: 12px; color: var(--mu); }
+.mu-acc { display: grid; gap: 8px; }
+/* Note and discount accordions: soft rows with a square toggle. */
+.mu-acc__item { border-radius: 14px; background: color-mix(in srgb, var(--fg) 5%, transparent); }
+.mu-acc__item summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 6px 0 16px; font-size: 14px; font-weight: var(--mu-font-body-bold); cursor: pointer; list-style: none; border-radius: 14px; }
+.mu-acc__item summary::-webkit-details-marker { display: none; }
+.mu-acc__icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: color-mix(in srgb, var(--fg) 10%, transparent); color: var(--fg); flex: none; }
+.mu-acc__icon .mu-icon { width: 16px; height: 16px; transition: transform 0.2s ease; }
+.mu-acc__item[open] .mu-acc__icon .mu-icon { transform: rotate(45deg); }
+.mu-acc__body { padding: 2px 6px 6px; display: grid; gap: 8px; }
+.mu-acc__field { display: flex; align-items: center; gap: 6px; height: 48px; padding: 0 4px 0 14px; border-radius: calc(var(--mu-btn-r-s) + 4px); background: var(--bg); box-shadow: inset 0 0 0 1px var(--bd); }
+.mu-acc__field:focus-within { box-shadow: inset 0 0 0 2px var(--fg); }
+.mu-acc__input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; color: var(--fg); font-size: 16px; text-transform: uppercase; letter-spacing: 0.04em; outline: none; }
+.mu-acc__input::placeholder { color: var(--mu); opacity: 1; text-transform: none; letter-spacing: 0; }
+.mu-acc__apply.mu-btn { min-height: 40px; padding: 0 16px; border-radius: var(--mu-btn-r-s); }
+.mu-acc__msg { font-size: 13px; padding-inline: 12px; }
+.mu-acc__msg:empty { display: none; }
+.mu-acc__codes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.mu-acc__codes li { display: inline-flex; align-items: center; gap: 2px; min-height: 34px; padding: 0 2px 0 12px; border-radius: var(--mu-btn-r-s); background: color-mix(in srgb, var(--fg) 10%, transparent); font-size: 13px; font-weight: var(--mu-font-body-bold); letter-spacing: 0.04em; text-transform: uppercase; }
+.mu-acc__codes button { display: grid; place-items: center; width: 36px; height: 36px; border-radius: var(--mu-btn-r-s); }
+.mu-acc__codes .mu-icon { width: 14px; height: 14px; }
+.mu-acc__note { width: 100%; padding: 12px 14px; border-radius: 12px; border: 0; box-shadow: inset 0 0 0 1px var(--bd); background: transparent; color: var(--fg); font: inherit; font-size: 16px; resize: vertical; }
+.mu-acc__note:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--fg); }
+[data-discount][aria-busy="true"] .mu-acc__field { opacity: 0.55; pointer-events: none; }
+@media (hover: hover) and (pointer: fine) {
+  .mu-acc__item summary:hover .mu-acc__icon { background: color-mix(in srgb, var(--fg) 16%, transparent); }
+  .mu-acc__codes button:hover { background: color-mix(in srgb, var(--fg) 14%, transparent); }
+  .mu-stepper__btn:not(:disabled):hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+}
+
+/* Empty */
+.mu-cart__empty { display: grid; justify-items: center; gap: 8px; padding: 44px 22px 48px; text-align: center; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); }
+.mu-cart__empty-icon { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 24px; background: var(--mu-g-hero); color: var(--mu-paper); margin-bottom: 8px; }
+.mu-cart__empty-icon .mu-icon { width: 30px; height: 30px; }
+.mu-cart__empty-title { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: calc(26px * var(--mu-heading-scale)); line-height: 1.1; }
+.mu-cart__empty .mu-btn { margin-top: 12px; }
+
+/* ---------- Drawer ---------- */
+/* The sheet itself doesn't scroll (the bag inside it does), so the ramp edge and the handle stay put at full size. */
+.mu-drawer {
+  border: 0; padding: 0; margin: auto 0 0; inset: auto 0 0; width: 100%; max-width: 100%; max-height: calc(100dvh - 56px);
+  border-radius: 24px 24px 0 0; overflow: hidden;
+}
+.mu-drawer[open] { display: flex; flex-direction: column; }
+.mu-drawer::before { content: ""; position: absolute; inset: 0 0 auto; z-index: 2; height: 4px; background: var(--mu-g-hero); pointer-events: none; }
+.mu-drawer::backdrop { background: rgb(11 11 12 / 0.45); }
+.mu-drawer[open] { animation: mu-drawer-up 0.28s cubic-bezier(.2,.7,.2,1); }
+@keyframes mu-drawer-up { from { transform: translateY(32px); opacity: 0; } }
+html.mu-locked { overflow: hidden; }
+.mu-drawer__handle { display: block; flex: none; width: 44px; height: 4px; margin: 8px auto 0; border-radius: 999px; background: color-mix(in srgb, var(--fg) 25%, transparent); }
+.mu-drawer mu-cart { display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px 18px calc(16px + env(safe-area-inset-bottom)); }
+.mu-drawer .mu-cart__head { padding: 6px 0 2px; }
+.mu-drawer .mu-sum { padding: 18px; border-radius: 20px; }
+@media (prefers-reduced-motion: reduce) { .mu-drawer[open] { animation: none; } }
+@media (min-width: 750px) {
+  .mu-drawer { margin: 0 0 0 auto; inset: 0 0 0 auto; width: min(460px, 100%); height: 100%; max-height: none; border-radius: 0; }
+  .mu-drawer::before { inset: 0 auto 0 0; width: 4px; height: auto; }
+  .mu-drawer__handle { display: none; }
+  .mu-drawer mu-cart { padding: 22px 24px; }
+  @keyframes mu-drawer-up { from { transform: translateX(32px); opacity: 0; } }
+}
+
+/* ---------- Page ---------- */
+.mu-cart-page { display: block; margin: 8px var(--gutter) 0; }
+.mu-cart--page .mu-cart__head { padding: 18px 0 6px; flex-wrap: wrap; }
+.mu-cart--page .mu-cart__title { font-size: calc(clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem) * var(--mu-heading-scale)); }
+.mu-cart--page .mu-cart__count { font-size: 18px; }
+.mu-cart__keep { font-size: 14px; color: var(--fg); }
+.mu-cart--page .mu-cart__empty { max-width: 640px; width: 100%; justify-self: center; margin-top: 10px; }
+@media (min-width: 990px) {
+  .mu-cart-page { margin-top: 18px; }
+  .mu-cart--page { gap: 22px; }
+  .mu-cart--page .mu-cart__head { align-items: flex-end; }
+  .mu-cart--page .mu-cart__form { grid-template-columns: minmax(0, 1fr) 440px; gap: 48px; align-items: start; }
+  .mu-cart--page .mu-line { grid-template-columns: 128px minmax(0, 1fr) auto; padding: 20px 0; column-gap: 22px; }
+  .mu-cart--page .mu-line__title { font-size: 17px; }
+  .mu-cart--page .mu-line__price { font-size: 17px; }
+  .mu-cart--page .mu-sum { position: sticky; top: 96px; padding: 28px; gap: 12px; }
+  .mu-cart--page .mu-sum__sub strong { font-size: 30px; }
+  .mu-cart--page .mu-cart__empty { padding: 64px 32px; }
+}
+.mu-t-cart .mu-main > .shopify-section + .shopify-section { margin-top: max(20px, var(--mu-gap)); }
+
+/* Express checkout (Theme settings > Cart), subscription line. */
+.mu-sum__express { margin-top: 10px; }
+.mu-sum__express:empty { display: none; }
+.mu-line__plan { font-weight: var(--mu-font-body-medium); }
+/* Bag: the preferred store for pickup (assets/mu-stores.js). */
+.mu-sum__store { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 0; font-size: 13px; }
+.mu-sum__store[hidden] { display: none; }
+.mu-sum__store > .mu-icon { width: 18px; height: 18px; }
+.mu-sum__store > span { flex: 1; min-width: 0; }
+.mu-sum__store-btn { padding: 0; min-height: 32px; border: 0; background: none; color: var(--fg); font: inherit; font-weight: var(--mu-font-body-bold); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.mu-sum__store-btn[hidden] { display: none; }
+.mu-sum__store-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+/* The drawer is narrow: the bundle card drops its thumb. */
+@media (min-width: 750px) {
+  .mu-drawer .mu-upsell { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .mu-drawer .mu-upsell__thumb { display: none; }
+}

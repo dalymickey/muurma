@@ -1,0 +1,91 @@
+{%- comment -%}
+  Structured data: Organization and WebSite on the home page, Product (Shopify's structured_data) on products,
+  Article on articles, and a BreadcrumbList on products, collections, articles, blogs and pages.
+{%- endcomment -%}
+{%- liquid
+  assign nets = 'instagram,tiktok,youtube,facebook,x,threads,pinterest,snapchat,linkedin,tumblr,vimeo,strava' | split: ','
+  assign same = ''
+  for n in nets
+    assign k = 'social_' | append: n
+    if settings[k] != blank
+      assign same = same | append: settings[k] | append: '|'
+    endif
+  endfor
+  assign same_as = same | split: '|'
+  assign home = request.origin | append: routes.root_url
+  assign search_tpl = request.origin | append: routes.search_url | append: '?q=' | append: '{' | append: 'search_term_string' | append: '}'
+-%}
+{%- if request.page_type == 'index' -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": {{ shop.name | json }},
+      "url": {{ home | json }}
+      {%- assign org_logo = settings.logo | default: settings.favicon -%}
+      {%- if org_logo != blank -%},
+        "logo": {{ org_logo | image_url: width: 512 | prepend: 'https:' | json }}
+      {%- endif -%}
+      {%- if same_as.size > 0 -%},
+        "sameAs": {{ same_as | json }}
+      {%- endif %}
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": {{ shop.name | json }},
+      "url": {{ home | json }},
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {{ search_tpl | json }},
+        "query-input": "required name=search_term_string"
+      }
+    }
+  </script>
+{%- elsif request.page_type == 'product' -%}
+  <script type="application/ld+json">{{ product | structured_data }}</script>
+{%- elsif request.page_type == 'article' -%}
+  <script type="application/ld+json">{{ article | structured_data }}</script>
+{%- endif -%}
+{%- if request.page_type == 'product' or request.page_type == 'collection' or request.page_type == 'article' or request.page_type == 'blog' or request.page_type == 'page' -%}
+  {%- liquid
+    assign mid_name = blank
+    assign mid_url = blank
+    assign last_name = blank
+    case request.page_type
+      when 'product'
+        if collection
+          assign mid_name = collection.title
+          assign mid_url = collection.url
+        endif
+        assign last_name = product.title
+      when 'collection'
+        assign last_name = collection.title
+      when 'article'
+        assign mid_name = blog.title
+        assign mid_url = blog.url
+        assign last_name = article.title
+      when 'blog'
+        assign last_name = blog.title
+      when 'page'
+        assign last_name = page.title
+    endcase
+    assign pos = 2
+  -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": {{ 'general.home' | t | json }}, "item": {{ home | json }} },
+        {%- if mid_name != blank -%}
+          { "@type": "ListItem", "position": 2, "name": {{ mid_name | json }}, "item": {{ request.origin | append: mid_url | json }} },
+          {%- assign pos = 3 -%}
+        {%- endif %}
+        { "@type": "ListItem", "position": {{ pos }}, "name": {{ last_name | json }}, "item": {{ canonical_url | json }} }
+      ]
+    }
+  </script>
+{%- endif -%}

@@ -1,0 +1,476 @@
+{%- comment -%}
+  Header: a solid bar with a ramp line along its foot, the logo, menu (desktop), search (an icon, or optionally a search bar that folds back to the
+  icon when the bar runs out of room and on phones), account (Shopify's <shopify-account>, on desktop and phones),
+  the bag (optionally with the cart total beside it) and the menu button (phones). Announcements come only from announcement blocks (optionally with the social links from Theme settings at the left, Announcement bar > Social icons) and show only as a slim bar
+  above the bar on every page (several rotate; none = no bar). The header never puts anything into the hero.
+{%- endcomment -%}
+{{ 'mu-header.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-header.js' | asset_url }}" defer></script>
+{%- render 'mu-cart-count', strings: true -%}
+{%- liquid
+  assign menu = section.settings.menu
+  assign scheme = section.settings.color_scheme
+  comment
+    Minimal style: logo, search, account, Bag and the menu button at every width; the menu, My store and country
+    picker live in the drawer. Transparent over hero: the bar sits on a first-section hero until the page scrolls.
+  endcomment
+  assign minimal = false
+  if section.settings.style == 'minimal'
+    assign minimal = true
+  endif
+  assign sch_id = scheme | append: ''
+  assign sch = settings.color_schemes[sch_id]
+  assign store_ic = 'pin'
+  if section.settings.store_icon == 'store'
+    assign store_ic = 'store'
+  endif
+  assign sbar = section.settings.search_bar
+  if minimal
+    assign sbar = false
+  endif
+  assign ofg = 'var(--mu-hero-fg, var(--fg))'
+  if section.settings.overlay_text == 'scheme'
+    assign o_id = section.settings.overlay_scheme | append: ''
+    assign ofg = settings.color_schemes[o_id].settings.text
+  endif
+  assign loc_id = 'MuHeadLoc-' | append: section.id
+  assign loc_mid = 'MuMenuLoc-' | append: section.id
+  comment
+    Highlight menu item: top-level titles (comma-separated, any case) that get the pulsing dot. Kept as |a|b| for a contains test.
+  endcomment
+  assign hl_keys = ''
+  assign hl_raw = section.settings.highlight_items | strip
+  if hl_raw != blank
+    assign hl_keys = '|'
+    assign hl_list = hl_raw | downcase | split: ','
+    for h in hl_list
+      assign h = h | strip
+      if h != blank
+        assign hl_keys = hl_keys | append: h | append: '|'
+      endif
+    endfor
+  endif
+  capture loc
+    render 'mu-loc', id: loc_id, country: section.settings.show_country, language: section.settings.show_language, class: 'mu-loc mu-loc--pop'
+  endcapture
+-%}
+  {%- liquid
+    comment
+      A message with a countdown that has ended and is set to hide drops out (on the next page load; until then the
+      timer just takes itself away). The theme editor keeps it so it can still be edited.
+    endcomment
+    assign ann_count = 0
+    assign ann_cd = false
+    assign ann_now = 'now' | date: '%s' | plus: 0
+    for block in section.blocks
+      if block.type == 'announcement' and block.settings.text != blank
+        assign cd_end = block.settings.countdown_end | strip
+        if cd_end != blank and block.settings.countdown_after != 'keep' and request.design_mode == false
+          assign cd_s = cd_end | date: '%s' | plus: 0
+          if cd_s > 0 and ann_now > cd_s
+            continue
+          endif
+        endif
+        if cd_end != blank
+          assign ann_cd = true
+        endif
+        assign ann_count = ann_count | plus: 1
+      endif
+    endfor
+    assign ann_bar = false
+    if ann_count > 0
+      assign ann_bar = true
+    endif
+    assign ann_social_mode = section.settings.ann_social | default: 'none'
+    assign ann_social = blank
+    assign ann_d_only = false
+    if ann_social_mode != 'none'
+      capture ann_social
+        render 'mu-social', class: 'mu-header__ann-social'
+      endcapture
+      assign ann_social = ann_social | strip
+      assign ann_n = ann_social | split: '<li>' | size | minus: 1
+      if ann_social != blank
+        assign ann_bar = true
+        if ann_count == 0 and ann_social_mode == 'desktop'
+          assign ann_d_only = true
+        endif
+      endif
+    endif
+  -%}
+  {%- capture ann -%}
+      <div class="mu-ann">
+        {%- assign ai = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'announcement' and block.settings.text != blank -%}
+            {%- liquid
+              assign cd_end = block.settings.countdown_end | strip
+              assign cd_s = 0
+              if cd_end != blank
+                assign cd_s = cd_end | date: '%s' | plus: 0
+              endif
+              if cd_s > 0 and ann_now > cd_s
+                if block.settings.countdown_after != 'keep' and request.design_mode == false
+                  continue
+                endif
+                assign cd_s = 0
+              endif
+            -%}
+            <p class="mu-ann__item{% if ai == 0 %} is-on{% endif %}"{% if ai > 0 %} aria-hidden="true"{% endif %} {{ block.shopify_attributes }}>
+              {%- if block.settings.link != blank -%}<a href="{{ block.settings.link }}"{% if ai > 0 %} tabindex="-1"{% endif %}>{{ block.settings.text | escape }}</a>{%- else -%}{{ block.settings.text | escape }}{%- endif -%}
+              {%- if cd_s > 0 -%}
+                {%- comment -%} Countdown: a compact ticking timer (aria-hidden) with the end date for screen readers. {%- endcomment -%}
+                <mu-countdown class="mu-ann__cd" data-end="{{ cd_end | escape }}">
+                  <span class="mu-ann__cd-out" aria-hidden="true" data-out></span>
+                  {%- assign cd_text = cd_end | date: '%a %-d %b, %H:%M' -%}
+                  <span class="visually-hidden" data-live-text>{{ 'sections.countdown.ends' | t: date: cd_text }}</span>
+                  <script type="application/json" data-strings>
+                    {"ends":{{ 'sections.countdown.ends' | t: date: '__DATE__' | json }},"short":{{ 'sections.countdown.short' | t: hours: '__H__', minutes: '__M__', seconds: '__S__' | json }},"short_days":{{ 'sections.countdown.short_days' | t: days: '__D__', hours: '__H__', minutes: '__M__', seconds: '__S__' | json }}}
+                  </script>
+                </mu-countdown>
+              {%- endif -%}
+            </p>
+            {%- assign ai = ai | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+  {%- endcapture -%}
+{%- assign sticky = section.settings.sticky_mode | default: 'desktop' -%}
+<mu-header class="mu-header{% if sticky == 'always' or sticky == 'desktop' %} mu-header--sd{% endif %}{% if sticky == 'always' or sticky == 'mobile' %} mu-header--sm{% endif %}{% if ann_bar %} mu-header--ann{% endif %}{% if ann_d_only %} mu-header--ann-d{% endif %}{% if sbar %} mu-header--sbar{% endif %}{% if section.settings.show_border == false %} mu-header--nb{% endif %}{% if minimal %} mu-header--min{% endif %}{% if section.settings.overlay %} mu-header--over{% endif %}" data-section="{{ section.id }}" style="{% if section.settings.overlay %}--mu-ofg: {{ ofg }};{% endif %}">
+  {%- if ann_bar -%}
+    {%- if ann_cd -%}<script src="{{ 'mu-countdown.js' | asset_url }}" defer></script>{%- endif -%}
+    {%- comment -%} Announcement bar: a slim strip above the pill on every page; it scrolls away while the pill stays. {%- endcomment -%}
+    <div class="mu-header__ann color-{{ section.settings.ann_scheme | default: scheme }}"{% if ann_social != blank %} style="--mu-ann-n: {{ ann_n }}"{% endif %}{% if ann_count > 1 %} data-ann="{{ section.settings.ann_speed | times: 1000 }}"{% endif %}>
+      {%- if ann_social != blank -%}<div class="mu-header__ann-side mu-header__ann-side--{{ ann_social_mode }}">{{ ann_social }}</div>{%- endif -%}
+      {%- if ann_count > 0 -%}
+        {%- comment -%} Arrows (Announcements > Show arrows): only with two or more messages. Using them stops the rotation. {%- endcomment -%}
+        <div class="mu-ann-wrap">
+          {%- if ann_count > 1 and section.settings.ann_arrows != false -%}
+            <button type="button" class="mu-ann__btn mu-ann__btn--prev" data-ann-prev aria-label="{{ 'header.ann_previous' | t }}">{% render 'mu-icon', name: 'chevron' %}</button>
+            {{- ann -}}
+            <button type="button" class="mu-ann__btn mu-ann__btn--next" data-ann-next aria-label="{{ 'header.ann_next' | t }}">{% render 'mu-icon', name: 'chevron' %}</button>
+          {%- else -%}
+            {{- ann -}}
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+  {%- comment -%} The search pill keeps the header scheme's text color even when the bar takes the hero's text color over a hero. {%- endcomment -%}
+  <div class="mu-header__bar color-{{ scheme }}"{% if sch.settings.text != blank %} style="--mu-sb-fg: {{ sch.settings.text }}; --mu-sb-mu: {{ sch.settings.muted }};"{% endif %}>
+    <div class="mu-header__logo">
+      <a href="{{ routes.root_url }}" class="mu-header__logo-link">
+        {%- capture logo -%}{%- render 'mu-logo', scheme: scheme, width: section.settings.logo_width, max_height: 44, class: 'mu-header__logo-img', loading: 'eager' -%}{%- endcapture -%}
+        {%- if logo != blank -%}
+          {{ logo }}
+        {%- else -%}
+          <span class="mu-header__wordmark">{{ section.settings.logo_text | default: shop.name | escape }}</span>
+        {%- endif -%}
+      </a>
+    </div>
+
+    {%- if menu != blank and minimal == false -%}
+      {%- comment -%}
+        At most one top-level item shows as current. First an item whose own URL is this page; then the one item that
+        holds this page lower down; then, on a product, the one item that links to a collection the product is in.
+        A page or collection listed under several items (a care kit in every Extras column) marks none of them;
+        link.child_active is not used because it lights every parent that holds the link.
+      {%- endcomment -%}
+      {%- liquid
+        assign nav_active = 0
+        assign hits = 0
+        for link in menu.links
+          if link.current
+            assign hits = hits | plus: 1
+            assign hit_at = forloop.index
+          endif
+        endfor
+        if hits == 1
+          assign nav_active = hit_at
+        elsif hits == 0
+          for link in menu.links
+            assign holds = false
+            for child in link.links
+              if child.current
+                assign holds = true
+              endif
+              for g in child.links
+                if g.current
+                  assign holds = true
+                endif
+              endfor
+            endfor
+            if holds
+              assign hits = hits | plus: 1
+              assign hit_at = forloop.index
+            endif
+          endfor
+          if hits == 1
+            assign nav_active = hit_at
+          elsif hits == 0 and product != blank
+            assign product_ids = product.collections | map: 'id'
+            for link in menu.links
+              if link.type == 'collection_link' and product_ids contains link.object.id
+                assign hits = hits | plus: 1
+                assign hit_at = forloop.index
+              endif
+            endfor
+            if hits == 1
+              assign nav_active = hit_at
+            endif
+          endif
+        endif
+      -%}
+      <nav class="mu-header__nav" aria-label="{{ 'header.menu' | t }}">
+        <ul role="list">
+          {%- for link in menu.links -%}
+            {%- liquid
+              assign is_active = false
+              if forloop.index == nav_active
+                assign is_active = true
+              endif
+            -%}
+            {%- liquid
+              assign hl_key = link.title | strip | downcase | prepend: '|' | append: '|'
+              assign hl_on = false
+              if hl_keys contains hl_key
+                assign hl_on = true
+              endif
+            -%}
+            <li>{%- render 'mu-nav-item', link: link, blocks: section.blocks, scheme: scheme, active: is_active, dot: hl_on -%}</li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
+    <div class="mu-header__tools">
+      {%- comment -%} My store: hidden until assets/mu-stores.js has a store list (Theme settings > Stores > Stores page). {%- endcomment -%}
+      {%- if section.settings.store_desktop and minimal == false -%}
+        <button type="button" class="mu-header__store" aria-haspopup="dialog" data-store-btn data-store-open hidden>
+          {%- render 'mu-icon', name: store_ic -%}
+          <span class="mu-header__store-txt">
+            <span class="mu-header__store-k"><i class="mu-st__dot" aria-hidden="true" data-store-dot hidden></i><span data-store-status>{{ 'stores.my_store' | t }}</span></span>
+            <span class="mu-header__store-n" data-store-name>{{ 'stores.choose' | t }}</span>
+          </span>
+          {%- render 'mu-icon', name: 'chevron' -%}
+        </button>
+      {%- endif -%}
+      {%- if loc != blank and minimal == false -%}
+        <details class="mu-header__loc">
+          <summary class="mu-iconbtn">
+            {%- if section.settings.show_country and localization.available_countries.size > 1 -%}
+              {{- localization.country | image_url: width: 40 | image_tag: width: 20, height: 15, alt: '', loading: 'lazy', class: 'mu-loc__flag' -}}
+              <span class="mu-header__loc-code mu-num" aria-hidden="true">{{ localization.country.currency.iso_code }}</span>
+            {%- else -%}
+              {%- render 'mu-icon', name: 'globe' -%}
+              <span class="mu-header__loc-code mu-num" aria-hidden="true">{{ localization.language.iso_code | split: '-' | first | upcase }}</span>
+            {%- endif -%}
+            <span class="visually-hidden">{{ 'localization.label' | t }}</span>
+          </summary>
+          <div class="mu-header__loc-pop color-{{ scheme }}">{{ loc }}</div>
+        </details>
+      {%- endif -%}
+      {%- if sbar -%}
+        <form class="mu-header__sbar" action="{{ routes.search_url }}" method="get" role="search" data-sbar>
+          {%- render 'mu-icon', name: 'search' -%}
+          <label class="visually-hidden" for="MuSbar-{{ section.id }}">{{ 'search.label' | t }}</label>
+          <input id="MuSbar-{{ section.id }}" type="search" name="q" placeholder="{{ 'search.label' | t }}" autocomplete="off"{% if section.settings.predictive_search %} role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="MuSbarOut-{{ section.id }}"{% endif %}>
+          <input type="hidden" name="options[prefix]" value="last">
+          {%- if section.settings.predictive_search -%}
+            <div class="mu-sdrop color-{{ scheme }}" id="MuSbarOut-{{ section.id }}" role="listbox" aria-label="{{ 'search.title' | t }}" hidden data-sbar-out></div>
+          {%- endif -%}
+        </form>
+      {%- endif -%}
+      <a class="mu-iconbtn mu-header__sicon" href="{{ routes.search_url }}"{% if section.settings.predictive_search %} data-search-open aria-haspopup="dialog" aria-controls="MuSearchDlg-{{ section.id }}"{% endif %}>
+        {%- render 'mu-icon', name: 'search' -%}
+        <span class="visually-hidden">{{ 'header.search' | t }}</span>
+      </a>
+      {%- if shop.customer_accounts_enabled -%}
+        <shopify-account menu="{{ settings.account_menu | default: 'customer-account-main-menu' }}" class="mu-iconbtn mu-header__account">
+          <span slot="signed-out-avatar" class="mu-header__avatar">{%- render 'mu-icon', name: 'account' -%}<span class="visually-hidden">{{ 'header.account' | t }}</span></span>
+        </shopify-account>
+        <a class="mu-iconbtn mu-header__account-link" href="{{ routes.account_url }}">
+          {%- render 'mu-icon', name: 'account' -%}
+          <span class="visually-hidden">{{ 'header.account' | t }}</span>
+        </a>
+      {%- endif -%}
+      {%- assign ct = section.settings.cart_total | default: 'off' -%}
+      <a class="mu-iconbtn mu-header__bag{% if ct != 'off' %} mu-header__bag--total mu-header__bag--t-{{ ct }}{% endif %}" href="{{ routes.cart_url }}" data-cart-link>
+        {%- render 'mu-icon', name: 'bag' -%}
+        {%- if ct != 'off' -%}
+          <span class="mu-header__total mu-num" data-cart-total data-money-sample="{%- capture mu_m -%}{%- render 'mu-money', m: 123456 -%}{%- endcapture -%}{{ mu_m | strip_html | escape }}" aria-hidden="true"{% if cart.item_count == 0 %} hidden{% endif %}>{%- capture mu_m -%}{%- render 'mu-money', m: cart.total_price -%}{%- endcapture -%}{{ mu_m | strip_html }}</span>
+        {%- endif -%}
+        {%- capture bag_count -%}{% render 'mu-cart-count' %}{%- endcapture -%}
+        <span class="visually-hidden" data-cart-label="bag">{{ 'header.bag_count' | t: count: bag_count }}</span>
+        <span class="mu-badge" data-cart-count data-count="{{ cart.item_count }}" aria-hidden="true">{{ cart.item_count }}</span>
+      </a>
+      <button type="button" class="mu-iconbtn mu-header__menu-btn" aria-haspopup="dialog" aria-controls="MuMenu-{{ section.id }}" data-menu-open>
+        {%- render 'mu-icon', name: 'menu' -%}
+        <span class="visually-hidden">{{ 'header.open_menu' | t }}</span>
+      </button>
+    </div>
+  </div>
+
+  <dialog class="mu-menu color-{{ scheme }}" id="MuMenu-{{ section.id }}" aria-label="{{ 'header.menu' | t }}">
+    <div class="mu-menu__top">
+      {%- if logo != blank -%}{{ logo }}{%- else -%}<span class="mu-header__wordmark">{{ section.settings.logo_text | default: shop.name | escape }}</span>{%- endif -%}
+      <button type="button" class="mu-iconbtn mu-menu__close" data-menu-close>
+        {%- render 'mu-icon', name: 'close' -%}
+        <span class="visually-hidden">{{ 'header.close_menu' | t }}</span>
+      </button>
+    </div>
+    {%- if menu != blank -%}
+      <nav aria-label="{{ 'header.menu' | t }}">
+        <ul role="list" class="mu-menu__list">
+          {%- for link in menu.links -%}
+            {%- liquid
+              assign hl_key = link.title | strip | downcase | prepend: '|' | append: '|'
+              assign hl_on = false
+              if hl_keys contains hl_key
+                assign hl_on = true
+              endif
+            -%}
+            <li>{%- render 'mu-nav-item', link: link, blocks: section.blocks, scheme: scheme, mobile: true, dot: hl_on -%}</li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+    {%- comment -%} Drawer foot: My store, country / language and Account, kept together at the bottom. {%- endcomment -%}
+    <div class="mu-menu__foot">
+      {%- if section.settings.store_mobile -%}
+        <button type="button" class="mu-menu__store" aria-haspopup="dialog" data-store-btn data-store-open hidden>
+          <span class="mu-menu__store-ic" aria-hidden="true">{%- render 'mu-icon', name: store_ic -%}</span>
+          <span class="mu-header__store-txt">
+            <span class="mu-header__store-k"><i class="mu-st__dot" aria-hidden="true" data-store-dot hidden></i><span data-store-status>{{ 'stores.my_store' | t }}</span></span>
+            <span class="mu-header__store-n" data-store-name>{{ 'stores.choose' | t }}</span>
+          </span>
+          {%- render 'mu-icon', name: 'arrow-right' -%}
+        </button>
+      {%- endif -%}
+      {%- render 'mu-loc', id: loc_mid, country: section.settings.show_country, language: section.settings.show_language, class: 'mu-loc mu-loc--menu' -%}
+      {%- if shop.customer_accounts_enabled -%}
+        <shopify-account menu="{{ settings.account_menu | default: 'customer-account-main-menu' }}" class="mu-menu__account mu-menu__account-el">
+          <span slot="signed-out-avatar" class="mu-btn mu-btn--ghost mu-menu__account-btn">{%- render 'mu-icon', name: 'account' -%}{{ 'header.account' | t }}</span>
+        </shopify-account>
+        <a class="mu-btn mu-btn--ghost mu-menu__account mu-menu__account-link" href="{{ routes.account_url }}">{% render 'mu-icon', name: 'account' %}{{ 'header.account' | t }}</a>
+      {%- endif -%}
+    </div>
+  </dialog>
+
+  {%- if section.settings.predictive_search -%}
+    <dialog class="mu-ps color-{{ scheme }}" id="MuSearchDlg-{{ section.id }}" aria-label="{{ 'search.title' | t }}" data-search data-url="{{ routes.predictive_search_url }}">
+      <form class="mu-ps__form" action="{{ routes.search_url }}" method="get" role="search">
+        {%- render 'mu-icon', name: 'search' -%}
+        <label class="visually-hidden" for="MuSearchIn-{{ section.id }}">{{ 'search.label' | t }}</label>
+        <input class="mu-ps__input" id="MuSearchIn-{{ section.id }}" type="search" name="q" placeholder="{{ 'search.label' | t }}" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="MuSearchOut-{{ section.id }}" aria-autocomplete="list" data-search-input>
+        <input type="hidden" name="options[prefix]" value="last">
+        <button class="mu-iconbtn" type="button" data-search-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+      </form>
+      <div class="mu-ps__out" id="MuSearchOut-{{ section.id }}" aria-live="polite" data-search-out></div>
+    </dialog>
+  {%- endif -%}
+</mu-header>
+
+{% schema %}
+{
+  "name": "t:sections.header.name",
+  "class": "mu-header-section",
+  "tag": "header",
+  "enabled_on": { "groups": ["header"] },
+  "settings": [
+    { "type": "paragraph", "content": "t:sections.header.logo_help" },
+    { "type": "text", "id": "logo_text", "label": "t:sections.header.logo_text", "info": "t:sections.header.logo_text_info" },
+    { "type": "range", "id": "logo_width", "label": "t:sections.header.logo_width", "min": 60, "max": 240, "step": 5, "unit": "px", "default": 140 },
+    { "type": "link_list", "id": "menu", "label": "t:sections.header.menu", "default": "main-menu" },
+    { "type": "text", "id": "highlight_items", "label": "t:sections.header.highlight", "info": "t:sections.header.highlight_info" },
+    { "type": "header", "content": "t:sections.header.ann_heading" },
+    { "type": "paragraph", "content": "t:sections.header.ann_help" },
+    { "type": "color_scheme", "id": "ann_scheme", "label": "t:sections.header.ann_scheme", "default": "scheme-1" },
+    {
+      "type": "select", "id": "ann_social", "label": "t:sections.header.ann_social", "info": "t:sections.header.ann_social_info", "default": "none",
+      "options": [
+        { "value": "none", "label": "t:sections.header.ann_social_none" },
+        { "value": "desktop", "label": "t:sections.header.ann_social_desktop" },
+        { "value": "all", "label": "t:sections.header.ann_social_all" }
+      ]
+    },
+    { "type": "range", "id": "ann_speed", "label": "t:sections.header.ann_speed", "info": "t:sections.header.ann_speed_info", "min": 3, "max": 10, "step": 1, "unit": "s", "default": 5 },
+    { "type": "checkbox", "id": "ann_arrows", "label": "t:sections.header.ann_arrows", "info": "t:sections.header.ann_arrows_info", "default": true },
+    { "type": "header", "content": "t:sections.header.options_heading" },
+    {
+      "type": "select", "id": "style", "label": "t:sections.header.style", "info": "t:sections.header.style_info", "default": "standard",
+      "options": [
+        { "value": "standard", "label": "t:sections.header.style_standard" },
+        { "value": "minimal", "label": "t:sections.header.style_minimal" }
+      ]
+    },
+    { "type": "checkbox", "id": "overlay", "label": "t:sections.header.overlay", "info": "t:sections.header.overlay_info", "default": false },
+    {
+      "type": "select", "id": "overlay_text", "label": "t:sections.header.overlay_text", "default": "hero", "visible_if": "{{ section.settings.overlay }}",
+      "options": [
+        { "value": "hero", "label": "t:sections.header.overlay_text_hero" },
+        { "value": "scheme", "label": "t:sections.header.overlay_text_scheme" }
+      ]
+    },
+    { "type": "color_scheme", "id": "overlay_scheme", "label": "t:sections.header.overlay_scheme", "default": "scheme-1", "visible_if": "{{ section.settings.overlay and section.settings.overlay_text == 'scheme' }}" },
+    {
+      "type": "select", "id": "sticky_mode", "label": "t:sections.header.sticky", "info": "t:sections.header.sticky_info", "default": "desktop",
+      "options": [
+        { "value": "always", "label": "t:sections.header.sticky_always" },
+        { "value": "desktop", "label": "t:sections.header.sticky_desktop" },
+        { "value": "mobile", "label": "t:sections.header.sticky_mobile" },
+        { "value": "off", "label": "t:sections.header.sticky_off" }
+      ]
+    },
+    {
+      "type": "select", "id": "cart_total", "label": "t:sections.header.cart_total", "info": "t:sections.header.cart_total_info", "default": "off",
+      "options": [
+        { "value": "off", "label": "t:sections.header.cart_total_off" },
+        { "value": "desktop", "label": "t:sections.header.cart_total_desktop" },
+        { "value": "all", "label": "t:sections.header.cart_total_all" }
+      ]
+    },
+    { "type": "checkbox", "id": "search_bar", "label": "t:sections.header.search_bar", "info": "t:sections.header.search_bar_info", "default": false, "visible_if": "{{ section.settings.style != 'minimal' }}" },
+    { "type": "checkbox", "id": "predictive_search", "label": "t:sections.header.predictive_search", "default": true },
+    { "type": "checkbox", "id": "show_country", "label": "t:sections.common.show_country", "info": "t:sections.common.show_country_info", "default": true },
+    { "type": "checkbox", "id": "show_language", "label": "t:sections.common.show_language", "info": "t:sections.common.show_language_info", "default": true },
+    { "type": "color_scheme", "id": "color_scheme", "label": "t:settings.colors.scheme", "default": "scheme-2" },
+    { "type": "checkbox", "id": "show_border", "label": "t:sections.header.show_border", "info": "t:sections.header.show_border_info", "default": true },
+    { "type": "header", "content": "t:sections.header.store_heading", "info": "t:sections.header.store_info" },
+    { "type": "checkbox", "id": "store_desktop", "label": "t:sections.header.store_desktop", "default": true, "visible_if": "{{ section.settings.style != 'minimal' }}" },
+    { "type": "checkbox", "id": "store_mobile", "label": "t:sections.header.store_mobile", "default": true },
+    { "type": "select", "id": "store_icon", "label": "t:sections.header.store_icon", "default": "pin", "options": [
+      { "value": "pin", "label": "t:sections.header.store_icon_pin" },
+      { "value": "store", "label": "t:sections.header.store_icon_store" }
+    ], "visible_if": "{{ section.settings.store_desktop or section.settings.store_mobile }}" }
+  ],
+  "blocks": [
+    {
+      "type": "announcement", "name": "t:sections.header.announcement",
+      "settings": [
+        { "type": "text", "id": "text", "label": "t:sections.common.text" },
+        { "type": "url", "id": "link", "label": "t:sections.common.link" },
+        { "type": "text", "id": "countdown_end", "label": "t:sections.header.ann_countdown", "info": "t:sections.header.ann_countdown_info", "placeholder": "2026-12-24T23:59:00-05:00" },
+        {
+          "type": "select", "id": "countdown_after", "label": "t:sections.countdown.after_end", "default": "hide", "visible_if": "{{ block.settings.countdown_end != blank }}",
+          "options": [
+            { "value": "hide", "label": "t:sections.header.ann_cd_hide" },
+            { "value": "keep", "label": "t:sections.header.ann_cd_keep" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "promo", "name": "t:sections.header.promo",
+      "settings": [
+        { "type": "text", "id": "menu_item", "label": "t:sections.header.promo_item", "info": "t:sections.header.promo_item_info" },
+        { "type": "image_picker", "id": "image", "label": "t:sections.common.image" },
+        { "type": "text", "id": "demo_image", "label": "t:sections.common.demo_image", "info": "t:sections.common.demo_image_info" },
+        { "type": "text", "id": "heading", "label": "t:sections.common.heading" },
+        { "type": "text", "id": "text", "label": "t:sections.common.text" },
+        { "type": "url", "id": "link", "label": "t:sections.common.link" }
+      ]
+    }
+  ]
+}
+{% endschema %}

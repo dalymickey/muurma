@@ -1,0 +1,97 @@
+{%- comment -%}
+  Country / currency and language pickers in one localization form. Each is a custom dropdown (details): the trigger
+  shows the current flag, country and currency (or language), the panel lists every option as a submit button, so a
+  pick works without JS. With JS, long lists get a search field and arrow-key movement (assets/mu-loc.js). The lists
+  sit in <noscript>: shown as is without JS, and built by mu-loc.js only when a picker is first used, which keeps a
+  few hundred buttons per picker out of the page.
+  Renders nothing when the store has one country and one language (or both are off).
+  @param id {String} unique id prefix
+  @param country {Boolean} show the country / currency picker
+  @param language {Boolean} show the language picker
+  @param class {String} optional extra class
+{%- endcomment -%}
+{%- liquid
+  assign show_c = false
+  if country and localization.available_countries.size > 1
+    assign show_c = true
+  endif
+  assign show_l = false
+  if language and localization.available_languages.size > 1
+    assign show_l = true
+  endif
+-%}
+{%- if show_c or show_l -%}
+  {%- form 'localization', id: id, class: class, data-loc: '' -%}
+    {%- if show_c -%}
+      {%- assign cur = localization.country -%}
+      <div class="mu-loc__field">
+        <span class="mu-loc__label" aria-hidden="true">{{ 'localization.country' | t }}</span>
+        <details class="mu-loc__dd" data-loc-dd>
+          <summary class="mu-loc__trigger">
+            <span class="visually-hidden">{{ 'localization.country' | t }}:</span>
+            {{- cur | image_url: width: 40 | image_tag: width: 20, height: 15, alt: '', class: 'mu-loc__flag', loading: 'lazy' -}}
+            <span class="mu-loc__name">{{ cur.name }}</span>
+            <span class="mu-loc__cur mu-num">{{ cur.currency.iso_code }} {{ cur.currency.symbol }}</span>
+            {%- render 'mu-icon', name: 'chevron', class: 'mu-loc__chev' -%}
+          </summary>
+          <div class="mu-loc__panel">
+            {%- if localization.available_countries.size > 6 -%}
+              <div class="mu-loc__search" data-loc-search-wrap hidden>
+                {%- render 'mu-icon', name: 'search' -%}
+                <input type="search" class="mu-loc__input" data-loc-search autocomplete="off" placeholder="{{ 'localization.search' | t }}" aria-label="{{ 'localization.search_countries' | t }}">
+              </div>
+            {%- endif -%}
+            <noscript data-loc-src>
+            <ul class="mu-loc__list" role="list">
+              {%- for c in localization.available_countries -%}
+                <li data-loc-item>
+                  <button type="submit" class="mu-loc__opt" name="country_code" value="{{ c.iso_code }}" data-loc-opt data-q="{{ c.name | escape }} {{ c.iso_code }} {{ c.currency.iso_code }}"{% if c.iso_code == cur.iso_code %} aria-current="true"{% endif %}>
+                    {{- c | image_url: width: 40 | image_tag: width: 20, height: 15, alt: '', class: 'mu-loc__flag', loading: 'lazy' -}}
+                    <span class="mu-loc__oname">{{ c.name }}</span>
+                    <span class="mu-loc__ocur mu-num">{{ c.currency.iso_code }} {{ c.currency.symbol }}</span>
+                  </button>
+                </li>
+              {%- endfor -%}
+            </ul>
+            </noscript>
+            <p class="mu-loc__none mu-muted" data-loc-none hidden>{{ 'localization.no_results' | t }}</p>
+          </div>
+        </details>
+      </div>
+    {%- endif -%}
+    {%- if show_l -%}
+      <div class="mu-loc__field">
+        <span class="mu-loc__label" aria-hidden="true">{{ 'localization.language' | t }}</span>
+        <details class="mu-loc__dd" data-loc-dd>
+          <summary class="mu-loc__trigger">
+            <span class="visually-hidden">{{ 'localization.language' | t }}:</span>
+            <span class="mu-loc__code mu-num" aria-hidden="true">{{ localization.language.iso_code | split: '-' | first | upcase }}</span>
+            <span class="mu-loc__name" lang="{{ localization.language.iso_code }}">{{ localization.language.endonym_name | capitalize }}</span>
+            {%- render 'mu-icon', name: 'chevron', class: 'mu-loc__chev' -%}
+          </summary>
+          <div class="mu-loc__panel">
+            {%- if localization.available_languages.size > 6 -%}
+              <div class="mu-loc__search" data-loc-search-wrap hidden>
+                {%- render 'mu-icon', name: 'search' -%}
+                <input type="search" class="mu-loc__input" data-loc-search autocomplete="off" placeholder="{{ 'localization.search' | t }}" aria-label="{{ 'localization.search_languages' | t }}">
+              </div>
+            {%- endif -%}
+            <noscript data-loc-src>
+            <ul class="mu-loc__list" role="list">
+              {%- for l in localization.available_languages -%}
+                <li data-loc-item>
+                  <button type="submit" class="mu-loc__opt" name="locale_code" value="{{ l.iso_code }}" lang="{{ l.iso_code }}" data-loc-opt data-q="{{ l.endonym_name | escape }} {{ l.name | escape }} {{ l.iso_code }}"{% if l.iso_code == localization.language.iso_code %} aria-current="true"{% endif %}>
+                    <span class="mu-loc__code mu-num" aria-hidden="true">{{ l.iso_code | split: '-' | first | upcase }}</span>
+                    <span class="mu-loc__oname">{{ l.endonym_name | capitalize }}</span>
+                  </button>
+                </li>
+              {%- endfor -%}
+            </ul>
+            </noscript>
+            <p class="mu-loc__none mu-muted" data-loc-none hidden>{{ 'localization.no_results' | t }}</p>
+          </div>
+        </details>
+      </div>
+    {%- endif -%}
+  {%- endform -%}
+{%- endif -%}

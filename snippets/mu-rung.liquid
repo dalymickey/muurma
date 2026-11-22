@@ -1,0 +1,38 @@
+{%- comment -%}
+  The level glyph: one mark per level, filled up to the product's level, coloured from the ramp. Style comes from
+  Theme settings > Scale > Rung style (bars, Column, rounds) unless style: is passed.
+  Accepts: product, or level (with scale: 2 for the second scale); label (default true) shows "Level 4 of 6 · High" next to it; size: 'sm' | 'lg'.
+  Renders nothing when the product has no level.
+{%- endcomment -%}
+{%- liquid
+  capture hs
+    if level != blank
+      render 'mu-level', level: level, scale: scale
+    else
+      render 'mu-level', product: product
+    endif
+  endcapture
+  assign hp = hs | split: '|'
+  assign lv = hp[0] | plus: 0
+  assign n = hp[1] | plus: 0
+  assign rs = style | default: settings.rung_style | default: 'bars'
+  assign sc = hp[4] | plus: 0
+-%}
+{%- if lv > 0 -%}
+  {%- liquid
+    if hp[2] != blank
+      assign aria = 'scale.level_named' | t: noun: hp[3], level: lv, total: n, name: hp[2]
+    else
+      assign aria = 'scale.level_of' | t: noun: hp[3], level: lv, total: n
+    endif
+  -%}
+  <span class="mu-rung mu-rung--{{ rs }}{% if size != blank %} mu-rung--{{ size }}{% endif %} mu-h-{{ lv }}{% if sc == 2 %} mu-s2{% endif %}" style="--n: {{ n }}; --l: {{ lv }};" {% if label == false %}role="img" aria-label="{{ aria | escape }}"{% endif %}>
+    <span class="mu-rung__marks" aria-hidden="true">
+      {%- for i in (1..n) -%}<i class="mu-h-{{ i }}{% if i <= lv %} is-on{% endif %}" style="--i: {{ i }};"></i>{%- endfor -%}
+    </span>
+    {%- unless label == false -%}
+      <span class="mu-rung__label" aria-hidden="true">{{ hp[3] }}&nbsp;{{ lv }}/{{ n }}{% if hp[2] != blank %} <span class="mu-rung__name">· {{ hp[2] }}</span>{% endif %}</span>
+      <span class="visually-hidden">{{ aria }}</span>
+    {%- endunless -%}
+  </span>
+{%- endif -%}

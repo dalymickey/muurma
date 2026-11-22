@@ -1,0 +1,197 @@
+{%- comment -%}
+  Product media stage: swipeable slides with dots at the foot (phones), a thumbnail column and a
+  counter (desktop). Used by main-product and the featured product section; assets/mu-product.js drives it.
+  @param product {Product}
+  @param media_scheme {String} colour scheme of the stage
+  @param media_style {String} auto, floating, fill or fit
+  @param media_ratio {String} adapt (the first image's shape, clamped to 4:5..4:3, never crops), square, portrait or landscape
+  @param eager {Boolean} load the first image eagerly (above the fold)
+  @param zoom {Boolean} image zoom: a button and a click on an image open a full-screen viewer
+{%- endcomment -%}
+{%- liquid
+  assign media_count = product.media.size
+  assign zoom_n = 0
+  if zoom
+    assign zoom_imgs = product.media | where: 'media_type', 'image'
+    assign zoom_n = zoom_imgs.size
+  endif
+  comment
+    Frame shape. Adapt follows the first image (clamped so a wide cut-out still gets a roomy 4:3 frame and a tall
+    photo stops at 4:5); every slide is then contained, so nothing is cropped. Fixed ratios crop Fill images with
+    object-fit: cover around the image's focal point.
+  endcomment
+  case media_ratio
+    when 'square'
+      assign mu_ar = 1
+    when 'portrait'
+      assign mu_ar = 0.8
+    when 'landscape'
+      assign mu_ar = 1.3333
+    else
+      assign mu_ar = product.media.first.preview_image.aspect_ratio | default: 1 | at_least: 0.8 | at_most: 1.3333 | round: 4
+  endcase
+  assign mu_thumbs = 0
+  if media_count > 1
+    assign mu_thumbs = media_count | at_most: 5
+  endif
+-%}
+<div class="mu-pp__stage color-{{ media_scheme }}{% if media_ratio == blank or media_ratio == 'adapt' %} mu-pp__stage--adapt{% endif %}{% if zoom_n > 0 %} mu-pp__stage--zoom{% endif %}" style="--mu-ar: {{ mu_ar }}; --mu-thumbs: {{ mu_thumbs }};" data-gallery>
+  <div class="mu-pp__slides" data-slides tabindex="0" role="region" aria-label="{{ 'products.gallery' | t }}">
+    {%- for media in product.media -%}
+      {%- liquid
+        assign style = media_style
+        if style == 'auto'
+          assign src_l = media.preview_image.src | downcase
+          if src_l contains '.png' or src_l contains '.webp'
+            assign style = 'floating'
+          else
+            assign style = 'fill'
+          endif
+        endif
+        assign load = 'lazy'
+        assign fp = 'auto'
+        assign media_alt = media.alt | default: product.title
+        if forloop.first and eager
+          assign load = 'eager'
+          assign fp = 'high'
+        endif
+        comment
+          sizes is the image element's layout width, not the uncropped file. Phones and tablets stack the stage:
+          full width minus the two gutters (12px under 750px, 24px from 750px). Adapt also caps the stage at 76svh,
+          which shrinks a short screen. Fit and Floating draw inside a 7cqw / 8–12cqh inset, so the element is a
+          fraction of that stage. Fill used to multiply by the crop, which made phones download a wider file than
+          the frame. Desktop (990px up) stays the column beside the buy box; a Fill crop there still asks for the
+          wider file so the large frame stays sharp.
+        endcomment
+        assign cf = 1
+        if style == 'fill' and media_ratio != blank and media_ratio != 'adapt'
+          assign cf = media.preview_image.aspect_ratio | divided_by: mu_ar | at_least: 1 | round: 3
+        endif
+        assign pp_f = 0.69 | times: cf
+        assign slot = 1
+        if style == 'fit' or style == 'floating'
+          assign img_ar = media.preview_image.aspect_ratio | default: 1
+          assign slot = img_ar | divided_by: mu_ar | times: 0.8 | at_most: 0.86 | round: 4
+        endif
+        assign pp_m = 'calc(100vw - 24px)'
+        assign pp_t = 'calc(100vw - 48px)'
+        if slot != 1
+          assign pp_m = 'calc((100vw - 24px) * ' | append: slot | append: ')'
+          assign pp_t = 'calc((100vw - 48px) * ' | append: slot | append: ')'
+        endif
+        if media_ratio == blank or media_ratio == 'adapt'
+          assign cap_m = 'calc(76svh * ' | append: mu_ar | append: ')'
+          assign cap_t = cap_m
+          if slot != 1
+            assign cap_m = 'calc(76svh * ' | append: mu_ar | append: ' * ' | append: slot | append: ')'
+            assign cap_t = cap_m
+          endif
+          assign pp_m = 'min(' | append: pp_m | append: ', ' | append: cap_m | append: ')'
+          assign pp_t = 'min(' | append: pp_t | append: ', ' | append: cap_t | append: ')'
+        endif
+      -%}
+      {%- capture pp_sizes -%}{% render 'mu-sizes', sub: 480, f: pp_f, tab: pp_t, mob: pp_m %}{%- endcapture -%}
+      <div class="mu-pp__slide mu-pp__slide--{{ style }}{% if media.media_type != 'image' %} mu-pp__slide--{{ media.media_type | replace: '_', '-' }}{% endif %}" data-slide data-media-id="{{ media.id }}" style="--mu-mr: {{ media.preview_image.aspect_ratio | default: 1 | round: 4 }};" role="group" aria-roledescription="slide" aria-label="{{ 'products.slide' | t: index: forloop.index, count: media_count }}">
+        {%- case media.media_type -%}
+          {%- when 'image' -%}
+            {%- if style == 'floating' -%}<span class="mu-pp__ground" aria-hidden="true"></span>{%- endif -%}
+            {% render 'mu-img', image: media, sizes: pp_sizes, loading: load, fp: fp, class: 'mu-pp__img', alt: media_alt %}
+          {%- when 'video' -%}
+            {%- comment -%} Native controls until the script swaps in the theme's play/pause and sound buttons. {%- endcomment -%}
+            {{ media | video_tag: controls: true, muted: true, playsinline: true, loop: true, preload: 'metadata', class: 'mu-pp__img mu-pp__vid', image_size: '1400x' }}
+            <div class="mu-pp__vctl" data-vctl hidden>
+              <button type="button" class="mu-iconbtn mu-pp__vbtn" data-v-play aria-label="{{ 'products.video_play' | t }}" data-play="{{ 'products.video_play' | t }}" data-pause="{{ 'products.video_pause' | t }}">
+                {%- render 'mu-icon', name: 'play', class: 'mu-pp__vi-play' -%}{%- render 'mu-icon', name: 'pause', class: 'mu-pp__vi-pause' -%}
+              </button>
+              <button type="button" class="mu-iconbtn mu-pp__vbtn" data-v-mute aria-label="{{ 'products.video_unmute' | t }}" data-mute="{{ 'products.video_mute' | t }}" data-unmute="{{ 'products.video_unmute' | t }}">
+                {%- render 'mu-icon', name: 'muted', class: 'mu-pp__vi-muted' -%}{%- render 'mu-icon', name: 'sound', class: 'mu-pp__vi-sound' -%}
+              </button>
+            </div>
+          {%- when 'external_video' -%}
+            {%- comment -%} YouTube / Vimeo: a poster and the theme's play button; the player loads only when asked. {%- endcomment -%}
+            <div class="mu-pp__defer" data-defer="video">
+              {% render 'mu-img', image: media.preview_image, sizes: pp_sizes, loading: load, class: 'mu-pp__img mu-pp__poster', alt: media_alt %}
+              <button type="button" class="mu-pp__bigplay" data-defer-go aria-label="{{ 'products.video_play' | t }}">{% render 'mu-icon', name: 'play' %}</button>
+              <template>{{ media | external_video_url: autoplay: true, playsinline: true, rel: 0 | external_video_tag: class: 'mu-pp__frame', loading: 'lazy' }}</template>
+            </div>
+          {%- when 'model' -%}
+            {%- comment -%} 3D model: a poster and a "View in 3D" button; Shopify's model viewer loads on demand. {%- endcomment -%}
+            <div class="mu-pp__defer" data-defer="model">
+              {% render 'mu-img', image: media.preview_image, sizes: pp_sizes, loading: load, class: 'mu-pp__img mu-pp__poster', alt: media_alt %}
+              <button type="button" class="mu-pp__bigplay mu-pp__bigplay--3d" data-defer-go aria-label="{{ 'products.view_3d' | t }}">{% render 'mu-icon', name: 'cube' %}</button>
+              <template>{{ media | model_viewer_tag: image_size: '1400x', class: 'mu-pp__model' }}</template>
+            </div>
+            <button type="button" class="mu-btn mu-btn--ghost mu-btn--sm mu-pp__xr" data-shopify-xr data-shopify-model3d-id="{{ media.id }}" data-shopify-title="{{ product.title | escape }}" data-shopify-xr-hidden>
+              {%- render 'mu-icon', name: 'ar' -%}{{ 'products.view_in_space' | t }}
+            </button>
+        {%- endcase -%}
+      </div>
+    {%- else -%}
+      <div class="mu-pp__slide mu-pp__slide--floating" data-slide>{{ 'product-1' | placeholder_svg_tag: 'mu-placeholder' }}</div>
+    {%- endfor -%}
+  </div>
+  {%- if media_count > 1 -%}
+    <div class="mu-pp__dots">
+      {%- for media in product.media -%}
+        {%- liquid
+          case media.media_type
+            when 'video', 'external_video'
+              assign mu_media_label = 'products.show_video' | t: index: forloop.index
+            when 'model'
+              assign mu_media_label = 'products.show_model' | t: index: forloop.index
+            else
+              assign mu_media_label = 'products.show_image' | t: index: forloop.index
+          endcase
+        -%}
+        <button type="button" class="mu-pp__dot{% if media.media_type != 'image' %} mu-pp__dot--{{ media.media_type | replace: '_', '-' }}{% endif %}" data-goto="{{ forloop.index0 }}" aria-label="{{ mu_media_label }}"{% if forloop.first %} aria-current="true"{% endif %}><i></i></button>
+      {%- endfor -%}
+    </div>
+    <div class="mu-pp__thumbs">
+      {%- for media in product.media limit: 5 -%}
+        {%- liquid
+          case media.media_type
+            when 'video', 'external_video'
+              assign mu_media_label = 'products.show_video' | t: index: forloop.index
+            when 'model'
+              assign mu_media_label = 'products.show_model' | t: index: forloop.index
+            else
+              assign mu_media_label = 'products.show_image' | t: index: forloop.index
+          endcase
+        -%}
+        <button type="button" class="mu-pp__thumb" data-goto="{{ forloop.index0 }}" aria-label="{{ mu_media_label }}"{% if forloop.first %} aria-current="true"{% endif %}>
+          {%- comment -%} The tray is 60px and only from 990px (phones use the dots). 1x–3x of that tile; hidden below 990px so a phone does not fetch it. {%- endcomment -%}
+          <img src="{{ media.preview_image | image_url: width: 120 }}" srcset="{{ media.preview_image | image_url: width: 60 }} 60w, {{ media.preview_image | image_url: width: 120 }} 120w, {{ media.preview_image | image_url: width: 180 }} 180w" sizes="(max-width: 989px) 1px, 60px" alt="" loading="lazy" width="60" height="60" style="object-position: {{ media.preview_image.presentation.focal_point }}">
+          {%- case media.media_type -%}
+            {%- when 'video', 'external_video' -%}<span class="mu-pp__badge mu-pp__badge--play" aria-hidden="true">{% render 'mu-icon', name: 'play' %}</span>
+            {%- when 'model' -%}<span class="mu-pp__badge" aria-hidden="true">{% render 'mu-icon', name: 'cube' %}</span>
+          {%- endcase -%}
+        </button>
+      {%- endfor -%}
+    </div>
+    <p class="mu-pp__count mu-muted" aria-hidden="true"><span data-count-now>1</span> / {{ media_count }}</p>
+  {%- endif -%}
+  {%- assign models = product.media | where: 'media_type', 'model' -%}
+  {%- if models.size > 0 -%}
+  <script type="application/json" data-xr-models>{{ models | json }}</script>
+{%- endif -%}
+  {%- if zoom_n > 0 -%}
+    {{ 'mu-pp-zoom.css' | asset_url | stylesheet_tag }}
+    <button type="button" class="mu-pp__zoom mu-iconbtn" data-zoom-open aria-haspopup="dialog" aria-label="{{ 'products.zoom' | t }}">{% render 'mu-icon', name: 'zoom' %}</button>
+    <dialog class="mu-zoom color-{{ media_scheme }}" data-zoom aria-label="{{ 'products.zoom' | t }}">
+      <button type="button" class="mu-zoom__close mu-iconbtn" data-zoom-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+      {%- if zoom_n > 1 -%}
+        <div class="mu-zoom__nav">
+          <button type="button" class="mu-iconbtn" data-zoom-step="-1" aria-label="{{ 'products.zoom_previous' | t }}">{% render 'mu-icon', name: 'chevron', class: 'mu-zoom__up' %}</button>
+          <button type="button" class="mu-iconbtn" data-zoom-step="1" aria-label="{{ 'products.zoom_next' | t }}">{% render 'mu-icon', name: 'chevron' %}</button>
+        </div>
+      {%- endif -%}
+      <div class="mu-zoom__list">
+        {%- for media in zoom_imgs -%}
+          <figure class="mu-zoom__item" data-zoom-item="{{ media.id }}" data-w="{{ media.preview_image.width }}" style="--mu-mr: {{ media.preview_image.aspect_ratio | default: 1 | round: 4 }};">
+            {% render 'mu-img', image: media, sizes: '100vw', class: 'mu-zoom__img', alt: media.alt %}
+          </figure>
+        {%- endfor -%}
+      </div>
+    </dialog>
+  {%- endif -%}
+</div>

@@ -1,0 +1,27 @@
+{%- comment -%}
+  A product's accent colour for "Product colors only" mode, or nothing: custom.accent_color, then custom.stage_color,
+  then the swatch of the first option value that has one, then a tag like "color:#F7B6C2" (or "colour:#"). Pass product.
+{%- endcomment -%}
+{%- liquid
+  assign c = product.metafields.custom.accent_color.value | default: product.metafields.custom.stage_color.value
+  if c == blank
+    for o in product.options_with_values
+      assign c = o.values.first.swatch.color
+      if c != blank
+        break
+      endif
+    endfor
+  endif
+  if c == blank
+    for t in product.tags
+      assign tl = t | downcase
+      if tl contains 'color:#' or tl contains 'colour:#'
+        assign c = t | split: ':' | last | strip
+        break
+      endif
+    endfor
+  endif
+  if c != blank
+    echo c
+  endif
+-%}

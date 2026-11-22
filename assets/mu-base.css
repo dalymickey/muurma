@@ -1,0 +1,505 @@
+/* Engine base. Tokens first, then the reset, type, controls, utilities and shared furniture. Every colour is a scheme
+   variable (snippets/mu-head-vars); the scale ramp tokens come from snippets/mu-scale-vars. */
+
+/* ---------- Tokens ---------- */
+:root {
+  --mu-ctl: 48px;                 /* button and field height */
+  --mu-ctl-s: 44px;               /* small controls, never under the 44px touch target */
+  --mu-field-r: min(var(--mu-radius), 14px);
+  --mu-chip-r: min(var(--mu-radius), 10px);
+  /* Button shape (Theme settings > Shape > Button shape): --mu-btn-radius is 999px for Pill, the corner radius for
+     Rounded. Smaller controls (chips, variant pills, 36-46px buttons) take three quarters so they read alike. */
+  --mu-btn-r-s: calc(var(--mu-btn-radius, 999px) * .75);
+  /* Photos set inside a panel (cards, the product page inset styles, zoom) round to this. */
+  --mu-media-r: clamp(6px, calc(var(--mu-radius, 16px) * .6), 14px);
+  --mu-spring: cubic-bezier(.34, 1.4, .5, 1);
+  --mu-glide: cubic-bezier(.22, .75, .2, 1);
+  --mu-lift: 3px;
+}
+body {
+  --gutter: 12px;
+  --mu-gap: var(--mu-gap-m, 16px);
+  --hole: var(--bg);
+}
+@media (min-width: 750px) { body { --gutter: 24px; --mu-gap: var(--mu-gap-d, 20px); } }
+
+/* ---------- Reset ---------- */
+*, ::before, ::after { box-sizing: border-box; margin: 0; }
+html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; overflow-x: clip; scroll-padding-top: calc(var(--mu-sticky-h, 0px) + 24px); }
+body {
+  min-height: 100svh; overflow-x: clip;
+  font: var(--mu-font-body-weight) var(--mu-body-size) / 1.5 var(--mu-font-body);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility;
+}
+:where(img, svg, video, picture, canvas) { display: block; max-inline-size: 100%; }
+:where(img) { block-size: auto; }
+:where(button, input, select, textarea) { font: inherit; color: inherit; letter-spacing: inherit; }
+:where(button) { padding: 0; border: 0; background: none; cursor: pointer; }
+:where(a) { color: inherit; text-decoration: none; }
+:where(ul, ol)[role="list"] { padding: 0; list-style: none; }
+[hidden] { display: none !important; }
+/* iOS Safari zooms into a focused field set under 16px: on touch and narrow screens every field is at least 16px. */
+@media (pointer: coarse), (max-width: 989px) {
+  :where(input:not([type="checkbox"], [type="radio"], [type="range"], [type="hidden"], [type="submit"], [type="button"], [type="reset"], [type="image"], [type="file"], [type="color"]), select, textarea) { font-size: max(16px, 1em); }
+}
+/* No grey tap flash or press-and-hold selection on controls; pressed states are the theme's own. */
+:where(a, button, label, summary, input, select, textarea, [role="button"]) { -webkit-tap-highlight-color: transparent; }
+:where(button, summary, [role="button"], .mu-btn, .shopify-payment-button__button) { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
+/* ---------- Type ---------- */
+h1, h2, h3, h4, .mu-display {
+  font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight);
+  line-height: 0.98; letter-spacing: 0.015em; text-wrap: balance;
+}
+.mu-h2 { font-size: calc(clamp(1.9rem, 1.25rem + 2.6vw, 3.5rem) * var(--mu-heading-scale)); }
+.mu-h3 { font-size: calc(clamp(1.45rem, 1.1rem + 1.3vw, 2.4rem) * var(--mu-heading-scale)); }
+:is(h1, h2, h3) em { font-style: normal; color: var(--acc); }
+p { text-wrap: pretty; }
+.mu-muted { color: var(--mu); }
+.mu-eyebrow { font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .12em; line-height: 1.2; text-transform: uppercase; }
+.mu-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--mu-chip-r);
+  background: color-mix(in srgb, currentColor 9%, transparent); font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .1em; line-height: 1; text-transform: uppercase;
+}
+.mu-num, .mu-price, .mu-unit { font-variant-numeric: tabular-nums; }
+.mu-unit { font-size: .85em; white-space: nowrap; }
+:is(.mu-rte, .rte) a, a.mu-link { color: var(--link); font-weight: var(--mu-font-body-bold); text-decoration: underline 2px color-mix(in srgb, var(--link) 40%, transparent); text-underline-offset: .22em; }
+:is(.mu-rte, .rte) a:hover, a.mu-link:hover { text-decoration-color: currentColor; }
+:is(.mu-rte, .rte, .rte > div) > * + * { margin-top: 1em; }
+
+/* Shopify's own rich text (policies and other unwrapped content): a reading rhythm for long legal documents. */
+.rte :is(h2, h3, h4, h5, h6) { line-height: 1.12; }
+.rte h2 { font-size: calc(1.6rem * var(--mu-heading-scale)); }
+.rte h3 { font-size: calc(1.3rem * var(--mu-heading-scale)); }
+.rte :is(h4, h5, h6) { font: var(--mu-font-body-bold) 1em / 1.3 var(--mu-font-body); letter-spacing: 0; }
+.rte * + :is(h2, h3) { margin-top: 1.75em; }
+.rte * + :is(h4, h5, h6) { margin-top: 1.5em; }
+.rte :is(h2, h3, h4, h5, h6) + * { margin-top: .6em; }
+.rte :is(ul, ol) { padding-inline-start: 1.25em; }
+.rte ul { list-style: square; }
+.rte ol { list-style: decimal-leading-zero; }
+.rte li + li { margin-top: .35em; }
+.rte li > :is(ul, ol) { margin-top: .35em; }
+.rte li::marker { color: var(--acc); }
+.rte table { display: block; overflow-x: auto; max-inline-size: 100%; border-collapse: collapse; font-size: .94em; }
+.rte :is(th, td) { padding: 10px 14px; border-block-end: 1px solid var(--bd); text-align: start; vertical-align: top; }
+.rte th { background: color-mix(in srgb, var(--fg) 6%, transparent); font-weight: var(--mu-font-body-bold); }
+.rte blockquote { padding: 4px 0 4px 18px; border-inline-start: 4px solid var(--acc); font-size: 1.1em; }
+.rte hr { height: 4px; border: 0; border-radius: 4px; background: var(--mu-g-hero); opacity: .5; }
+.rte img { border-radius: var(--mu-radius); }
+
+/* Policy pages: Shopify's markup in the theme's reading column (.mu-main outranks Shopify's policy.css). */
+.mu-main .shopify-policy__container { inline-size: min(68ch, 100% - 2 * var(--gutter) - 24px); max-width: none; margin-inline: auto; padding-block: clamp(32px, 5vw, 64px) clamp(48px, 7vw, 96px); font-size: 1.04rem; line-height: 1.65; }
+.mu-main .shopify-policy__title { margin-bottom: clamp(24px, 3.5vw, 40px); padding-bottom: 14px; border-bottom: 4px solid transparent; border-image: var(--mu-g-hero) 1; text-align: start; }
+.mu-main .shopify-policy__title h1 { font-size: calc(clamp(2.4rem, 1.5rem + 3.4vw, 4.75rem) * var(--mu-heading-scale)); overflow-wrap: anywhere; }
+
+/* ---------- Focus ---------- */
+:focus:not(:focus-visible) { outline: 0; }
+:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+
+/* ---------- Buttons ---------- */
+/* Primary: the scheme button with a ring. On hover it lifts off a hard edge (a stamp) and presses flat; the icon gives a
+   small kick. The edge is the label colour, so it always contrasts with the face (a dark button sits on a light edge, a
+   light one on a dark edge), and a 1px line in the ring colour under it keeps the edge visible on a page of the same
+   tone. Shape follows Theme settings > Shape > Buttons (--mu-btn-radius). */
+.mu-btn {
+  --b-bg: var(--btn); --b-fg: var(--btn-fg); --b-ring: var(--ring); --b-drop: var(--b-fg); --b-line: var(--b-ring);
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: var(--mu-ctl); padding: 0 24px; border: 0; border-radius: var(--mu-btn-radius, 999px);
+  background: var(--b-bg); color: var(--b-fg); box-shadow: inset 0 0 0 2px var(--b-ring), 0 0 0 0 var(--b-drop), 0 0 0 0 var(--b-line);
+  font-size: .9375rem; font-weight: var(--mu-font-body-bold); line-height: 1; letter-spacing: .01em; white-space: nowrap; text-decoration: none;
+}
+.mu-btn--secondary { --b-bg: var(--btn2); --b-fg: var(--btn2-fg); --b-ring: transparent; --b-drop: color-mix(in srgb, var(--btn2-fg) 55%, transparent); --b-line: transparent; }
+.mu-btn--ghost { --b-bg: transparent; --b-fg: var(--fg); --b-ring: color-mix(in srgb, var(--fg) 28%, transparent); --b-drop: transparent; --b-line: transparent; }
+.mu-btn:disabled { --b-drop: transparent; --b-line: transparent; }
+.mu-btn--sm { min-height: var(--mu-ctl-s); padding: 0 18px; font-size: .875rem; gap: 8px; }
+/* Icon-only: one size var (--mu-ib) sets every dimension, so no context's min-height can stretch it. */
+.mu-btn--icon { --mu-ib: 44px; flex: none; inline-size: var(--mu-ib); block-size: var(--mu-ib); min-inline-size: var(--mu-ib); min-height: var(--mu-ib); padding: 0; border-radius: var(--mu-btn-radius, 999px); }
+.mu-icon, .mu-btn svg { flex: none; inline-size: 20px; block-size: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.mu-btn:active { translate: 0 1px; }
+@media (hover: hover) and (pointer: fine) {
+  .mu-btn { transition: translate .2s var(--mu-spring), box-shadow .2s var(--mu-spring), background-color .15s; }
+  .mu-btn svg { transition: translate .25s var(--mu-spring); }
+  .mu-btn:hover { translate: 0 calc(-1 * var(--mu-lift)); box-shadow: inset 0 0 0 2px var(--b-ring), 0 var(--mu-lift) 0 0 var(--b-drop), 0 calc(var(--mu-lift) + 1px) 0 0 var(--b-line); }
+  .mu-btn:hover svg { translate: 3px 0; }
+  .mu-btn--ghost:hover { --b-bg: color-mix(in srgb, var(--fg) 7%, transparent); --b-ring: var(--fg); translate: none; }
+  .mu-btn:active { translate: 0 0; box-shadow: inset 0 0 0 2px var(--b-ring), 0 0 0 0 var(--b-drop), 0 0 0 0 var(--b-line); }
+}
+
+/* ---------- Fields ---------- */
+/* A filled rounded box with no outline; hover deepens the fill, focus turns it to the page colour inside a 2px ring. */
+.mu-input, .mu-select {
+  inline-size: 100%; min-height: var(--mu-ctl); padding: 0 16px; border: 0; border-radius: var(--mu-field-r);
+  background: color-mix(in srgb, var(--fg) 7%, var(--bg)); color: var(--fg); font-size: 16px;
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--fg) 22%, transparent);
+  -webkit-appearance: none; appearance: none; transition: background-color .15s, box-shadow .15s;
+}
+.mu-input::placeholder { color: var(--mu); opacity: 1; }
+.mu-input:focus-visible, .mu-select:focus-visible { outline: 0; background: var(--bg); box-shadow: inset 0 0 0 2px var(--focus, var(--fg)); }
+.mu-input[aria-invalid="true"] { box-shadow: inset 0 -3px 0 var(--sale); }
+@media (hover: hover) and (pointer: fine) { .mu-input:hover:not(:focus-visible) { background: color-mix(in srgb, var(--fg) 11%, var(--bg)); } }
+
+/* ---------- Icon buttons and badge ---------- */
+.mu-iconbtn {
+  --mu-ib: 44px; position: relative; flex: none; display: inline-grid; place-items: center;
+  inline-size: var(--mu-ib); block-size: var(--mu-ib); padding: 0; border-radius: var(--mu-btn-radius, 999px); color: inherit; line-height: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  /* Hover tints over the button's own fill rather than replacing it, so a filled button (quick view close, back to
+     top, slider arrows) keeps its fill and never turns the colour of the panel behind it. */
+  .mu-iconbtn { transition: background-color .15s, scale .2s var(--mu-spring), translate .2s var(--mu-glide), box-shadow .2s; }
+  .mu-iconbtn:hover:not(:disabled) { background-image: linear-gradient(color-mix(in srgb, currentColor 8%, transparent) 0 0); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, currentColor 30%, transparent); }
+  /* Solid ones lift with a soft shadow instead, so the icon keeps its full contrast against the fill in every scheme. */
+  :is(.mu-qa__close, .mu-qv__step, .mu-totop, .mu-slider-nav__btn, .mu-pp__vbtn, .mu-pp__zoom, .mu-zoom .mu-iconbtn):hover:not(:disabled) { background-image: none; translate: 0 -1px; box-shadow: var(--mu-ib-halo, 0 0 #0000), 0 8px 18px -8px color-mix(in srgb, var(--fg) 60%, transparent); }
+  .mu-iconbtn:active:not(:disabled) { scale: .94; }
+}
+.mu-badge {
+  position: absolute; inset: 2px 0 auto auto; display: grid; place-items: center; min-inline-size: 19px; block-size: 19px; padding: 0 5px;
+  border-radius: 7px; background: var(--badge); color: var(--badge-fg); font-size: 11px; font-weight: var(--mu-font-body-bold); line-height: 1; font-variant-numeric: tabular-nums;
+  rotate: 8deg;
+}
+.mu-badge:empty, .mu-badge[data-count="0"] { display: none; }
+
+/* ---------- Utilities ---------- */
+.visually-hidden { position: absolute !important; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.mu-skip { position: fixed; z-index: 100; inset: 10px auto auto 10px; padding: 12px 18px; border-radius: var(--mu-field-r); background: var(--fg); color: var(--bg); font-weight: var(--mu-font-body-bold); translate: 0 -200%; }
+.mu-skip:focus { translate: none; }
+.mu-placeholder { inline-size: 100%; block-size: 100%; fill: currentColor; opacity: .16; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mu-icon--close { transition: rotate .3s var(--mu-spring); }
+  :is(a, button, summary):hover > .mu-icon--close { rotate: 90deg; }
+}
+
+/* ---------- Layout ---------- */
+.mu-main { display: block; outline: 0; }
+.mu-main > .shopify-section + .shopify-section { margin-top: var(--mu-gap); }
+.mu-wrap { margin-inline: var(--gutter); }
+.mu-measure { max-inline-size: 66ch; }
+.mu-section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 20px; margin: 0 var(--gutter) 18px; }
+/* Page width (Theme settings > Layout): each section centres in a --mu-page-width column; .mu-bleed bands and
+   full-width custom code keep the edges. */
+.mu-pagew .mu-main > .shopify-section:not(:has(.mu-bleed, > .mu-custom--full)) { max-width: calc(var(--mu-page-width) + 2 * var(--gutter)); margin-inline: auto; }
+
+/* ---------- Section surface (snippets/mu-surface) ---------- */
+/* Full-width background: the panel keeps its place in the page column, so the content stays at page width, and its
+   colour is painted out to the screen edges with a border-image outset (ink overflow, so it never adds a scrollbar). */
+.mu-pagew .mu-sf--full { border-image: linear-gradient(var(--bg) 0 0) fill 0 / / 0 50vw; }
+/* Page width: the panel sits in the column, inset by the gutter at every width, with the chosen corners rounded.
+   Each radius is capped at half the panel (min with 50%), so a short band on a phone never turns into a pill. A
+   panel in the page's own scheme has no visible edge, so it stays flush and square. */
+.mu-sf--page:not(.mu-sf--plain) {
+  --sf-c: min(var(--sf-r, var(--mu-radius-lg)), 50%);
+  --sf-tl: var(--sf-c); --sf-tr: var(--sf-c); --sf-br: var(--sf-c); --sf-bl: var(--sf-c);
+  margin-inline: var(--gutter); border-radius: var(--sf-tl) var(--sf-tr) var(--sf-br) var(--sf-bl);
+}
+.mu-sf--page.mu-sf--no-tl { --sf-tl: 0px; }
+.mu-sf--page.mu-sf--no-tr { --sf-tr: 0px; }
+.mu-sf--page.mu-sf--no-br { --sf-br: 0px; }
+.mu-sf--page.mu-sf--no-bl { --sf-bl: 0px; }
+/* Scheme panel (.mu-sp): page sections with no band of their own (cart, blog, collections list and apps) sit
+   flush in the page's scheme and only take padding once their scheme differs. */
+.mu-sp.mu-sf--page:not(.mu-sf--plain) { padding: clamp(24px, 4vw, 48px) clamp(16px, 3vw, 40px); }
+.mu-sp.mu-sf--full:not(.mu-sf--plain) { padding-block: clamp(24px, 4vw, 48px); }
+
+/* ---------- Section base (snippets/mu-section-style) ----------
+   Background image: a layer under the section's content (z-index -1 inside the root's own stacking context, so it sits
+   above the scheme colour), clipped to the root's corners, with an overlay in the scheme's background colour. On a
+   full-width surface under a page width it runs out to the screen edges like the colour does. */
+.mu-sec:has(> .mu-secbg) { position: relative; isolation: isolate; }
+.mu-secbg { position: absolute; inset: 0; z-index: -1; overflow: hidden; border-radius: inherit; pointer-events: none; }
+.mu-secbg::after { content: ""; position: absolute; inset: 0; background: var(--bg); opacity: var(--sec-ov, 0); }
+.mu-secbg__img { width: 100%; height: 100%; object-fit: cover; }
+/* Section margins (snippets/mu-section-style sets --mu-mt / --mu-mb from the sliders, phones then desktop).
+   A contained panel with corner radius above 0 (snippets/mu-surface adds mu-sf--round) also sets --mu-round-min.
+   The used space is the greater of the two, so a rounded panel never sits flush and a merchant can still set more.
+   Square panels, full-bleed backgrounds and panels in the page's own scheme leave --mu-round-min unset.
+   The floor is 16px on phones and 24px from 750px, matching build/partials/section-base.json roundedGap. */
+.shopify-section:has(.mu-sf--round) { --mu-round-min: 16px; }
+@media (min-width: 750px) { .shopify-section:has(.mu-sf--round) { --mu-round-min: 24px; } }
+.shopify-section {
+  padding-top: max(var(--mu-mt, 0px), var(--mu-round-min, 0px));
+  padding-bottom: max(var(--mu-mb, 0px), var(--mu-round-min, 0px));
+}
+.mu-pagew .mu-sf--full > .mu-secbg { inset-inline: calc(50% - 50vw); border-radius: 0; }
+
+/* ---------- Back to top (snippets/mu-to-top) ---------- */
+/* A round button in a bottom corner (clear of the safe area), in after a screen and a half of scrolling. Phones lift
+   it over the tab bar and add bar. */
+.mu-totop {
+  position: fixed; z-index: 29; inset: auto max(20px, env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) auto; border-radius: var(--mu-btn-radius, 999px);
+  background: var(--fg); color: var(--bg); box-shadow: 0 2px 14px -2px color-mix(in srgb, var(--fg) 38%, transparent);
+  opacity: 0; visibility: hidden; scale: .6;
+}
+.mu-totop.is-on { opacity: 1; visibility: visible; scale: 1; }
+/* Out of the way over footer content and while the cookie banner (which can share the corner) is open. */
+.mu-totop.is-on.is-foot, body:has(.mu-ck[open]) .mu-totop.is-on { opacity: 0; visibility: hidden; pointer-events: none; }
+.mu-totop--left { inset-inline: max(20px, env(safe-area-inset-left)) auto; }
+.mu-totop--raised { bottom: calc(96px + env(safe-area-inset-bottom)); }
+.no-js .mu-totop { display: none; }
+/* Scroll progress ring drawn around the button in the deep end of the ramp. */
+/* The ring box is the button plus 4px all round (max-inline-size: none beats the base svg cap, which squeezed it off
+   centre); rotated -90deg about its own centre so the stroke starts at 12 o'clock and hugs the edge at any size. */
+.mu-totop .mu-totop__ring { position: absolute; inset: -4px; inline-size: calc(100% + 8px); block-size: calc(100% + 8px); max-inline-size: none; overflow: visible; rotate: -90deg; transform-origin: 50% 50%; pointer-events: none; }
+.mu-totop__ring circle { fill: none; stroke-width: 3; stroke-linecap: round; }
+.mu-totop__track { stroke: transparent; }
+/* Square buttons: the outline sits on the button's own edge (no offset, no rotation; the path starts at 12 o'clock). */
+.mu-totop .mu-totop__ring--edge { inset: 0; inline-size: 100%; block-size: 100%; rotate: none; }
+.mu-totop:not(.mu-totop--edge) .mu-totop__ring--edge, .mu-totop--edge .mu-totop__ring:not(.mu-totop__ring--edge) { display: none; }
+.mu-totop__ring--edge path { fill: none; stroke-width: 3; stroke-linecap: butt; stroke-linejoin: miter; }
+.mu-totop__fill { stroke: var(--mu-h-mid, var(--acc)); stroke-dasharray: 100; stroke-dashoffset: 100; }
+@media (max-width: 749px) {
+  .mu-totop { inset-inline: auto max(14px, env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .mu-totop--left { inset-inline: max(14px, env(safe-area-inset-left)) auto; }
+  :is(.mu-totop--raised, .mu-bar-on .mu-totop) { bottom: calc(94px + env(safe-area-inset-bottom)); }
+  .mu-totop--desk { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mu-totop { transition: opacity .2s, scale .3s var(--mu-spring), bottom .25s var(--mu-glide), visibility 0s .3s; }
+  .mu-totop.is-on { transition: opacity .2s, scale .3s var(--mu-spring), bottom .25s var(--mu-glide); }
+  .mu-totop.is-on.is-foot, body:has(.mu-ck[open]) .mu-totop.is-on { transition: opacity .2s, bottom .25s var(--mu-glide), visibility 0s .2s; }
+  .mu-totop__fill { transition: stroke-dashoffset .1s linear; }
+}
+
+/* ---------- Country and language pickers (snippets/mu-loc, assets/mu-loc.js) ---------- */
+/* A filled trigger like the fields; the panel lists every option with an optional search. Inner corners follow the
+   panel's (radius minus inset) so they stay concentric down to square. */
+.mu-loc { display: grid; gap: 12px; }
+.mu-loc__field { display: grid; gap: 6px; min-width: 0; }
+.mu-loc__label { font-size: .75rem; font-weight: var(--mu-font-body-bold); letter-spacing: .08em; text-transform: uppercase; color: var(--mu); }
+.mu-loc__dd { position: relative; min-width: 0; }
+.mu-loc__trigger {
+  display: flex; align-items: center; gap: 10px; min-height: var(--mu-ctl-s); padding-inline: 12px 10px; border-radius: var(--mu-field-r);
+  background: color-mix(in srgb, var(--fg) 7%, transparent); font-size: .9375rem; list-style: none; cursor: pointer;
+}
+.mu-loc__trigger::-webkit-details-marker { display: none; }
+.mu-loc__flag { flex: none; inline-size: 22px; block-size: 16px; border-radius: 4px; object-fit: cover; }
+.mu-loc__name, .mu-loc__oname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-loc__cur, .mu-loc__ocur { flex: none; color: var(--mu); font-size: .75rem; font-variant-numeric: tabular-nums; }
+.mu-loc__code { flex: none; display: inline-grid; place-items: center; min-inline-size: 28px; block-size: 20px; padding: 0 5px; border-radius: 6px; background: var(--fg); color: var(--bg); font-size: 10.5px; font-weight: var(--mu-font-body-bold); letter-spacing: .04em; }
+.mu-loc__chev { flex: none; inline-size: 16px; block-size: 16px; transition: rotate .25s var(--mu-spring); }
+.mu-loc__dd[open] .mu-loc__chev { rotate: 180deg; }
+.mu-loc__panel {
+  --loc-r: var(--mu-field-r); --loc-p: 5px; --loc-ri: max(0px, var(--loc-r) - var(--loc-p));
+  margin-top: 6px; padding: var(--loc-p); border-radius: var(--loc-r); background: var(--bg); color: var(--fg);
+  box-shadow: 0 0 0 1px var(--bd), 0 18px 36px -18px color-mix(in srgb, var(--fg) 45%, transparent);
+}
+.mu-loc__search { position: relative; margin-bottom: 5px; }
+.mu-loc__search .mu-icon { position: absolute; inset: 0 auto 0 12px; margin-block: auto; inline-size: 16px; block-size: 16px; color: var(--mu); pointer-events: none; }
+.mu-loc__input { inline-size: 100%; min-height: 42px; padding: 0 12px 0 36px; border: 0; border-radius: var(--loc-ri); background: color-mix(in srgb, var(--fg) 7%, transparent); font-size: 16px; -webkit-appearance: none; appearance: none; }
+.mu-loc__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.mu-loc__input:focus-visible { outline-offset: -2px; }
+.mu-loc__list { max-block-size: 272px; margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; }
+.mu-loc__opt { display: flex; align-items: center; gap: 10px; inline-size: 100%; min-height: 42px; padding: 0 10px; border-radius: var(--loc-ri); font-size: .875rem; text-align: start; }
+.mu-loc__opt[aria-current="true"] { background: var(--fg); color: var(--bg); font-weight: var(--mu-font-body-bold); }
+.mu-loc__opt[aria-current="true"] .mu-loc__ocur { color: inherit; opacity: .75; }
+.mu-loc__opt:focus-visible { outline-offset: -2px; }
+.mu-loc__none { padding: 12px 10px; font-size: .8125rem; }
+/* Touch (assets/mu-header.js): a see-through native select over the trigger opens the system picker. */
+.mu-loc__field--native { position: relative; }
+.mu-loc__native { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; opacity: 0; font-size: 16px; cursor: pointer; -webkit-appearance: none; appearance: none; }
+.mu-loc__field--native:has(.mu-loc__native:focus-visible) .mu-loc__trigger { outline: 2px solid var(--focus); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .mu-loc__trigger:hover { background: color-mix(in srgb, var(--fg) 12%, transparent); }
+  .mu-loc__opt:not([aria-current="true"]):hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+}
+
+/* ---------- Social links (snippets/mu-social) ---------- */
+.mu-social { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mu-social__link { display: grid; place-items: center; inline-size: 44px; block-size: 44px; border-radius: 34%; background: color-mix(in srgb, currentColor 10%, transparent); }
+.mu-social__link .mu-icon { inline-size: 20px; block-size: 20px; }
+/* Hover and keyboard focus swap to the scheme's button pair (fill and its text colour), so the icon always contrasts
+   its tile, also on the ramp footer, where --fg is reset to the ground's text colour but --bg stays the page colour. */
+.mu-social__link:focus-visible { background: var(--btn, var(--fg)); color: var(--btn-fg, var(--bg)); }
+@media (hover: hover) and (pointer: fine) {
+  .mu-social__link { transition: background-color .15s, color .15s, rotate .25s var(--mu-spring); }
+  .mu-social__link:hover { background: var(--btn, var(--fg)); color: var(--btn-fg, var(--bg)); rotate: -6deg; }
+}
+@media (prefers-reduced-motion: reduce) { .mu-social__link:hover { rotate: none; } }
+
+/* ---------- Custom code and Apps sections ---------- */
+.mu-custom { margin-inline: var(--gutter); padding-block: 24px; }
+.mu-custom:is(.color-scheme-1, .color-scheme-3, .color-scheme-4, .color-scheme-5) { padding-inline: 24px; border-radius: var(--mu-radius-lg); }
+.mu-custom--full { margin-inline: 0; border-radius: 0 !important; }
+
+/* ---------- Swatches, terms, rating ---------- */
+/* Shopify swatch data in a chip, or tucked into the corner of a colour photo tile. */
+.mu-sw { display: inline-block; flex: none; inline-size: 16px; block-size: 16px; margin-inline-end: 8px; vertical-align: -3px; border-radius: 5px; background: center / cover; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 25%, transparent); }
+.mu-sw--corner { position: absolute; inset: auto 5px 5px auto; margin: 0; inline-size: 14px; block-size: 14px; box-shadow: 0 0 0 2px var(--bg); }
+/* Newsletter terms checkbox: a row of its own under the email field. */
+.mu-terms { display: flex; flex-basis: 100%; align-items: flex-start; gap: 10px; padding-top: 8px; font-size: .8125rem; line-height: 1.4; text-align: start; cursor: pointer; }
+.mu-terms input { flex: none; inline-size: 18px; block-size: 18px; margin: 1px 0 0; accent-color: var(--fg); }
+.mu-terms a { text-decoration: underline; text-underline-offset: 2px; }
+/* Five stars filled to --mu-r over a faint track, then the value and count. */
+.mu-rating { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; font-size: .8125rem; line-height: 1; }
+.mu-rating__stars {
+  --s: 14px; --star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M10 1.2l2.5 5.6 6.1.6-4.6 4.1 1.3 6-5.3-3.1-5.3 3.1 1.3-6L1.4 7.4l6.1-.6z'/%3E%3C/svg%3E");
+  flex: none; inline-size: calc(5 * var(--s) + 4 * 2px); block-size: var(--s);
+  background: linear-gradient(90deg, var(--acc, currentColor) var(--mu-r), color-mix(in srgb, currentColor 20%, transparent) 0);
+  -webkit-mask: var(--star) 0 0 / var(--s) var(--s) space no-repeat; mask: var(--star) 0 0 / var(--s) var(--s) space no-repeat;
+}
+.mu-rating__val { font-weight: var(--mu-font-body-bold); }
+.mu-card__rating { margin-top: 6px; font-size: .75rem; }
+.mu-card__rating .mu-rating__stars { --s: 12px; }
+.mu-pp__rating { margin-top: 12px; font-size: .875rem; }
+.mu-pp__rating .mu-rating__stars { --s: 16px; }
+
+/* ---------- Store status dots (header, pickup, quick add, stores) ---------- */
+/* Open: the scheme's fixed green (--ok). Closing soon: half filled. Closed: a ring. In store only: amber. */
+.mu-st__dot, .mu-pkup__dot { flex: none; display: inline-block; inline-size: 9px; block-size: 9px; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--mu); }
+.mu-st__dot.is-on, .mu-pkup__dot.is-on { background: var(--ok, var(--fg)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok, var(--fg)) 22%, transparent); }
+.mu-st__dot.is-soon { background: linear-gradient(90deg, var(--ok, var(--fg)) 50%, transparent 0); box-shadow: inset 0 0 0 2px var(--ok, var(--fg)); }
+.mu-st__dot.is-store, .mu-pkup__dot.is-store { background: var(--mu-instore, #E2A11B); box-shadow: none; }
+
+/* ---------- Modal backdrops ---------- */
+/* Popups, quick add, drawers, menu, search, pickup sheet, store chooser and the blurred cookie modal blur the page behind;
+   each keeps its own dim as the fallback. */
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  :is(.mu-pop, .mu-qa, .mu-drawer, .mu-menu, .mu-ps, .mu-sg, .mu-st, .mu-ck--blur)::backdrop { -webkit-backdrop-filter: blur(8px) saturate(1.2); backdrop-filter: blur(8px) saturate(1.2); }
+}
+
+/* ---------- Motion ---------- */
+/* Section motion (assets/mu-motion.js): items under the first screen start small and clear, then pop in once,
+   staggered by --i. Cards in a sideways scroller (mu-ai--rail) only fade, since a transform moves their snap point;
+   the scroller itself (mu-air) rises as one. Individual transform properties add to an element's own transform. */
+@media (prefers-reduced-motion: no-preference) {
+  .mu-ai:not(.is-in) { opacity: 0; scale: .96; translate: 0 16px; }
+  .mu-ai--rail:not(.is-in) { scale: none; translate: none; }
+  .mu-air:not(.is-in) { translate: 0 16px; }
+  .mu-ai.is-in { transition: opacity .5s ease-out, scale .7s var(--mu-spring), translate .7s var(--mu-glide); transition-delay: calc(var(--i, 0) * 70ms); }
+  .mu-air.is-in { transition: translate .7s var(--mu-glide); }
+  /* Keyboard focus that reaches an item before it pops in shows it at once. */
+  :is(.mu-ai, .mu-air):not(.is-in):focus-within { opacity: 1; scale: none; translate: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}
+
+/* ---------- Texture and stamped badges (Theme settings > Shape) ---------- */
+/* Texture: a fine grain tile (an SVG noise filter, drawn once by the browser) laid over the page. Charred adds a soft
+   fade at the screen edges. Never takes clicks. */
+.mu-tex::after {
+  content: ""; position: fixed; inset: 0; z-index: 80; pointer-events: none; opacity: .07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.6 -.45'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.mu-tex--char::after {
+  opacity: .1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1.6 -.45'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E"), radial-gradient(130% 110% at 50% 45%, transparent 55%, rgb(0 0 0 / .9));
+  background-size: 200px 200px, 100% 100%;
+}
+@media print { .mu-tex::after { display: none; } }
+/* Stamped badges: square corners, a printed rule and wide caps, set a hair off straight like an ink stamp. */
+.mu-stamp :is(.mu-kicker, .mu-card__tag, .mu-meter__name) { border-radius: 1px; letter-spacing: .14em; text-transform: uppercase; }
+.mu-stamp .mu-kicker { background: transparent; color: inherit; box-shadow: inset 0 0 0 1.5px currentColor; rotate: -1.5deg; }
+.mu-stamp .mu-kicker .mu-rung__marks i { background: color-mix(in srgb, currentColor 22%, transparent); }
+.mu-stamp .mu-card__tag { box-shadow: inset 0 0 0 1.5px currentColor; }
+.mu-stamp .mu-meter__name { background: transparent; color: inherit; box-shadow: inset 0 0 0 1.5px var(--h); }
+
+/* Corner radius 0 (body.mu-sq): panels that keep their own fixed rounding elsewhere go square too. */
+/* Every panel, chip, bar and thumb that carries its own fixed rounding drops it too; true circles (dots, radios) stay round. */
+.mu-sq { --mu-media-r: 0px; }
+.mu-sq :is(.mu-card, .mu-card--label) { --cr: 0px; }
+.mu-sq :is(.mu-grid__promo, .mu-tcard__link, .mu-f, .mu-cl__empty, .mu-cl__search,
+  .rte hr, .mu-badge, .mu-loc__flag, .mu-loc__code, .mu-social__link, .mu-sw, .mu-kicker, .mu-card__tag, .mu-card__chip,
+  .mu-line__thumb, .mu-gift, .mu-gift__row, .mu-gift__box, .mu-upsell, .mu-upsell__steps span, .mu-upsell__thumb, .mu-upsell__save, .mu-pair, .mu-pair__thumb,
+  .mu-acc__item, .mu-acc__item summary, .mu-acc__icon, .mu-acc__field, .mu-acc__note, .mu-cart__empty-icon, .mu-drawer, .mu-drawer .mu-sum, .mu-ship__bar,
+  .mu-f__box, .mu-f__track, .mu-ck--bar .mu-ck__panel, .mu-footer__rung,
+  .mu-lvg__num, .mu-header__drop-list a, .mu-ps, .mu-ps__thumb, .mu-rung__marks i,
+  .mu-hero__card, .mu-hero__photo, .mu-hero__nav, .mu-ledge__step, .mu-ledge__step b, .mu-ac__media, .mu-steps > span, .mu-gc__qr, .mu-pop__code, .mu-meter__seg, .mu-meter__name,
+  .mu-pp__stage, .mu-pp__bigplay, .mu-pp__badge, .mu-opt__tip, .mu-pp__tile, .mu-breaks td, .mu-pp__acc-item, .mu-pp__tabs, .mu-pp__stock-bar, .mu-pp__stock-bar > i,
+  .mu-pp-bar__img, .mu-pp__thumbs, .mu-pp__thumb, .mu-pp__panel, .mu-pp__below, .mu-plans__card, .mu-fchip, .mu-subp__modes, .mu-subp__mode, .mu-pkup__icon, .mu-pkup__rows, .mu-pkup__mine,
+  .mu-pp__hint, .mu-pp__spec, .mu-comp__img, .mu-pp__feat-icon,
+  .mu-qv, .mu-qv__eyebrow, .mu-qa__pick, .mu-qv__thumbs, .mu-qv__thumb, .mu-qv__badge, .mu-qv__pips i,
+  .mu-rt__video, .mu-rt__media, .mu-bp__tag, .mu-st, .mu-st__dist, .mu-st__tag, .mu-st__pick, .mu-st__hours .is-today > *, .mu-sl__hours .is-today > *,
+  .mu-tk.mu-pp__ticker--pill) { border-radius: 0 !important; }
+.mu-sq :is(.mu-f__track, .mu-qv, .mu-qv__thumb, .mu-pp__thumb, .mu-ck__copy, .mu-fc__head, .mu-lvg__head, .mu-pg__head, .mu-ah__copy, .mu-step__rail, .mu-ann__item, .mu-sum__sub)::after,
+.mu-sq :is(.mu-f__track, .mu-qv, .mu-qv__thumb, .mu-pp__thumb, .mu-ck__copy, .mu-fc__head, .mu-lvg__head, .mu-pg__head, .mu-ah__copy, .mu-step__rail, .mu-ann__item, .mu-hero__dot)::before { border-radius: 0 !important; }
+
+/* ---------- Heading case and outlined emphasis (Theme settings > Type) ---------- */
+.mu-hup :is(h1, h2, h3, h4, .mu-display, .mu-card__title) { text-transform: uppercase; letter-spacing: -.01em; }
+/* Outline: the emphasised word in a headline is drawn as a hollow outline in the text colour, not filled. No text
+   shadow: it would show through the hollow letters and muddy the outline. */
+.mu-emo :is(h1, h2, h3, .mu-display) em { -webkit-text-fill-color: transparent; -webkit-text-stroke: max(1.5px, .03em) currentColor; paint-order: stroke fill; text-shadow: none; }
+@supports not (-webkit-text-stroke: 1px black) { .mu-emo :is(h1, h2, h3, .mu-display) em { color: var(--acc); } }
+
+/* ---------- Sticker surface (Theme settings > Shape > Surface) ----------
+   Cards, media panels and buttons get a 3px ink outline and a hard offset shadow, like a die-cut sticker.
+   The ink is the page scheme's text colour (--mu-ink). */
+.mu-stk { --stk-w: 3px; --stk-o: 6px; --stk-ink: var(--mu-ink, #1A1033); --stk-paper: var(--mu-paper, #fff); }
+.mu-stk .mu-btn:not(.mu-btn--ghost, .mu-btn--icon) {
+  --b-ring: var(--stk-ink); --b-drop: var(--stk-ink); --b-line: transparent;
+  box-shadow: inset 0 0 0 var(--stk-w) var(--b-ring), 4px 4px 0 0 var(--b-drop);
+}
+.mu-stk .mu-btn--secondary { --b-ring: var(--stk-ink); --b-drop: var(--stk-ink); }
+.mu-stk .mu-btn:active { translate: 4px 4px; box-shadow: inset 0 0 0 var(--stk-w) var(--b-ring), 0 0 0 0 var(--b-drop); }
+.mu-stk .mu-btn:disabled { box-shadow: inset 0 0 0 var(--stk-w) color-mix(in srgb, var(--stk-ink) 35%, transparent); }
+@media (hover: hover) and (pointer: fine) {
+  .mu-stk .mu-btn:not(.mu-btn--ghost, .mu-btn--icon):hover { translate: -2px -2px; box-shadow: inset 0 0 0 var(--stk-w) var(--b-ring), 6px 6px 0 0 var(--b-drop); }
+  .mu-stk .mu-btn:not(.mu-btn--ghost, .mu-btn--icon):active { translate: 4px 4px; box-shadow: inset 0 0 0 var(--stk-w) var(--b-ring), 0 0 0 0 var(--b-drop); }
+}
+.mu-stk .mu-card--level.mu-card, .mu-stk .mu-card--plain .mu-card__media, .mu-stk .mu-card--label {
+  background: var(--stk-paper); color: var(--stk-ink);
+  box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--stk-ink);
+}
+.mu-stk .mu-card--level.mu-card:not(.mu-card--unrated) { background: var(--stk-paper); color: var(--stk-ink); box-shadow: 0 0 0 var(--stk-w) var(--stk-ink), var(--stk-o) var(--stk-o) 0 var(--stk-w) var(--stk-ink); }
+.mu-stk .mu-card--level .mu-card__media {
+  border-radius: var(--cr) var(--cr) 0 0; border-bottom: var(--stk-w) solid var(--stk-ink); overflow: hidden;
+  background: repeating-conic-gradient(from 0deg at 50% 55%, color-mix(in srgb, var(--stk-paper) 26%, var(--h)) 0deg 9deg, var(--h) 9deg 18deg);
+}
+.mu-stk .mu-card--level.mu-card--unrated .mu-card__media { background: var(--band); }
+.mu-stk .mu-card--level .mu-card__img { filter: drop-shadow(4px 6px 0 rgb(0 0 0 / .18)); }
+.mu-stk .mu-card--level .mu-card__body { padding-top: 12px; }
+.mu-stk .mu-card--level .mu-card__chip { padding: 0; background: none; color: inherit; }
+.mu-stk .mu-card--level:not(.mu-card--unrated) .mu-card__qv { --b-bg: var(--h); --b-fg: var(--h-fg); }
+.mu-stk .mu-card__tag { background: var(--stk-ink); color: var(--stk-paper); }
+@media (prefers-reduced-motion: reduce) { .mu-stk .mu-btn:hover, .mu-stk .mu-btn:active { translate: none; } }
+
+/* ---------- Buttons nested in an input pill (search page, footer newsletter, cart discount code) ----------
+   The pill is the surface, so its button sits flat inside it with an even inset: no ring, offset drop or lift in any
+   preset. A ring or sticker drop would poke past the pill edge and read as a second, misaligned button. Hover darkens
+   the fill instead of moving it. The tripled class outranks the sticker and lift rules above without !important. */
+:is(.mu-cl__search, .mu-field-pill, .mu-acc__field) > .mu-btn.mu-btn.mu-btn { --b-ring: transparent; --b-drop: transparent; --b-line: transparent; box-shadow: none; translate: none; }
+:is(.mu-cl__search, .mu-field-pill, .mu-acc__field) > .mu-btn.mu-btn.mu-btn:is(:hover, :active) { box-shadow: none; translate: none; }
+@media (hover: hover) and (pointer: fine) {
+  :is(.mu-cl__search, .mu-field-pill, .mu-acc__field) > .mu-btn.mu-btn.mu-btn:hover { --b-bg: color-mix(in srgb, var(--btn) 84%, var(--btn-fg)); }
+}
+/* Sticker preset: the search and discount pills' button and focus ring use the sticker ink, so the button is one clean ink shape. */
+.mu-stk :is(.mu-cl__search, .mu-acc__field) .mu-btn { --btn: var(--stk-ink); --btn-fg: var(--stk-paper); }
+.mu-stk .mu-cl__search:focus-within { outline-color: var(--stk-ink); }
+
+/* ---------- Breadcrumbs (snippets/mu-crumbs) ----------
+   One inline row, Home / Middle / Current, wrapping when it has to. Each link keeps to one line and long titles end in
+   an ellipsis (the middle link at 16em, the current page at the row width). The slash is decoration (empty alt text). */
+.mu-crumbs { min-inline-size: 0; max-inline-size: 100%; font-size: .75rem; line-height: 1.4; }
+.mu-crumbs__list { display: flex; flex-wrap: wrap; align-items: baseline; row-gap: 2px; margin: 0; padding: 0; list-style: none; }
+.mu-crumbs__list > li { display: flex; align-items: baseline; min-inline-size: 0; max-inline-size: 100%; }
+.mu-crumbs__list > li + li::before { content: "/"; content: "/" / ""; flex: none; margin-inline: .5em; opacity: .6; }
+.mu-crumbs__list > li > :is(a, span) { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-crumbs__list > li:not(:last-child) > a { max-inline-size: 16em; }
+.mu-crumbs a { color: inherit; text-decoration: none; }
+.mu-crumbs a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.mu-cl__head .mu-crumbs { margin-bottom: 10px; }
+@media (min-width: 990px) { .mu-crumbs { font-size: .8125rem; } }
+
+/* Until the shopper's first move (html.mu-woke, set in theme.liquid) the looping decoration holds still. */
+html:not(.mu-woke) :is(.mu-tk__list, .mu-footer__mq-track, .mu-split__haze i), html:not(.mu-woke) :is(.mu-hs__dot, .mu-hl)::after { animation-play-state: paused; }
+
+/* Motion off stops marquees, spins and scroll tilt even when the shopper has not asked for reduced motion. */
+body.mu-motion-off :is(.mu-tk__list, .mu-footer__mq-track, .mu-sticker) { animation: none !important; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body.mu-hover-lift :is(.mu-lineup__row, .mu-bundle) { transition: translate .25s ease; }
+  body.mu-hover-lift :is(.mu-lineup__row, .mu-bundle):hover { translate: 0 -4px; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    body.mu-scroll-tilt :is(.mu-lineup__row, .mu-label__panel-bg) {
+      animation: mu-view-tilt linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 60%;
+    }
+  }
+}
+@keyframes mu-view-tilt { from { rotate: -1.25deg; } to { rotate: 1.25deg; } }
+@media (prefers-reduced-motion: reduce) {
+  body.mu-scroll-tilt :is(.mu-lineup__row, .mu-label__panel-bg) { animation: none; }
+}

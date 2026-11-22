@@ -1,0 +1,116 @@
+{%- comment -%}
+  Local pickup for a variant, from the variant's store availabilities (no app). Inline: the closest location's status and
+  ready time, then up to three locations, each with a "Store details" expander (address and phone). "Check
+  availability at other stores" opens a side drawer listing every pickup location with an availability dot, ready time
+  and address. Rendered in the buy buttons block and by sections/mu-pickup (fetched by assets/mu-product.js when the
+  variant changes). Nothing shows when no location offers pickup or the variant doesn't need shipping.
+  The shopper's preferred store (assets/mu-stores.js) moves to the top with a My store tag and leads the status line;
+  every store in the drawer can be set as the preferred store. Stores that can't offer the variant stay listed with a
+  hollow dot and "Unavailable for pickup" (no ready time), after the stores that can; when the lead store can't, the
+  nearest store that can is suggested under it.
+  In store only: when the variant can't be bought online (sold out, not a pre-order) but a location still has it, the
+  stores that have it get an amber dot and "In store only" instead of a ready time, and the lead line says "In stock at
+  … · Purchase in store only" (no pickup promise). assets/mu-stores.js keeps the same wording when it reorders.
+  @param variant {Variant}
+{%- endcomment -%}
+{%- liquid
+  assign spots = variant.store_availabilities | where: 'pick_up_enabled', true
+  assign on_spots = spots | where: 'available', true
+  assign near = on_spots.first | default: spots.first
+  assign instore = false
+  if variant.available == false and on_spots.size > 0
+    assign instore = true
+  endif
+-%}
+{%- if spots.size > 0 and variant.requires_shipping -%}
+  <div class="mu-pkup{% if instore %} is-instore{% endif %}" data-mu-pick{% if instore %} data-instore{% endif %}>
+    <script type="application/json" data-pick-t>{"at":{{ 'products.pickup_at_html' | t: location: '[store]' | json }},"none":{{ 'products.pickup_none_at_html' | t: location: '[store]' | json }},"alt":{{ 'products.pickup_alt_html' | t: location: '[store]' | json }},"nowhere":{{ 'products.pickup_nowhere' | t | json }},"store":{{ 'products.pickup_store_html' | t: location: '[store]' | json }}}</script>
+    <div class="mu-pkup__head">
+      <span class="mu-pkup__icon" aria-hidden="true">{% render 'mu-icon', name: 'store' %}</span>
+      <div class="mu-pkup__info">
+        {%- assign near_name = near.location.name | escape | prepend: '<b>' | append: '</b>' -%}
+        {%- if instore -%}
+          <p class="mu-pkup__lead" data-pick-lead>{{ 'products.pickup_store_html' | t: location: near_name }}</p>
+          <p class="mu-pkup__time mu-muted" data-pick-time hidden></p>
+        {%- elsif near.available -%}
+          <p class="mu-pkup__lead" data-pick-lead>{{ 'products.pickup_at_html' | t: location: near_name }}</p>
+          <p class="mu-pkup__time mu-muted" data-pick-time>{{ near.pick_up_time }}</p>
+        {%- elsif spots.size > 1 -%}
+          <p class="mu-pkup__lead" data-pick-lead>{{ 'products.pickup_nowhere' | t }}</p>
+          <p class="mu-pkup__time mu-muted" data-pick-time hidden></p>
+        {%- else -%}
+          <p class="mu-pkup__lead" data-pick-lead>{{ 'products.pickup_none_at_html' | t: location: near_name }}</p>
+          <p class="mu-pkup__time mu-muted" data-pick-time hidden></p>
+        {%- endif -%}
+        <p class="mu-pkup__alt" data-pick-alt hidden></p>
+      </div>
+    </div>
+    <ul class="mu-pkup__rows" role="list">
+      {%- assign i = 0 -%}
+      {%- for pass in (1..2) -%}
+      {%- for spot in spots -%}
+        {%- if pass == 1 and spot.available != true -%}{%- continue -%}{%- endif -%}
+        {%- if pass == 2 and spot.available -%}{%- continue -%}{%- endif -%}
+        <li class="mu-pkup__row{% unless spot.available %} is-off{% endunless %}" data-store="{{ spot.location.name | escape }}" data-on="{{ spot.available }}"{% if instore and spot.available %} data-instore{% endif %} data-time="{{ spot.pick_up_time | escape }}" data-i="{{ i }}"{% if i > 2 %} hidden{% endif %}>
+          <div class="mu-pkup__row-head">
+            <span class="mu-pkup__dot{% if spot.available %}{% if instore %} is-store{% else %} is-on{% endif %}{% endif %}" aria-hidden="true"></span>
+            <span class="mu-pkup__row-name">{{ spot.location.name | escape }}</span>
+            <span class="mu-pkup__mine" hidden>{{ 'stores.my_store' | t }}</span>
+            <span class="mu-pkup__row-time mu-muted">{%- if spot.available and instore -%}{{ 'products.pickup_store_only' | t }}{%- elsif spot.available -%}{{ spot.pick_up_time }}{%- else -%}{{ 'products.pickup_no' | t }}{%- endif -%}</span>
+          </div>
+          <details class="mu-pkup__det">
+            <summary class="mu-pkup__det-btn">
+              <span class="mu-pkup__plus" aria-hidden="true">{% render 'mu-icon', name: 'plus' %}</span>{{ 'products.pickup_details' | t }}
+              <span class="visually-hidden">{{ spot.location.name | escape }}</span>
+            </summary>
+            <div class="mu-pkup__det-body">
+              <address>{{ spot.location.address | format_address }}</address>
+              {%- if spot.location.address.phone != blank -%}<p><a class="mu-link" href="tel:{{ spot.location.address.phone | remove: ' ' }}">{{ spot.location.address.phone | escape }}</a></p>{%- endif -%}
+            </div>
+          </details>
+        </li>
+        {%- assign i = i | plus: 1 -%}
+      {%- endfor -%}
+      {%- endfor -%}
+    </ul>
+    <button type="button" class="mu-pkup__more" data-pick-open aria-haspopup="dialog">
+      {%- if spots.size > 1 -%}{{ 'products.pickup_other' | t }}{%- else -%}{{ 'products.pickup_info' | t }}{%- endif -%}
+    </button>
+    <dialog class="mu-sg mu-pkup__sheet color-{{ settings.page_scheme }}" aria-labelledby="MuPick-{{ variant.id }}" data-pick-sheet>
+      <div class="mu-sg__top">
+        <div>
+          <p class="mu-pkup__eyebrow mu-muted">{{ 'products.pickup_title' | t }}</p>
+          <h2 class="mu-sg__title" id="MuPick-{{ variant.id }}">{{ variant.product.title | escape }}</h2>
+          {%- unless variant.product.has_only_default_variant -%}<p class="mu-muted mu-pkup__variant">{{ variant.title | escape }}</p>{%- endunless -%}
+        </div>
+        <button type="button" class="mu-iconbtn mu-sg__close" data-pick-close>
+          {%- render 'mu-icon', name: 'close' -%}
+          <span class="visually-hidden">{{ 'general.close' | t }}</span>
+        </button>
+      </div>
+      <ul class="mu-sg__body mu-pkup__list" role="list">
+        {%- assign i = 0 -%}
+        {%- for pass in (1..2) -%}
+        {%- for spot in spots -%}
+          {%- if pass == 1 and spot.available != true -%}{%- continue -%}{%- endif -%}
+          {%- if pass == 2 and spot.available -%}{%- continue -%}{%- endif -%}
+          <li class="mu-pkup__spot{% unless spot.available %} is-off{% endunless %}" data-store="{{ spot.location.name | escape }}" data-on="{{ spot.available }}" data-i="{{ i }}">
+            <h3 class="mu-pkup__name">
+              <span class="mu-pkup__dot{% if spot.available %}{% if instore %} is-store{% else %} is-on{% endif %}{% endif %}" aria-hidden="true"></span>{{ spot.location.name | escape }}
+            </h3>
+            <p class="mu-pkup__status">
+              {%- if spot.available and instore -%}{{ 'products.pickup_store_only' | t }}{%- elsif spot.available -%}{{ 'products.pickup_yes' | t }}<span class="mu-muted"> · {{ spot.pick_up_time }}</span>{%- else -%}{{ 'products.pickup_no' | t }}{%- endif -%}
+            </p>
+            <address class="mu-muted">{{ spot.location.address | format_address }}</address>
+            {%- if spot.location.address.phone != blank -%}<p><a class="mu-link" href="tel:{{ spot.location.address.phone | remove: ' ' }}">{{ spot.location.address.phone | escape }}</a></p>{%- endif -%}
+            <button type="button" class="mu-btn mu-btn--sm mu-btn--ghost mu-pkup__set" data-store-set="{{ spot.location.name | escape }}" aria-pressed="false">
+              {%- render 'mu-icon', name: 'check' -%}<span data-set-label>{{ 'stores.set' | t }}</span>
+            </button>
+          </li>
+          {%- assign i = i | plus: 1 -%}
+        {%- endfor -%}
+        {%- endfor -%}
+      </ul>
+    </dialog>
+  </div>
+{%- endif -%}

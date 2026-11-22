@@ -1,0 +1,173 @@
+{%- comment -%}
+  Results grid for the collection and search pages. With group on, the page's products sit in one run per level,
+  mildest first, each headed by its level ("3 · Medium · 4 products"), with a row of level links above (first page
+  only) and the promo blocks after the first run; products with no level come last, under "Other products". A page where no product has a level is one plain grid. Otherwise one grid with each promo
+  after its row count. "Load more" (mu-collection.js) appends the next page's grid.
+  Params: items, paginate, next_url, total, cols, blocks (promo blocks or nil), group.
+{%- endcomment -%}
+{%- liquid
+  assign n = settings.scale_levels | default: 6
+  assign cols = cols | plus: 0
+  assign start = paginate.current_offset
+  assign left = total | minus: start | minus: items.size
+  assign promos = blocks | where: 'type', 'promo'
+  assign lv_list = ''
+  if group
+    for p in items
+      capture h
+        render 'mu-level', product: p
+      endcapture
+      assign lv_list = lv_list | append: h | append: ','
+    endfor
+  endif
+  assign lvs = lv_list | split: ','
+  # Group only when a product on this page has a level; otherwise every card would sit under one "no level" heading.
+  if group
+    assign any_level = false
+    for l in lvs
+      assign lh = l | split: '|' | first | plus: 0
+      if lh > 0
+        assign any_level = true
+        break
+      endif
+    endfor
+    unless any_level
+      assign group = false
+    endunless
+  endif
+  assign img_sizes = '(min-width: 990px) 22vw, 45vw'
+  if cols == 3
+    assign img_sizes = '(min-width: 990px) 28vw, 45vw'
+  endif
+-%}
+{%- capture promo_html -%}
+  {%- for b in promos -%}
+    {%- assign bs = b.settings -%}
+    <li class="mu-grid__promo color-{{ bs.color_scheme }}" {{ b.shopify_attributes }}>
+      <div class="mu-grid__promo-copy">
+        {%- if bs.eyebrow != blank -%}<p class="mu-kicker">{{ bs.eyebrow | escape }}</p>{%- endif -%}
+        {%- if bs.heading != blank -%}<p class="mu-grid__promo-title mu-title-l">{{ bs.heading | escape }}</p>{%- endif -%}
+        {%- if bs.text != blank -%}<p class="mu-lede">{{ bs.text | escape }}</p>{%- endif -%}
+        {%- assign href = bs.link | default: bs.product.url -%}
+        {%- if bs.button_label != blank and href != blank -%}<a class="mu-btn" href="{{ href }}">{{ bs.button_label | escape }}</a>{%- endif -%}
+      </div>
+      {%- assign pimg = bs.image | default: bs.product.featured_media.preview_image -%}
+      {%- if pimg != blank -%}{{ pimg | image_url: width: 800 | image_tag: class: 'mu-grid__promo-img', widths: '300,500,800', sizes: '(min-width: 990px) 30vw, 60vw', loading: 'lazy', alt: '' }}{%- endif -%}
+    </li>
+  {%- endfor -%}
+{%- endcapture -%}
+<div class="mu-grid{% if group %} mu-grid--group{% endif %}" data-bands data-total="{{ total }}" style="--cols: {{ cols }};">
+  {%- if group -%}
+    {%- if paginate.current_page == 1 -%}
+      <nav class="mu-lvnav" aria-label="{{ 'scale.jump' | t }}">
+        <ul role="list">
+          {%- for i in (1..n) -%}
+            {%- assign has = false -%}
+            {%- for l in lvs -%}{%- assign lh = l | split: '|' | first | plus: 0 -%}{%- if lh == i -%}{%- assign has = true -%}{%- break -%}{%- endif -%}{%- endfor -%}
+            {%- if has -%}<li><a class="mu-lvnav__chip mu-h-{{ i }}" href="#mu-l{{ i }}">{{ i }}</a></li>{%- endif -%}
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+    {%- assign shown_promo = false -%}
+    {%- for i in (0..n) -%}
+      {%- liquid
+        assign lvl = i | plus: 1
+        if i == n
+          assign lvl = 0
+        endif
+        assign idx = ''
+        for l in lvs
+          assign lh = l | split: '|' | first | plus: 0
+          if lh == lvl
+            assign idx = idx | append: forloop.index0 | append: ','
+          endif
+        endfor
+        assign idx = idx | split: ','
+        if idx.size == 0
+          continue
+        endif
+        capture hs
+          render 'mu-level', level: lvl
+        endcapture
+        assign hp = hs | split: '|'
+      -%}
+      <section class="mu-lvg{% if lvl > 0 %} mu-h-{{ lvl }}{% endif %}"{% if paginate.current_page == 1 and lvl > 0 %} id="mu-l{{ lvl }}"{% endif %} aria-labelledby="mu-lvg-{{ paginate.current_page }}-{{ lvl }}">
+        <h2 class="mu-lvg__head" id="mu-lvg-{{ paginate.current_page }}-{{ lvl }}">
+          {%- if lvl > 0 -%}
+            <span class="mu-lvg__num">{{ lvl }}</span><span class="mu-lvg__name mu-scale-type">{{ hp[2] }}</span><span class="visually-hidden">, {{ 'scale.level_of' | t: noun: hp[3], level: lvl, total: n }}</span>
+          {%- else -%}
+            <span class="mu-lvg__name">{{ 'scale.unrated' | t }}</span>
+          {%- endif -%}
+          <span class="mu-lvg__count">{{ 'collections.count_products' | t: count: idx.size }}</span>
+        </h2>
+        <ul class="mu-grid__list" role="list">
+          {%- for k in idx -%}
+            {%- assign kk = k | plus: 0 -%}
+            <li class="mu-band__item">{% render 'mu-card', product: items[kk], sizes: img_sizes, heading: 'h3' %}</li>
+          {%- endfor -%}
+        </ul>
+      </section>
+      {%- if shown_promo == false and promo_html != blank -%}
+        <ul class="mu-grid__list mu-grid__list--promo" role="list">{{ promo_html }}</ul>
+        {%- assign shown_promo = true -%}
+      {%- endif -%}
+    {%- endfor -%}
+  {%- else -%}
+    <ul class="mu-grid__list" role="list">
+      {%- for p in items -%}
+        <li class="mu-band__item">
+          {%- if p.object_type == 'product' or p.object_type == nil -%}
+            {%- liquid
+              assign eager = false
+              assign fp = ''
+              if forloop.index < 5 and paginate.current_page == 1
+                assign eager = true
+                # The first two cards are the first row on a phone, where one of them is the largest paint.
+                if forloop.index < 3
+                  assign fp = 'high'
+                endif
+              endif
+            -%}
+            {%- render 'mu-card', product: p, sizes: img_sizes, heading: 'h2', eager: eager, fp: fp -%}
+          {%- else -%}
+            {%- assign type_key = 'search.type_' | append: p.object_type -%}
+            <article class="mu-tcard">
+              <a class="mu-tcard__link" href="{{ p.url }}">
+                <p class="mu-kicker">{{ type_key | t }}</p>
+                <h2 class="mu-tcard__title">{{ p.title | escape }}</h2>
+                <p class="mu-tcard__text">{{ p.content | strip_html | truncatewords: 18 }}</p>
+              </a>
+            </article>
+          {%- endif -%}
+        </li>
+        {%- assign pi = forloop.index -%}
+        {%- for b in promos -%}
+          {%- liquid
+            assign at = b.settings.rows | times: cols
+            if at > items.size
+              assign at = items.size
+            endif
+          -%}
+          {%- if paginate.current_page == 1 and pi == at -%}
+              {%- assign bs = b.settings -%}
+              <li class="mu-grid__promo color-{{ bs.color_scheme }}" {{ b.shopify_attributes }}>
+                <div class="mu-grid__promo-copy">
+                  {%- if bs.eyebrow != blank -%}<p class="mu-kicker">{{ bs.eyebrow | escape }}</p>{%- endif -%}
+                  {%- if bs.heading != blank -%}<p class="mu-grid__promo-title mu-title-l">{{ bs.heading | escape }}</p>{%- endif -%}
+                  {%- if bs.text != blank -%}<p class="mu-lede">{{ bs.text | escape }}</p>{%- endif -%}
+                  {%- assign href = bs.link | default: bs.product.url -%}
+                  {%- if bs.button_label != blank and href != blank -%}<a class="mu-btn" href="{{ href }}">{{ bs.button_label | escape }}</a>{%- endif -%}
+                </div>
+                {%- assign pimg = bs.image | default: bs.product.featured_media.preview_image -%}
+                {%- if pimg != blank -%}{{ pimg | image_url: width: 800 | image_tag: class: 'mu-grid__promo-img', widths: '300,500,800', sizes: '(min-width: 990px) 30vw, 60vw', loading: 'lazy', alt: '' }}{%- endif -%}
+              </li>
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
+  {%- if next_url != blank -%}
+    <div class="mu-band__more"><a class="mu-btn mu-btn--secondary" href="{{ next_url }}" data-more>{{ 'collections.load_more' | t: count: left }}</a></div>
+  {%- endif -%}
+</div>

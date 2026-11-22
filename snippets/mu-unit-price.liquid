@@ -1,0 +1,13 @@
+{%- comment -%}
+  Unit price, for example "$2.50/100 ml", with a screen reader label. Used on the product page, cards and the cart.
+  @param price {Number} unit price in cents (variant.unit_price or line_item.unit_price)
+  @param measurement {UnitPriceMeasurement}
+{%- endcomment -%}
+{%- if measurement -%}
+  <span class="mu-unit"><span class="visually-hidden">{{ 'products.unit_price' | t }} </span>
+    {%- render 'mu-money', m: price -%}
+    <span aria-hidden="true">/</span><span class="visually-hidden"> {{ 'products.unit_per' | t }} </span>
+    {%- if measurement.reference_value != 1 -%}{{ measurement.reference_value }}{%- endif -%}
+    {{- measurement.reference_unit -}}
+  </span>
+{%- endif -%}

@@ -1,0 +1,73 @@
+{%- comment -%}
+  Article card. Plain fields rather than an article object so the same card serves the blog and any article list.
+  Params: title, url, image (image or blank), date (date value), excerpt (plain text), tag, featured (true = the large
+  card with a scale-ramp edge and its own button), overlay (featured only: text sits on the image), scheme (featured only), eager (featured only).
+  Phones: one visual, the title (clamped to 2 lines in the band cards), one link.
+{%- endcomment -%}
+{%- liquid
+  assign date_iso = date | date: '%Y-%m-%d'
+  assign alt = image.alt | default: title
+-%}
+{%- if featured -%}
+  <article class="mu-feat color-{{ scheme }}{% if overlay %} mu-feat--overlay{% endif %}">
+    <a class="mu-feat__media" href="{{ url }}" tabindex="-1" aria-hidden="true">
+      {%- if image != blank -%}
+        {%- liquid
+          assign cf = image.aspect_ratio | divided_by: 1.3333 | at_least: 1 | round: 3
+          if overlay
+            assign f_m = '100vw'
+            assign f_t = '100vw'
+            assign f_share = 0.72
+          else
+            assign f_m = 'calc((100vw - 36px) * ' | append: cf | append: ')'
+            assign f_t = 'calc((100vw - 56px) * ' | append: cf | append: ')'
+            assign f_share = 0.5875
+          endif
+          assign f_fp = blank
+          if eager
+            assign f_fp = 'high'
+          endif
+        -%}
+        {%- capture f_sizes -%}{% render 'mu-sizes', sub: 70, f: f_share, tab: f_t, mob: f_m %}{%- endcapture -%}
+        {% render 'mu-img', image: image, sizes: f_sizes, fp: f_fp, alt: alt %}
+      {%- else -%}
+        {{ 'lifestyle-2' | placeholder_svg_tag: 'mu-placeholder' }}
+      {%- endif -%}
+    </a>
+    <div class="mu-feat__body">
+      <p class="mu-eyebrow mu-muted"><time datetime="{{ date_iso }}">{{ date | time_tag: format: 'date' }}</time>{% if tag != blank %} · {{ tag | escape }}{% endif %}</p>
+      <h2 class="mu-feat__title mu-h2"><a href="{{ url }}">{{ title | escape }}</a></h2>
+      {%- if excerpt != blank -%}<p class="mu-feat__ex mu-muted">{{ excerpt }}</p>{%- endif -%}
+      <a class="mu-btn mu-feat__btn" href="{{ url }}" aria-label="{{ 'blogs.read' | t | append: ': ' | append: title | escape }}">{{ 'blogs.read' | t }}{% render 'mu-icon', name: 'arrow' %}</a>
+    </div>
+  </article>
+{%- else -%}
+  <li class="mu-ac">
+    <a class="mu-ac__link" href="{{ url }}">
+      <div class="mu-ac__media">
+        {%- if image != blank -%}
+          {%- liquid
+            comment
+              A third of the list on desktop (4:3 frame), a square thumbnail beside the copy on phones; the photo covers both.
+            endcomment
+            assign cf_d = image.aspect_ratio | divided_by: 1.3333 | at_least: 1 | round: 3
+            assign cf_m = image.aspect_ratio | at_least: 1 | round: 3
+            assign a_f = 0.3375 | times: cf_d
+            assign a_t = 'calc(33vw * ' | append: cf_m | append: ')'
+            assign a_m = 'calc((36vw - 17px) * ' | append: cf_m | append: ')'
+          -%}
+          {%- capture a_sizes -%}{% render 'mu-sizes', sub: 104, f: a_f, tab: a_t, mob: a_m %}{%- endcapture -%}
+          {% render 'mu-img', image: image, max: 1600, sizes: a_sizes %}
+        {%- else -%}
+          {{ 'image' | placeholder_svg_tag: 'mu-placeholder' }}
+        {%- endif -%}
+      </div>
+      <div class="mu-ac__body">
+        <p class="mu-eyebrow mu-muted"><time datetime="{{ date_iso }}">{{ date | time_tag: format: 'date' }}</time>{% if tag != blank %}<span class="mu-ac__tag"> · {{ tag | escape }}</span>{% endif %}</p>
+        <h2 class="mu-ac__title">{{ title | escape }}</h2>
+        {%- if excerpt != blank -%}<p class="mu-ac__ex mu-muted">{{ excerpt }}</p>{%- endif -%}
+        <span class="mu-ac__more" aria-hidden="true">{{ 'blogs.read' | t }}{% render 'mu-icon', name: 'arrow' %}</span>
+      </div>
+    </a>
+  </li>
+{%- endif -%}

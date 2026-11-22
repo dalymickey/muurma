@@ -1,0 +1,102 @@
+{%- comment -%}
+  Fonts, global tokens and one class per colour scheme (.color-scheme-<id>). Every colour in the theme is read from these
+  variables, so the 5 schemes (and any the merchant adds) restyle everything.
+{%- endcomment -%}
+{%- liquid
+  assign hf = settings.heading_font
+  assign bf = settings.body_font
+  assign bf_500 = bf | font_modify: 'weight', '500'
+  assign bf_600 = bf | font_modify: 'weight', '600'
+  assign bf_i = bf | font_modify: 'style', 'italic'
+  assign bf_600i = bf_600 | font_modify: 'style', 'italic'
+  assign hf_i = hf | font_modify: 'style', 'italic'
+  assign lf = settings.label_font
+  assign use_label = false
+  if lf != blank
+    assign use_label = true
+  endif
+-%}
+{%- comment -%} The hero's heading and body weights load early so the swap from fallback fonts doesn't shift the first screen. {%- endcomment -%}
+{{ hf | font_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}
+{%- if lf %}{{ lf | font_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}{% endif -%}
+{%- if bf_500 %}{{ bf_500 | font_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}{% endif -%}
+{%- if bf_600 %}{{ bf_600 | font_url | preload_tag: as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }}{% endif %}
+<style>
+  {{ hf | font_face: font_display: 'swap' }}
+  {{ bf | font_face: font_display: 'swap' }}
+  {%- if bf_500 %}{{ bf_500 | font_face: font_display: 'swap' }}{% endif -%}
+  {%- if bf_600 %}{{ bf_600 | font_face: font_display: 'swap' }}{% endif -%}
+  {%- if bf_i %}{{ bf_i | font_face: font_display: 'swap' }}{% endif -%}
+  {%- if bf_600i %}{{ bf_600i | font_face: font_display: 'swap' }}{% endif -%}
+  {%- if hf_i %}{{ hf_i | font_face: font_display: 'swap' }}{% endif %}
+  {%- if use_label %}{{ lf | font_face: font_display: 'swap' }}{% endif %}
+  :root {
+    --mu-font-heading: {{ hf.family }}, {{ hf.fallback_families }};
+    --mu-font-heading-weight: {{ hf.weight }};
+    --mu-font-body: {{ bf.family }}, {{ bf.fallback_families }};
+    --mu-font-body-weight: {{ bf.weight }};
+    --mu-font-label: {% if use_label %}{{ lf.family }}, {{ lf.fallback_families }}{% else %}var(--mu-font-body){% endif %};
+    --mu-font-wordmark: {% if lf %}{{ lf.family }}, {{ lf.fallback_families }}{% else %}var(--mu-font-heading){% endif %};
+    --mu-btn-radius: {% if settings.button_shape == 'rounded' %}{{ settings.radius | at_least: 4 }}px{% elsif settings.button_shape == 'square' %}0px{% else %}999px{% endif %};
+    --mu-h-mid: var(--acc);
+    --mu-font-body-medium: {% if bf_500 %}500{% else %}{{ bf.weight }}{% endif %};
+    --mu-font-body-bold: {% if bf_600 %}600{% else %}700{% endif %};
+    --mu-heading-scale: {{ settings.heading_scale | divided_by: 100.0 }};
+    --mu-body-size: {{ settings.body_size }}px;
+    --mu-radius: {{ settings.radius }}px;
+    --mu-ink: {{ settings.page_scheme.settings.text | default: '#1A1033' }};
+    --mu-paper: {{ settings.page_scheme.settings.background | default: '#FFFFFF' }};
+    --mu-ok-dark: #3ddc84; --mu-ok-light: #188a4a;
+    --mu-scrim: rgb(0 0 0 / .45); --mu-on-scrim: #fff;
+    --mu-radius-lg: {{ settings.radius | times: 1.5 | round }}px;
+    --mu-gap-d: {{ settings.section_gap | default: 20 }}px;
+    --mu-gap-m: {{ settings.section_gap_mobile | default: 16 }}px;
+    {%- if settings.page_width != blank and settings.page_width != 'full' %}
+    --mu-page-width: {{ settings.page_width }}px;
+    {%- endif %}
+    --mu-card-m: {% if settings.card_mobile_size == 'compact' %}44%{% else %}62%{% endif %};
+    {%- comment -%} New / Sale badge colours (Cards > Badge colours). Unset = the scheme's colours. With no text colour, white or near-black, whichever contrasts more. {%- endcomment -%}
+    {%- assign badge_kinds = 'new,sale' | split: ',' -%}
+    {%- for k in badge_kinds -%}
+      {%- liquid
+        assign bg_key = 'badge_' | append: k | append: '_bg'
+        assign fg_key = 'badge_' | append: k | append: '_fg'
+        assign b_bg = settings[bg_key]
+        assign b_fg = settings[fg_key]
+        if b_bg != blank and b_fg == blank
+          assign c_light = '#ffffff' | color_contrast: b_bg
+          assign c_dark = '#0b0b0c' | color_contrast: b_bg
+          if c_light >= c_dark
+            assign b_fg = '#ffffff'
+          else
+            assign b_fg = '#0b0b0c'
+          endif
+        endif
+      -%}
+      {%- if b_bg != blank %}
+    --mu-badge-{{ k }}: {{ b_bg }}; --mu-badge-{{ k }}-fg: {{ b_fg }};
+      {%- endif -%}
+    {%- endfor %}
+  }
+  {%- for scheme in settings.color_schemes -%}
+    {%- liquid
+      assign s = scheme.settings
+      assign bg_b = s.background | color_brightness
+      if bg_b < 128
+        assign shade = 'rgb(0 0 0 / .45)'
+        assign ok = 'var(--mu-ok-dark)'
+      else
+        assign shade = 'rgb(11 11 12 / .14)'
+        assign ok = 'var(--mu-ok-light)'
+      endif
+    -%}
+    .color-{{ scheme.id }} {
+      --bg: {{ s.background }}; --band: {{ s.band }}; --fg: {{ s.text }}; --mu: {{ s.muted }};
+      --acc: {{ s.accent }}; --btn: {{ s.button }}; --btn-fg: {{ s.button_label }}; --ring: {{ s.button_ring }};
+      --btn2: {{ s.secondary }}; --btn2-fg: {{ s.secondary_label }}; --link: {{ s.link }}; --bd: {{ s.border }};
+      --badge: {{ s.badge }}; --badge-fg: {{ s.badge_label }}; --sale: {{ s.sale }}; --shade: {{ shade }}; --ok: {{ ok }};
+      --focus: {{ s.text }};
+      background-color: var(--bg); color: var(--fg);
+    }
+  {%- endfor %}
+</style>

@@ -1,0 +1,24 @@
+{%- comment -%}
+  Under the product price: the pre-order badge and note (mu-pp-pre), unit price, the taxes included line (from the store's tax setting) and Shop Pay
+  instalments. The instalments banner needs its own product form; assets/mu-product.js keeps its variant id in step.
+  @param product {Product}
+  @param v {Variant}
+  @param pb {Object} price block settings
+  @param uid {String}
+{%- endcomment -%}
+{%- render 'mu-pp-pre', product: product, v: v, part: 'line' -%}
+<p class="mu-pp__unit mu-muted" data-unit{% unless v.unit_price_measurement %} hidden{% endunless %}>
+  {%- render 'mu-unit-price', price: v.unit_price, measurement: v.unit_price_measurement -%}
+</p>
+{%- if pb.show_tax and cart.taxes_included -%}
+  <p class="mu-pp__tax mu-muted">{{ 'products.taxes_included' | t }}</p>
+{%- endif -%}
+{%- if pb.show_installments -%}
+  {%- assign terms_id = 'MuTerms-' | append: uid -%}
+  <div class="mu-pp__terms">
+    {%- form 'product', product, id: terms_id -%}
+      <input type="hidden" name="id" value="{{ v.id }}" data-terms-id>
+      {{ form | payment_terms }}
+    {%- endform -%}
+  </div>
+{%- endif -%}

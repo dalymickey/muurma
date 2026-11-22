@@ -1,0 +1,12 @@
+{%- comment -%}
+  Not added in the theme editor: assets/mu-product.js fetches /variants/{id}?section_id=mu-pickup to refresh local
+  pickup when the shopper picks another variant.
+{%- endcomment -%}
+{%- render 'mu-pickup', variant: product.selected_or_first_available_variant -%}
+
+{% schema %}
+{
+  "name": "t:sections.pickup.name",
+  "class": "mu-pickup-src"
+}
+{% endschema %}

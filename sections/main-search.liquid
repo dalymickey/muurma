@@ -1,0 +1,260 @@
+{%- comment -%}
+  Search results: the same scale-ramp header, bar, rail or sheet and grid as the collection page. The header holds the
+  search field; the grid shows products as cards and pages or articles as text cards. Filters are Shopify's storefront
+  filters for search; with none set up, the tab offers sort only.
+{%- endcomment -%}
+{{ 'mu-pages.css' | asset_url | stylesheet_tag }}
+{{ 'mu-collection.css' | asset_url | stylesheet_tag }}
+{{ 'mu-grid.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-collection.js' | asset_url }}" defer></script>
+{%- liquid
+  assign s = section.settings
+  assign fid = 'MuFilters-' | append: section.id
+  assign active_count = 0
+  for filter in search.filters
+    assign active_count = active_count | plus: filter.active_values.size
+    if filter.type == 'price_range'
+      if filter.min_value.value != nil or filter.max_value.value != nil
+        assign active_count = active_count | plus: 1
+      endif
+    endif
+  endfor
+  assign terms_q = search.terms | url_encode
+  assign clear_url = routes.search_url | append: '?q=' | append: terms_q | append: '&options%5Bprefix%5D=last'
+  assign has_filters = false
+  if search.filters.size > 0 and search.performed
+    assign has_filters = true
+  endif
+  assign total = search.results_count
+-%}
+{%- capture chips -%}
+  {%- for filter in search.filters -%}
+    {%- for value in filter.active_values -%}
+      <li><a class="mu-cl__chip" href="{{ value.url_to_remove }}" data-ajax>{{ value.label | escape }}{% render 'mu-icon', name: 'close' %}<span class="visually-hidden">{{ 'collections.remove' | t }}</span></a></li>
+    {%- endfor -%}
+    {%- if filter.type == 'price_range' -%}
+      {%- if filter.min_value.value != nil or filter.max_value.value != nil -%}
+        <li><a class="mu-cl__chip" href="{{ filter.url_to_remove }}" data-ajax><span class="mu-num">{%- assign mu_lo = filter.min_value.value | default: 0 -%}{%- assign mu_hi = filter.max_value.value | default: filter.range_max -%}{%- render 'mu-money', m: mu_lo, trim: true -%}–{%- render 'mu-money', m: mu_hi, trim: true -%}</span>{% render 'mu-icon', name: 'close' %}<span class="visually-hidden">{{ 'collections.remove' | t }}</span></a></li>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+
+<mu-results class="mu-cl mu-cl--search color-{{ s.color_scheme | default: settings.page_scheme }}{% if has_filters %} mu-cl--rail{% endif %}" data-section="{{ section.id }}"{% if s.load_auto %} data-auto-load{% endif %}>
+  <p class="visually-hidden" role="status" data-more-status data-msg="{{ 'collections.loaded' | t: shown: '__N__', total: '__T__' }}"></p>
+  <header class="mu-cl__stage mu-cl__stage--search mu-bleed mu-fill-hero">
+    <div class="mu-in mu-cl__stage-in">
+      <div class="mu-cl__head">
+        {%- if s.show_breadcrumbs -%}{%- assign crumb_title = 'search.title' | t -%}{%- render 'mu-crumbs', current: crumb_title -%}{%- endif -%}
+        <p class="mu-kicker">{{ 'search.title' | t }}</p>
+        <h1 class="mu-cl__title mu-title-xl">{% if search.performed and search.terms != blank %}“{{ search.terms | escape }}”{% else %}{{ 'search.heading' | t }}{% endif %}</h1>
+        <form class="mu-cl__search" action="{{ routes.search_url }}" method="get" role="search">
+          <label class="visually-hidden" for="MuSearch-{{ section.id }}">{{ 'search.label' | t }}</label>
+          {%- render 'mu-icon', name: 'search' -%}
+          <input id="MuSearch-{{ section.id }}" type="search" name="q" value="{{ search.terms | escape }}" placeholder="{{ 'search.label' | t }}" autocomplete="off">
+          <input type="hidden" name="options[prefix]" value="last">
+          <button class="mu-btn" type="submit">{{ 'search.submit' | t }}</button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  {%- if search.performed -%}
+    <div class="mu-in mu-cl__bar">
+      <p class="mu-cl__count mu-num" data-part="count" role="status">{{ 'search.results' | t: count: total, terms: search.terms }}</p>
+      <ul class="mu-cl__chips" role="list" data-part="chips-tab">{{ chips }}</ul>
+      {%- if total > 0 or active_count > 0 -%}
+        <button class="mu-btn mu-btn--secondary mu-cl__tab" type="button" data-tab aria-controls="{{ fid }}-panel" aria-expanded="{% if has_filters %}true{% else %}false{% endif %}">
+          {%- render 'mu-icon', name: 'filter' -%}
+          <span>{% if has_filters %}{{ 'collections.filter_sort' | t }}{% else %}{{ 'collections.sort' | t }}{% endif %}</span>
+          <span class="mu-num" data-part="tab-count">{% if active_count > 0 %} · {{ active_count }}{% endif %}</span>
+        </button>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  <div class="mu-in mu-cl__body">
+    {%- if search.performed and total > 0 or active_count > 0 -%}
+      {%- render 'mu-filters', results: search, id: fid, action: routes.search_url, clear_url: clear_url, count: total, noun: 'results', active_count: active_count, scheme: s.rail_scheme, terms: search.terms -%}
+    {%- endif -%}
+    <div class="mu-cl__results" data-part="results">
+      {%- if search.performed -%}
+        {%- paginate search.results by s.per_page -%}
+          {%- if search.results.size > 0 -%}
+            {%- render 'mu-grid', items: search.results, paginate: paginate, next_url: paginate.next.url, total: total, cols: s.columns, blocks: nil, group: false -%}
+          {%- else -%}
+            <div class="mu-cl__empty">
+              <p>{% if active_count > 0 %}{{ 'collections.no_match' | t }}{% else %}{{ 'search.none' | t: terms: search.terms }}{% endif %}</p>
+              {%- if active_count > 0 -%}
+                <a class="mu-btn" href="{{ clear_url }}" data-ajax>{{ 'collections.clear_all' | t }}</a>
+              {%- else -%}
+                <a class="mu-btn" href="{{ routes.all_products_collection_url }}">{{ 'collections.shop_all' | t }}</a>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        {%- endpaginate -%}
+      {%- endif -%}
+    </div>
+  </div>
+  <div class="mu-cl__scrim" data-close hidden></div>
+</mu-results>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.main_search.name",
+  "class": "mu-main-search",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:sections.main_collection.results_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "color_scheme",
+      "id": "rail_scheme",
+      "label": "t:sections.main_collection.rail_scheme",
+      "default": "scheme-5"
+    },
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "t:sections.main_collection.columns",
+      "default": "4",
+      "options": [
+        {
+          "value": "3",
+          "label": "3"
+        },
+        {
+          "value": "4",
+          "label": "4"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "per_page",
+      "label": "t:sections.main_collection.per_page",
+      "min": 3,
+      "max": 48,
+      "step": 3,
+      "default": 24
+    },
+    {
+      "type": "checkbox",
+      "id": "load_auto",
+      "label": "t:sections.main_collection.load_auto",
+      "info": "t:sections.main_collection.load_auto_info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_breadcrumbs",
+      "label": "t:sections.common.show_breadcrumbs",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,29 @@
+{
+  "type": "header",
+  "name": "t:groups.header",
+  "sections": {
+    "header": {
+      "type": "mu-header",
+      "settings": {
+        "logo_text": "MUURMA",
+        "menu": "main-menu",
+        "style": "standard",
+        "overlay": true,
+        "overlay_text": "hero",
+        "sticky_mode": "always",
+        "cart_total": "off",
+        "search_bar": false,
+        "predictive_search": true,
+        "show_country": false,
+        "show_language": false,
+        "color_scheme": "scheme-4",
+        "show_border": false,
+        "store_desktop": false,
+        "store_mobile": false
+      }
+    }
+  },
+  "order": [
+    "header"
+  ]
+}

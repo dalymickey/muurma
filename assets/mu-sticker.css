@@ -1,0 +1,38 @@
+/* Stickers. The angle is decorative. Reduced motion and Motion off straighten them.
+   Spin only runs when Motion is Lively, Spin stickers is on, and the shopper allows motion. */
+
+.mu-stickers { position: absolute; z-index: 3; inset: 8px 8px auto auto; display: grid; gap: 6px; justify-items: end; max-width: 70%; }
+.mu-sticker {
+  margin: 0; width: max-content; max-width: 16rem; padding: 4px 10px;
+  background: var(--bg); color: var(--fg); font-weight: var(--mu-font-body-bold);
+  font-size: .8125rem; line-height: 1.2; letter-spacing: .02em; overflow-wrap: anywhere;
+  rotate: var(--mu-sticker-rot, 0deg);
+}
+.mu-sticker--flat { border-radius: 2px; rotate: none; }
+.mu-sticker--round { border-radius: 999px; }
+.mu-sticker--font-heading { font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); letter-spacing: 0; }
+.mu-sticker--font-body { font-family: var(--mu-font-body); }
+.mu-sticker--font-mono { font-family: var(--mu-font-label, var(--mu-font-body)); }
+.mu-sticker--shadow { box-shadow: 3px 3px 0 color-mix(in srgb, var(--fg) 85%, transparent); }
+:is(.mu-sec, .mu-pp--feature, .mu-fp-stage__visual):has(> .mu-block-stickers) { position: relative; }
+.mu-block-stickers { position: absolute; z-index: 4; inset: 0; pointer-events: none; }
+.mu-block-stickers .mu-sticker { pointer-events: auto; position: absolute; }
+.mu-sticker--top_left { top: 12px; left: 12px; }
+.mu-sticker--top_right { top: 12px; right: 12px; }
+.mu-sticker--bottom_left { bottom: 12px; left: 12px; top: auto; }
+.mu-sticker--bottom_right { bottom: 12px; right: 12px; top: auto; }
+.mu-stickers .mu-sticker { position: static; }
+
+@media (prefers-reduced-motion: no-preference) {
+  body.mu-spin .mu-sticker--tilted { animation: mu-sticker-spin 9s linear infinite; }
+}
+@keyframes mu-sticker-spin { to { rotate: calc(var(--mu-sticker-rot, 0deg) + 360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mu-sticker { rotate: none; animation: none; }
+}
+body.mu-motion-off .mu-sticker { rotate: none; animation: none; }
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body.mu-hover-lift .mu-sticker { transition: translate .2s ease; }
+  body.mu-hover-lift :is(.mu-stickers, .mu-block-stickers, .mu-bundle__stickers) .mu-sticker:hover { translate: 0 -3px; }
+}

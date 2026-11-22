@@ -1,0 +1,5 @@
+{%- comment -%} The shared quick view dialog. Rendered once in the layout when Theme settings > Product cards > Show quick view button is on, and on product pages. It also carries the card quick buy messages (data-qb-*). {%- endcomment -%}
+<dialog class="mu-qa mu-qa--view color-{{ settings.page_scheme }}" aria-labelledby="mu-qa-title" data-qa-dialog data-qb-added="{{ 'products.added' | t | escape }}" data-qb-error="{{ 'products.add_error' | t | escape }}">
+  <div data-qa-body></div>
+</dialog>
+<script src="{{ 'mu-quick-add.js' | asset_url }}" defer></script>

@@ -1,0 +1,244 @@
+{%- comment -%}
+  Quick view body. Not placed in templates: assets/mu-quick-add.js fetches it with the Section Rendering API on a
+  product URL (?section_id=mu-quick-add), so it renders in that product's context. A two-column dialog (a stacked
+  sheet on phones) with a swipeable media gallery (images, videos, 3D model previews) with thumbnails or dots, the
+  title, price, a short description (Theme settings > Product cards > Description length), the options, the add
+  button and a "View details" link. A product with a level tints the dialog with its level colour and shows a
+  small "Level 3 of 6" scale beside the price.
+  Combined listings: an option value that belongs to another product carries data-product-url; choosing it reloads
+  this section on that product's URL (assets/mu-quick-add.js).
+  Coming soon (custom.release_date in the future, snippets/mu-pp-release): the add button stays off and reads Coming soon.
+{%- endcomment -%}
+{%- if product -%}
+  {%- liquid
+    assign v = product.selected_or_first_available_variant
+    assign single = product.has_only_default_variant
+    capture rs
+      render 'mu-pp-release', product: product
+    endcapture
+    assign coming = false
+    if rs != '0'
+      assign coming = true
+    endif
+    capture ci
+      render 'mu-pp-colour-index', product: product
+    endcapture
+    assign colour_index = ci | strip | plus: 0
+    capture pre_ok
+      render 'mu-pre-ok', product: product
+    endcapture
+    assign pre_ok = pre_ok | strip
+    assign pre_label = settings.preorder_label | strip
+    if pre_label == blank
+      assign pre_label = 'products.preorder' | t
+    endif
+    assign words = settings.quick_view_words | default: 0
+    capture qv_hs
+      render 'mu-level', product: product
+    endcapture
+    assign qv_hp = qv_hs | split: '|'
+    assign qv_lv = qv_hp[0] | plus: 0
+    assign qv_n = qv_hp[1] | plus: 0
+    assign qv_tc = ''
+    assign qv_ts = ''
+    if settings.scale_mode == 'colors'
+      capture qv_tn
+        render 'mu-tone', product: product
+      endcapture
+      assign qv_tn = qv_tn | split: '|'
+      if qv_tn[0] != blank
+        assign qv_tc = ' ' | append: qv_tn[0]
+        assign qv_ts = qv_tn[1]
+      endif
+    endif
+  -%}
+  {%- capture qa_close -%}
+    <button class="mu-iconbtn mu-qa__close" type="button" data-qa-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+  {%- endcapture -%}
+  {%- capture qa_price -%}
+    <p class="mu-qa__price" data-qa-price>{% render 'mu-money', m: v.price %}</p>
+  {%- endcapture -%}
+  {%- capture qa_opts -%}
+    <input type="hidden" name="id" value="{{ v.id }}" data-qa-id>
+    {%- unless single -%}
+      {%- for option in product.options_with_values -%}
+        {%- assign oi = forloop.index0 -%}
+        {%- if oi == colour_index -%}
+          {%- comment -%} Colour: the product page's thumbnail tiles (variant image, else the swatch), name underneath. {%- endcomment -%}
+          <fieldset class="mu-qa__opt">
+            <legend>{{ option.name | escape }}</legend>
+            <div class="mu-qa__colours">
+              {%- for value in option.values -%}
+                {%- liquid
+                  assign cv = value.variant
+                  if cv == blank
+                    for variant in product.variants
+                      if variant.options[oi] == value
+                        assign cv = variant
+                        break
+                      endif
+                    endfor
+                  endif
+                  assign thumb = cv.featured_media
+                -%}
+                <label class="mu-qa__colour">
+                  <input type="radio" name="option{{ forloop.parentloop.index }}" value="{{ value | escape }}" data-qa-option="{{ oi }}" data-value-id="{{ value.id }}"{% if value.product_url != blank %} data-product-url="{{ value.product_url }}"{% endif %}{% if option.selected_value == value %} checked{% endif %}>
+                  <span class="mu-qa__tile" aria-hidden="true">
+                    {%- if thumb != blank -%}
+                      {%- liquid
+                        assign ti = thumb.preview_image
+                        assign tw = 56
+                        if ti.aspect_ratio > 1
+                          assign tw = ti.aspect_ratio | times: 56 | ceil
+                        endif
+                      -%}
+                      <img src="{{ ti | image_url: width: 180 }}" srcset="{{ ti | image_url: width: 120 }} 120w, {{ ti | image_url: width: 180 }} 180w, {{ ti | image_url: width: 280 }} 280w, {{ ti | image_url: width: 380 }} 380w" sizes="{{ tw }}px" alt="" width="56" height="56" loading="lazy" style="object-position: {{ ti.presentation.focal_point }}">
+                      {%- render 'mu-swatch-dot', value: value, class: 'mu-sw--corner' -%}
+                    {%- elsif value.swatch.image -%}
+                      <i style="background-image: url({{ value.swatch.image | image_url: width: 80 }})"></i>
+                    {%- elsif value.swatch.color -%}
+                      <i style="background-color: {{ value.swatch.color }}"></i>
+                    {%- else -%}
+                      {%- render 'mu-swatch-fallback', value: value -%}
+                    {%- endif -%}
+                  </span>
+                  <span class="mu-qa__colour-name">{{ value | escape }}</span>
+                </label>
+              {%- endfor -%}
+            </div>
+          </fieldset>
+        {%- else -%}
+          {%- liquid
+            # Words, not sizes: w1 when values average more than four characters ("150 ml kit", not "10.5").
+            assign all_v = option.values | join: ''
+            assign cap_v = option.values.size | times: 4
+            assign wide = all_v.size | minus: cap_v | at_least: 0 | at_most: 1
+          -%}
+          <fieldset class="mu-qa__opt">
+            <legend>{{ option.name | escape }}</legend>
+            <div class="mu-qa__pills mu-qa__pills--w{{ wide }}">
+              {%- for value in option.values -%}
+                <label class="mu-qa__pill">
+                  <input type="radio" name="option{{ forloop.parentloop.index }}" value="{{ value | escape }}" data-qa-option="{{ oi }}" data-value-id="{{ value.id }}"{% if value.product_url != blank %} data-product-url="{{ value.product_url }}"{% endif %}{% if option.selected_value == value %} checked{% endif %}>
+                  <span>{%- render 'mu-swatch-dot', value: value -%}{{ value | escape }}</span>
+                </label>
+              {%- endfor -%}
+            </div>
+          </fieldset>
+        {%- endif -%}
+      {%- endfor -%}
+    {%- endunless -%}
+    <p class="mu-qa__pick" data-qa-pick hidden></p>
+    <button class="mu-btn mu-qa__add" type="submit" data-qa-add{% if coming or v.available == false %} disabled{% endif %}>
+      <span data-qa-label>{% if coming %}{{ 'products.coming_soon' | t }}{% elsif v.available %}{% render 'mu-pp-pre', product: product, v: v, part: 'label', fallback: 'products.add' %}{% else %}{{ 'products.sold_out' | t }}{% endif %}</span>
+    </button>
+    <p class="mu-qa__msg" role="status" data-qa-msg></p>
+    <a class="mu-qa__more mu-link" href="{{ product.url }}">{{ 'products.view_details' | t }}</a>
+    <script type="application/json" data-qa-variants>
+      [{%- for variant in product.variants -%}{"id":{{ variant.id }},"options":{{ variant.options | json }},"available":{% if coming %}false{% else %}{{ variant.available | json }}{% endif %},"price":{%- capture mu_m -%}{%- render 'mu-money', m: variant.price -%}{%- endcapture -%}{{ mu_m | json }}{% if variant.featured_media %},"media":{{ variant.featured_media.id }}{% endif %}{% if variant.quantity_rule.min > 1 %},"qmin":{{ variant.quantity_rule.min }}{% endif %}{% if pre_ok == 'true' and variant.available and variant.inventory_management == 'shopify' and variant.inventory_policy == 'continue' and variant.inventory_quantity <= 0 %},"pre":true{% endif %}{% if variant.requires_shipping %},"pick":[{%- assign vspots = variant.store_availabilities | where: 'pick_up_enabled', true -%}{%- for sp in vspots -%}{"n":{{ sp.location.name | json }},"on":{{ sp.available | json }},"t":{{ sp.pick_up_time | json }}}{% unless forloop.last %},{% endunless %}{%- endfor -%}]{% endif %}}{% unless forloop.last %},{% endunless %}{%- endfor -%}]
+    </script>
+    <script type="application/json" data-qa-strings>
+      {"add":{{ 'products.add' | t | json }},"preorder":{{ pre_label | json }},"soldOut":{% if coming %}{{ 'products.coming_soon' | t | json }}{% else %}{{ 'products.sold_out' | t | json }}{% endif %},"added":{{ 'products.added' | t | json }},"error":{{ 'products.add_error' | t | json }}}
+    </script>
+  {%- endcapture -%}
+
+  {%- liquid
+    assign media_count = 0
+    for media in product.media limit: 12
+      assign media_count = forloop.length
+    endfor
+    comment
+      The photo frame takes the first image's shape (clamped to 3:4..4:3), and every slide is contained in it, so
+      nothing is cropped.
+    endcomment
+    assign qv_ar = product.media.first.preview_image.aspect_ratio | default: 1 | at_least: 0.75 | at_most: 1.3333 | round: 4
+    comment
+      The sheet photo is the frame minus the sheet's 10px padding. From 750px the dialog is two columns
+      (1 / 1.1) inside 12px of padding, capped at 980px. The old 100vw / 480px asked for a wider file than the frame.
+    endcomment
+    assign qv_sizes = '(min-width: 1028px) 501px, (min-width: 750px) calc((100vw - 72px) * 0.5238), calc(100vw - 20px)'
+  -%}
+  <form class="mu-qa__panel mu-qv{% if qv_lv > 0 %} mu-h-{{ qv_lv }}{% endif %}{{ qv_tc }}"{% if qv_ts != blank %} style="{{ qv_ts }}"{% endif %} action="{{ routes.cart_add_url }}" method="post" data-qa-form data-url="{{ product.url }}">
+    {{ qa_close }}
+    <div class="mu-qv__media" style="--qv-ar: {{ qv_ar }};">
+      <div class="mu-qv__track" data-qv-track{% if media_count > 1 %} tabindex="0"{% endif %} role="region" aria-label="{{ 'products.gallery' | t }}">
+        {%- for media in product.media limit: 12 -%}
+          {%- liquid
+            assign fit = 'fill'
+            assign media_alt = media.alt | default: product.title
+            assign load = 'lazy'
+            if forloop.first
+              assign load = 'eager'
+            endif
+          -%}
+          <div class="mu-qv__slide mu-qv__slide--{{ fit }}" data-qv-slide data-media-id="{{ media.id }}" role="group" aria-roledescription="slide" aria-label="{{ 'products.slide' | t: index: forloop.index, count: media_count }}">
+            {%- case media.media_type -%}
+              {%- when 'video' -%}
+                {{ media | video_tag: controls: true, muted: true, playsinline: true, loop: true, preload: 'none', class: 'mu-qv__img', image_size: '1000x' }}
+              {%- when 'external_video' -%}
+                <div class="mu-qv__defer" data-qv-defer>
+                  {% render 'mu-img', image: media.preview_image, max: 1200, sizes: qv_sizes, loading: load, class: 'mu-qv__img', alt: media_alt %}
+                  <button type="button" class="mu-qv__play" data-qv-play aria-label="{{ 'products.video_play' | t }}">{% render 'mu-icon', name: 'play' %}</button>
+                  <template>{{ media | external_video_url: autoplay: true, playsinline: true, rel: 0 | external_video_tag: class: 'mu-qv__frame', loading: 'lazy' }}</template>
+                </div>
+              {%- when 'model' -%}
+                {%- comment -%} 3D model: the poster and a "View in 3D" button; Shopify's model viewer loads on demand. {%- endcomment -%}
+                <div class="mu-qv__defer" data-qv-defer data-qv-model>
+                  {% render 'mu-img', image: media.preview_image, max: 1200, sizes: qv_sizes, loading: load, class: 'mu-qv__img', alt: media_alt %}
+                  <button type="button" class="mu-qv__play mu-qv__play--3d" data-qv-play aria-label="{{ 'products.view_3d' | t }}">{% render 'mu-icon', name: 'cube' %}</button>
+                  <template>{{ media | model_viewer_tag: image_size: '1000x', class: 'mu-qv__frame mu-qv__model' }}</template>
+                </div>
+              {%- else -%}
+                {% render 'mu-img', image: media.preview_image, max: 1200, sizes: qv_sizes, loading: load, class: 'mu-qv__img', alt: media_alt %}
+            {%- endcase -%}
+          </div>
+        {%- else -%}
+          <div class="mu-qv__slide mu-qv__slide--float">{{ 'product-1' | placeholder_svg_tag: 'mu-placeholder mu-qv__img' }}</div>
+        {%- endfor -%}
+      </div>
+      {%- if media_count > 1 -%}
+        <button type="button" class="mu-iconbtn mu-qv__step mu-qv__step--prev" data-qv-step="-1" aria-label="{{ 'general.slider_prev' | t: label: product.title }}">{% render 'mu-icon', name: 'arrow-right' %}</button>
+        <button type="button" class="mu-iconbtn mu-qv__step" data-qv-step="1" aria-label="{{ 'general.slider_next' | t: label: product.title }}">{% render 'mu-icon', name: 'arrow-right' %}</button>
+        <div class="mu-qv__thumbs">
+          {%- for media in product.media limit: 12 -%}
+            {%- liquid
+              case media.media_type
+                when 'video', 'external_video'
+                  assign mu_media_label = 'products.show_video' | t: index: forloop.index
+                when 'model'
+                  assign mu_media_label = 'products.show_model' | t: index: forloop.index
+                else
+                  assign mu_media_label = 'products.show_image' | t: index: forloop.index
+              endcase
+            -%}
+            <button type="button" class="mu-qv__thumb" data-qv-goto="{{ forloop.index0 }}" aria-label="{{ mu_media_label }}"{% if forloop.first %} aria-current="true"{% endif %}>
+              <img src="{{ media.preview_image | image_url: width: 120 }}" srcset="{{ media.preview_image | image_url: width: 60 }} 60w, {{ media.preview_image | image_url: width: 120 }} 120w, {{ media.preview_image | image_url: width: 180 }} 180w" sizes="(max-width: 749px) 1px, 52px" alt="" loading="lazy" width="52" height="52" style="object-position: {{ media.preview_image.presentation.focal_point }}">
+              {%- if media.media_type == 'video' or media.media_type == 'external_video' -%}<span class="mu-qv__badge" aria-hidden="true">{% render 'mu-icon', name: 'play' %}</span>{%- endif -%}
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+    <div class="mu-qv__info">
+      {%- if product.vendor != blank -%}<p class="mu-eyebrow mu-muted mu-qv__eyebrow">{{ product.vendor | escape }}</p>{%- endif -%}
+      <h2 class="mu-qa__title mu-qv__title" id="mu-qa-title">{{ product.title | escape }}</h2>
+      <div class="mu-qv__line">
+        {{ qa_price }}
+        {%- if qv_lv > 0 -%}
+          <p class="mu-qv__level mu-scale-type"><span class="mu-qv__pips" style="--n: {{ qv_n }};" aria-hidden="true">{% for i in (1..qv_n) %}<i class="mu-h-{{ i }}{% if i <= qv_lv %} is-lit{% endif %}" style="--i: {{ i }};"></i>{% endfor %}</span>{{ 'scale.level_of' | t: noun: qv_hp[3], level: qv_lv, total: qv_n }}</p>
+        {%- endif -%}
+      </div>
+      {%- if words > 0 and product.description != blank -%}
+        <p class="mu-qv__desc mu-muted">{{ product.description | replace: '</p>', ' </p>' | replace: '<br', ' <br' | replace: '</li>', ' </li>' | replace: '</h', ' </h' | replace: '</div>', ' </div>' | strip_html | truncatewords: words }}</p>
+      {%- endif -%}
+      {{ qa_opts }}
+    </div>
+  </form>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.quick_add.name",
+  "settings": []
+}
+{% endschema %}

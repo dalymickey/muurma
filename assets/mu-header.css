@@ -1,0 +1,465 @@
+/* Engine header: a solid full-width bar (no art behind it, D6) with a ramp line along its foot, pill nav, a bag chip
+   that carries its own count, and the announcement strip above. The phone menu, search dialog, country picker and
+   My store live here too. JS state classes (assets/mu-header.js): is-stuck, is-sbar-off, is-tools-min, is-nav-tight,
+   is-nav-off, is-sdrop-open, is-solid (transparent header only). */
+/* Bar height and the announcement strip, read by full-screen heroes before the header script has measured. */
+:root { --mu-bar-h: 60px; --mu-ann-h: 0px; }
+:root:has(.mu-header--ann) { --mu-ann-h: 36px; }
+@media (max-width: 749px) { :root:has(.mu-header--ann-d) { --mu-ann-h: 0px; } }
+@media (min-width: 990px) { :root { --mu-bar-h: 72px; } }
+:root { --mu-top-est: calc(var(--mu-ann-h) + var(--mu-bar-h)); }
+.mu-header-section { position: relative; z-index: 40; }
+.mu-header { --hb: 60px; --hx: var(--gutter); display: block; position: relative; }
+.mu-pagew .mu-header { --hx: max(var(--gutter), (100% - var(--mu-page-width)) / 2); }
+@media (min-width: 750px) { .mu-header-section:has(.mu-header--sd) { position: sticky; top: 0; z-index: 40; } }
+@media (max-width: 749px) { .mu-header-section:has(.mu-header--sm) { position: sticky; top: 0; z-index: 40; } }
+@media (min-width: 990px) { .mu-header { --hb: 72px; } }
+
+.mu-header__bar {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; column-gap: 4px;
+  min-height: var(--hb); padding-inline: var(--hx);
+}
+/* The ramp line: the whole ramp, 3px, under the bar. Show border off hides it. z-index -1 keeps it under every panel the
+   bar opens (dropdowns, mega menu, search results, country picker) while the bar's own background stays below it. */
+.mu-header__bar::after {
+  content: ""; position: absolute; z-index: -1; left: 0; right: 0; bottom: -3px; height: 3px;
+  background: var(--mu-g-hero); pointer-events: none;
+}
+.mu-header--nb .mu-header__bar::after { display: none; }
+.mu-header.is-stuck .mu-header__bar { box-shadow: 0 6px 20px -12px rgb(20 8 4 / 0.45); }
+
+.mu-header__logo { display: flex; flex: none; margin: 0; font: inherit; line-height: 1; }
+.mu-header__logo-link { display: inline-flex; align-items: center; min-height: 48px; }
+.mu-header__wordmark {
+  font-family: var(--mu-font-wordmark, var(--mu-font-heading));
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: 0.55em;
+  text-indent: 0.55em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+}
+/* mu-logo sizes the image in whole pixels (width, ratio, 44px height cap); keep it a block so it sits on the pixel grid. */
+.mu-header__logo-img { display: block; height: auto; }
+
+.mu-header__nav { display: none; }
+.mu-header__tools { display: flex; align-items: center; column-gap: 2px; min-width: 0; margin-inline-start: auto; }
+.mu-header__tools > * { flex-shrink: 0; }
+.mu-header__tools > .mu-header__sbar { flex-shrink: 1; }
+
+/* Bag chip: an inverted pill holding the icon, the optional total and the count (no corner badge). */
+.mu-header__tools .mu-header__bag {
+  width: auto; aspect-ratio: auto; height: 44px;
+  display: inline-flex; align-items: center; column-gap: 8px; padding-inline: 8px;
+  margin-inline-start: 6px; border-radius: 0;
+  background: transparent; color: inherit;
+}
+.mu-header__bag .mu-icon { width: 19px; height: 19px; }
+.mu-header__bag .mu-badge {
+  position: static; inset: auto; min-width: 22px; height: 22px; padding: 0 6px; margin: 0;
+  border-radius: 11px; background: var(--mu-h-mid); color: var(--mu-h3-fg, #fff); box-shadow: none;
+  font-size: 12px; line-height: 22px; text-align: center;
+}
+.mu-header__total { display: none; font-size: 14px; font-weight: var(--mu-font-body-bold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mu-header__total[hidden] { display: none !important; }
+.mu-header__bag--t-all .mu-header__total { display: inline; }
+@media (min-width: 750px) { .mu-header__bag--t-desktop .mu-header__total { display: inline; } }
+@media (hover: hover) and (pointer: fine) {
+  .mu-header__tools .mu-header__bag { transition: background-color 0.15s ease; }
+  .mu-header__tools .mu-header__bag:hover:not(:disabled) { background: color-mix(in srgb, var(--fg) 82%, var(--bg)); }
+}
+
+/* Search bar (header setting, 750px up): a soft filled field; folds back to the icon when the bar runs out of room. */
+.mu-header__sbar { display: none; }
+@media (min-width: 750px) {
+  .mu-header--sbar:not(.is-sbar-off) .mu-header__sicon { display: none; }
+  .mu-header--sbar:not(.is-sbar-off) .mu-header__sbar {
+    position: relative; display: flex; align-items: center; column-gap: 10px;
+    flex: 0 1 260px; min-width: 160px; height: 42px; margin-inline-end: 8px; padding-inline: 14px;
+    border-radius: var(--mu-btn-radius, 999px); background: color-mix(in srgb, var(--mu-sb-fg, var(--fg)) 6%, var(--bg)); color: var(--mu-sb-fg, var(--fg));
+    outline: 1.5px solid transparent; outline-offset: -1.5px;
+  }
+  .mu-header--sbar .mu-header__sbar:focus-within { outline-color: var(--mu-sb-fg, var(--fg)); }
+  .mu-header__sbar .mu-icon { width: 17px; height: 17px; opacity: 0.7; }
+  .mu-header__sbar input[type="search"] {
+    flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0;
+    background: none; color: inherit; font: inherit; font-size: 15px;
+  }
+  .mu-header__sbar input::placeholder { color: var(--mu-sb-mu, var(--mu)); opacity: 1; }
+  .mu-header__sbar input::-webkit-search-cancel-button { -webkit-appearance: none; }
+}
+@media (min-width: 750px) and (pointer: coarse) { .mu-header__sbar input[type="search"] { font-size: 16px; } }
+
+/* Account: Shopify's <shopify-account>, always shown (D6). A plain link stands in until it is defined. */
+shopify-account.mu-header__account {
+  --shopify-account-avatar-size: 44px; --shopify-account-signed-in-avatar-size: 28px;
+  --shopify-account-signed-in-avatar-color-background: var(--mu-h-mid); --shopify-account-signed-in-avatar-color-text: var(--bg);
+  cursor: pointer;
+}
+shopify-account.mu-header__account:not(:defined), shopify-account.mu-menu__account-el:not(:defined) { display: none; }
+shopify-account.mu-header__account:defined + .mu-header__account-link,
+shopify-account.mu-menu__account-el:defined + .mu-menu__account-link { display: none; }
+shopify-account.mu-header__account::part(signed-out-avatar) {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit;
+}
+.mu-header__avatar { display: grid; place-items: center; }
+shopify-account.mu-menu__account-el {
+  --shopify-account-signed-in-avatar-size: 34px; --shopify-account-signed-in-avatar-color-background: var(--mu-h-mid);
+  --shopify-account-signed-in-avatar-color-text: var(--bg); cursor: pointer;
+}
+shopify-account.mu-menu__account-el::part(signed-out-avatar) { display: block; width: auto; height: auto; padding: 0; border: 0; border-radius: 0; background: none; color: inherit; }
+
+/* Phones: the logo gives way first (wraps to two lines, then clips); the tools keep their size. */
+@media (max-width: 749px) {
+  .mu-header__logo { flex: 0 1 auto; min-width: 0; margin-inline-end: 6px; }
+  .mu-header__logo-link { max-width: 100%; }
+  .mu-header__logo-img { min-width: 0; max-width: 100%; }
+  .mu-header__wordmark {
+    display: block; overflow: hidden;
+    font-size: 12px; letter-spacing: 0.42em; text-indent: 0.42em;
+    line-height: 1; white-space: nowrap;
+  }
+  .mu-header__tools .mu-header__bag { padding-inline: 11px; column-gap: 6px; }
+}
+@media (max-width: 359px) {
+  .mu-header__tools .mu-iconbtn { --mu-ib: 40px; }
+  .mu-header__wordmark { font-size: 16px; }
+  shopify-account.mu-header__account { --shopify-account-avatar-size: 40px; }
+  shopify-account.mu-header__account::part(signed-out-avatar) { width: 40px; height: 40px; }
+  .mu-header__tools .mu-header__bag { height: 40px; padding-inline: 9px; }
+}
+
+/* Desktop nav: pills. Hover tints, the current page is a filled pill. */
+@media (min-width: 990px) {
+  .mu-header__menu-btn { display: none; }
+  .mu-header__nav { display: block; flex: none; margin-inline-start: 36px; }
+  .mu-header__nav > ul { display: flex; column-gap: 4px; margin: 0; padding: 0; list-style: none; }
+  .mu-header__nav a, .mu-header__nav summary {
+    display: inline-flex; align-items: center; column-gap: 5px; min-height: 40px; padding-inline: 14px;
+    border-radius: 0; font-weight: 400; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    list-style: none; cursor: pointer;
+  }
+  .mu-header__nav summary::-webkit-details-marker { display: none; }
+  .mu-header__nav summary .mu-icon { width: 15px; height: 15px; transition: rotate 0.2s ease; }
+  .mu-header__nav details[open] > summary .mu-icon { rotate: 180deg; }
+  .mu-header__nav > ul > li > [aria-current], .mu-header__nav > ul > li > details > summary[aria-current] { background: var(--fg); color: var(--bg); }
+  .mu-header__drop { position: relative; }
+  .mu-header__drop-list {
+    position: absolute; z-index: 5; top: calc(100% + 12px); left: 0; min-width: 230px; margin: 0; padding: 8px; list-style: none;
+    border-radius: var(--mu-radius); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent), 0 22px 44px -18px rgb(20 8 4 / 0.35);
+  }
+  .mu-header__drop-list a { display: flex; width: 100%; min-height: 40px; border-radius: calc(var(--mu-radius) - 4px); }
+
+  /* Mega panel: a full-width sheet under the bar; its content sits in the page column. */
+  .mu-header__drop--mega { position: static; }
+  .mu-mega {
+    position: absolute; z-index: 5; top: calc(100% + 3px); left: 0; right: 0;
+    max-height: calc(100vh - 140px); overflow-y: auto; overscroll-behavior: contain;
+    padding: 30px var(--hx) 36px; box-shadow: 0 30px 50px -30px rgb(20 8 4 / 0.4);
+  }
+  .mu-header__drop--compact { position: relative; }
+  .mu-header__drop--compact .mu-mega {
+    top: calc(100% + 12px); left: -10px; right: auto; width: max-content; max-width: min(860px, calc(100vw - 48px));
+    padding: 22px 24px; border-radius: var(--mu-radius-lg); box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent), 0 22px 44px -18px rgb(20 8 4 / 0.35);
+  }
+  .mu-header__drop--compact .mu-mega__cols { grid-template-columns: minmax(170px, auto); row-gap: 4px; }
+  .mu-mega__in { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 32px; }
+  .mu-header__drop--mega:not(.mu-header__drop--compact) .mu-mega { container: mu-mega / inline-size; }
+  .mu-header__drop--mega:not(.mu-header__drop--compact) .mu-mega__in { grid-template-columns: minmax(360px, 1fr) auto; }
+  .mu-mega__cols { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px 28px; align-content: start; }
+  .mu-header__nav .mu-mega a { display: flex; min-height: 34px; padding: 0; border-radius: 0; background: none; color: inherit; }
+  .mu-header__nav .mu-mega .mu-mega__all {
+    grid-column: 1 / -1; column-gap: 8px; margin-bottom: 6px;
+    font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: calc(28px * var(--mu-heading-scale));
+  }
+  .mu-header__nav .mu-header__drop--compact .mu-mega__all { font-size: calc(21px * var(--mu-heading-scale)); }
+  .mu-mega__all .mu-icon { width: 20px; height: 20px; }
+  .mu-header__nav .mu-mega .mu-mega__head { font-weight: var(--mu-font-body-bold); }
+  .mu-mega__col ul { display: grid; margin: 6px 0 0; padding: 0; list-style: none; }
+  .mu-mega__col li a { color: var(--mu); font-size: 15px; }
+  .mu-header__nav .mu-mega__col li a[aria-current] { color: var(--fg); }
+  /* Promo tiles: full rows only (1, 2, 3, or 4 when there is room, else 2 x 2). */
+  .mu-mega__promos {
+    --k: 1; --pw: 260px;
+    display: grid; grid-template-columns: repeat(var(--k), minmax(0, 1fr)); gap: 18px 14px; align-content: start;
+    width: min(var(--pw), calc(100cqi - 392px));
+  }
+  .mu-mega__promos--2 { --k: 2; --pw: 500px; }
+  .mu-mega__promos--3 { --k: 3; --pw: 740px; }
+  .mu-mega__promos--4, .mu-mega__promos--many { --k: 4; --pw: 980px; }
+  @container mu-mega (max-width: 1179px) {
+    .mu-mega__promos--4, .mu-mega__promos--many { --k: 2; --pw: 400px; }
+    .mu-mega__promos--4 .mu-mega__promo-img, .mu-mega__promos--many .mu-mega__promo-img { aspect-ratio: 1; }
+  }
+  .mu-header__drop--compact .mu-mega__promos { width: auto; grid-template-columns: repeat(var(--k), 170px); }
+  .mu-header__drop--compact .mu-mega__promos--4, .mu-header__drop--compact .mu-mega__promos--many { --k: 2; }
+  .mu-header__nav .mu-mega .mu-mega__promo { display: grid; row-gap: 8px; align-content: start; min-width: 0; min-height: 0; }
+  .mu-mega__promo-title { display: inline-flex; align-items: center; column-gap: 6px; font-weight: var(--mu-font-body-bold); }
+  .mu-mega__promo-title .mu-icon { width: 15px; height: 15px; }
+  .mu-mega__promo-text { font-size: 14px; }
+}
+@media (min-width: 990px) and (hover: hover) and (pointer: fine) {
+  .mu-header__nav > ul > li > a:not([aria-current]):hover,
+  .mu-header__nav > ul > li > details > summary:not([aria-current]):hover,
+  .mu-header__nav details[open] > summary:not([aria-current]),
+  .mu-header__drop-list a:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+  .mu-header__nav .mu-mega a:not(.mu-mega__promo):hover { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--mu-h-mid); text-underline-offset: 5px; }
+  .mu-header__nav .mu-mega .mu-mega__promo:hover .mu-mega__promo-title { text-decoration: underline; text-decoration-color: var(--mu-h-mid); text-underline-offset: 4px; }
+}
+.mu-mega__promo-img { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.mu-mega__promo-img :is(img, svg) { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.mu-mega__promo-img svg { fill: currentColor; opacity: 0.3; }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .mu-mega__promo-img img { transition: scale 0.45s ease; }
+  .mu-mega__promo:hover .mu-mega__promo-img img { scale: 1.05; }
+}
+
+/* Announcement strip: a mini scale ramp leads each message. 36px tall; a sticky header lifts by that much so only
+   the bar stays. */
+.mu-header__ann {
+  position: relative; display: flex; align-items: center; justify-content: center; height: 36px; padding-inline: 14px; overflow: hidden;
+  background: var(--bg); color: var(--fg); font-size: 12.5px; font-weight: var(--mu-font-body-medium); letter-spacing: 0.01em; white-space: nowrap;
+}
+.mu-header__ann a { color: inherit; text-decoration: none; }
+.mu-ann-wrap { display: flex; align-items: center; column-gap: 4px; min-width: 0; max-width: 100%; }
+.mu-ann { display: grid; min-width: 0; max-width: 100%; }
+.mu-ann__item {
+  grid-area: 1 / 1; align-self: center; display: inline-flex; align-items: center; justify-content: center; column-gap: 9px;
+  margin: 0; min-width: 0; overflow: hidden; white-space: nowrap; transition: opacity 0.3s ease, translate 0.3s ease;
+}
+.mu-ann__item > a { overflow: hidden; text-overflow: ellipsis; }
+.mu-ann__item::before { content: ""; flex: none; width: 22px; height: 7px; border-radius: 4px; background: var(--mu-g-hero); }
+.mu-ann__item:not(.is-on) { visibility: hidden; opacity: 0; translate: 0 8px; }
+@media (prefers-reduced-motion: reduce) { .mu-ann__item { transition: none; translate: none !important; } }
+.mu-ann__btn {
+  display: inline-grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0;
+  border-radius: 50%; background: none; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.mu-ann__btn svg { width: 13px; height: 13px; }
+.mu-ann__btn--prev svg { rotate: 90deg; }
+.mu-ann__btn--next svg { rotate: -90deg; }
+.mu-ann__btn:focus-visible { outline-offset: -3px; }
+@media (hover: hover) and (pointer: fine) {
+  .mu-ann__btn:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+  .mu-header__ann a:hover { text-decoration: underline; }
+}
+@media (min-width: 750px) { .mu-header-section:has(.mu-header--sd.mu-header--ann) { top: -36px; } }
+@media (max-width: 749px) { .mu-header-section:has(.mu-header--sm.mu-header--ann:not(.mu-header--ann-d)) { top: -36px; } }
+/* Social icons at the strip's start; the message stays centred on desktop. */
+.mu-header__ann-side { display: flex; align-items: center; flex: none; }
+.mu-header__ann .mu-header__ann-social { flex-wrap: nowrap; column-gap: 0; }
+.mu-header__ann .mu-header__ann-social .mu-social__link { width: 30px; height: 30px; box-shadow: none; }
+.mu-header__ann .mu-header__ann-social .mu-icon { width: 14px; height: 14px; }
+@media (max-width: 749px) {
+  .mu-header__ann-side--desktop { display: none; }
+  .mu-header__ann:has(.mu-header__ann-side--all) { justify-content: space-between; column-gap: 10px; padding-inline-start: 6px; }
+  .mu-header__ann:has(.mu-header__ann-side--all) :is(.mu-ann-wrap, .mu-ann) { flex: 1; }
+  .mu-header__ann-social li:nth-child(n + 4) { display: none; }
+  .mu-header--ann-d .mu-header__ann { display: none; }
+}
+@media (min-width: 750px) {
+  .mu-header__ann-side { position: absolute; top: 0; bottom: 0; left: var(--hx); }
+  .mu-header__ann:has(.mu-header__ann-side) .mu-ann-wrap { max-width: calc(100% - 2 * (var(--hx) + 14px + 30px * var(--mu-ann-n, 4))); }
+}
+
+/* Phone and tablet menu: a sheet from the right with big stepped links. */
+.mu-menu {
+  inset: 0 0 0 auto; width: min(400px, 100%); max-width: 100%; height: 100%; max-height: none; margin: 0 0 0 auto;
+  padding: 10px 22px 28px; border: 0; overflow-y: auto;
+}
+.mu-menu::before { content: ""; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--mu-g-hero); background-size: 100% 100%; }
+.mu-menu::backdrop { background: rgb(20 8 4 / 0.5); }
+.mu-menu[open] { display: flex; flex-direction: column; animation: mu-menu-in 0.25s ease-out; }
+@keyframes mu-menu-in { from { translate: 24px 0; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mu-menu[open] { animation: none; } }
+html:has(.mu-menu[open]) { overflow: hidden; }
+.mu-menu__top { display: flex; align-items: center; justify-content: space-between; column-gap: 14px; min-height: 60px; margin-bottom: 14px; }
+.mu-menu__top > :not(.mu-menu__close) { min-width: 0; max-width: 100%; }
+.mu-menu__top > .mu-header__wordmark { line-height: 1.05; white-space: normal; overflow-wrap: anywhere; text-wrap: balance; }
+.mu-menu__close { flex-shrink: 0; background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.mu-menu__list { display: grid; margin: 0; padding: 0; list-style: none; }
+.mu-menu__list > li { border-bottom: 1px solid color-mix(in srgb, var(--fg) 10%, transparent); }
+.mu-menu__list > li > a, .mu-menu__list > li > details > summary {
+  display: flex; align-items: center; justify-content: space-between; min-height: 58px;
+  font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight); font-size: 24px; list-style: none; cursor: pointer;
+}
+.mu-menu__list summary::-webkit-details-marker { display: none; }
+.mu-menu__list details[open] > summary .mu-icon { rotate: 180deg; }
+.mu-menu__sub { display: grid; padding: 0 0 14px; }
+.mu-menu__sub a { display: flex; align-items: center; min-height: 44px; font-size: 16px; color: var(--mu); }
+.mu-menu__sub a[aria-current] { color: var(--fg); font-weight: var(--mu-font-body-bold); }
+.mu-menu__list .mu-menu__deep summary { display: flex; align-items: center; justify-content: space-between; min-height: 44px; font-size: 16px; color: var(--mu); list-style: none; cursor: pointer; }
+.mu-menu__list .mu-menu__deep[open] > summary { color: var(--fg); }
+.mu-menu__deep summary .mu-icon { width: 15px; height: 15px; }
+.mu-menu__deep ul { display: grid; margin: 0; padding: 0 0 8px 12px; list-style: none; border-inline-start: 3px solid var(--mu-h-mid); }
+.mu-menu__deep ul a { min-height: 40px; font-size: 15px; }
+.mu-menu__promos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 0 18px; }
+.mu-menu__promos .mu-mega__promo { display: grid; row-gap: 6px; font-size: 14px; }
+.mu-menu__promos .mu-mega__promo-img { aspect-ratio: 1; }
+.mu-menu__promos .mu-mega__promo-title { display: flex; align-items: center; column-gap: 4px; font-weight: var(--mu-font-body-bold); }
+.mu-menu__promos .mu-icon { width: 14px; height: 14px; }
+.mu-menu__promos .mu-mega__promo-text { display: none; }
+.mu-menu__account { align-self: flex-start; }
+/* Drawer foot: takes the free space above it, so it sits at the bottom of a short drawer and follows a long nav. */
+.mu-menu__foot { display: flex; flex-direction: column; row-gap: 14px; margin-top: auto; padding-top: 20px; }
+.mu-menu__foot:not(:has(> :not(script):not([hidden]))) { display: none; }
+@media (min-width: 990px) { .mu-menu { display: none; } }
+
+/* Search dialog: a sheet dropped from the top edge with a filled field. */
+.mu-ps {
+  width: 100%; max-width: none; max-height: min(86dvh, 720px); margin: 0 0 auto; padding: 18px var(--gutter) 22px;
+  border: 0; border-radius: 0 0 var(--mu-radius-lg) var(--mu-radius-lg); overflow-y: auto; background: var(--bg); color: var(--fg);
+  box-shadow: 0 30px 60px -30px rgb(20 8 4 / 0.5);
+}
+.mu-ps[open] { animation: mu-ps-in 0.22s ease-out; }
+@keyframes mu-ps-in { from { translate: 0 -16px; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mu-ps[open] { animation: none; } }
+.mu-ps::backdrop { background: rgb(20 8 4 / 0.5); }
+.mu-ps > * { max-width: 820px; margin-inline: auto; }
+.mu-ps__form {
+  display: flex; align-items: center; column-gap: 10px; min-height: 58px; padding: 0 6px 0 18px;
+  border-radius: var(--mu-btn-radius, 999px); background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+  outline: 2px solid transparent; outline-offset: -2px;
+}
+.mu-ps__form:focus-within { outline-color: var(--fg); }
+.mu-ps__input { flex: 1; min-width: 0; min-height: 54px; border: 0; background: none; font-size: 18px; }
+.mu-ps__input:focus { outline: 0; }
+.mu-ps__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.mu-ps__out:empty { display: none; }
+.mu-ps__results { display: grid; row-gap: 12px; padding: 16px 4px 4px; }
+.mu-ps__head { margin-top: 4px; }
+.mu-ps__queries, .mu-ps__links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.mu-ps__query, .mu-ps__chip {
+  display: inline-flex; align-items: center; min-height: 38px; padding-inline: 15px; border-radius: var(--mu-btn-radius, 999px);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 16%, transparent); font-size: 14px;
+}
+.mu-ps__query mark { background: none; color: inherit; font-weight: var(--mu-font-body-bold); }
+.mu-ps__products { display: grid; row-gap: 4px; margin: 0; padding: 0; list-style: none; }
+.mu-ps__product { display: grid; grid-template-columns: 60px minmax(0, 1fr) auto; align-items: center; column-gap: 14px; padding: 6px 12px 6px 6px; border-radius: var(--mu-radius); }
+.mu-ps__product:is(:hover, :focus-visible), .mu-sdrop .is-active { background: color-mix(in srgb, var(--fg) 7%, transparent); }
+.mu-ps__query:hover, .mu-ps__chip:hover { box-shadow: inset 0 0 0 1.5px var(--fg); }
+.mu-ps__thumb { width: 60px; height: 60px; overflow: hidden; border-radius: min(var(--mu-radius), 12px); background: color-mix(in srgb, var(--fg) 6%, var(--bg)); }
+.mu-ps__thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center !important; border-radius: inherit; }
+.mu-ps__name { font-size: 15px; font-weight: var(--mu-font-body-bold); line-height: 1.25; }
+.mu-ps__price { font-size: 14px; text-align: end; white-space: nowrap; }
+.mu-ps__none { padding: 8px 4px; }
+.mu-ps__all { justify-self: start; margin-top: 6px; }
+@media (min-width: 990px) { .mu-ps__products { grid-template-columns: 1fr 1fr; column-gap: 10px; } }
+
+/* Header search bar results: a panel under the field, scrolling inside, the full-results button pinned at its foot. */
+.mu-sdrop { display: none; }
+@media (min-width: 750px) {
+  .mu-sdrop:not([hidden]) {
+    position: absolute; z-index: 5; top: calc(100% + 16px); right: -8px; display: block;
+    width: min(500px, calc(100vw - 2 * var(--gutter))); max-height: min(580px, calc(100dvh - 120px)); padding: 8px;
+    overflow-y: auto; overscroll-behavior: contain; border-radius: var(--mu-radius-lg); background: var(--bg); color: var(--fg); text-align: start;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent), 0 26px 50px -20px rgb(20 8 4 / 0.4);
+  }
+  .mu-sdrop .mu-ps__results { row-gap: 8px; padding: 6px 4px 4px; }
+  .mu-sdrop .mu-ps__head { margin: 4px 6px 0; }
+  .mu-sdrop .mu-ps__products { grid-template-columns: minmax(0, 1fr); }
+  .mu-sdrop .mu-ps__product { grid-template-columns: 52px minmax(0, 1fr) auto; }
+  .mu-sdrop .mu-ps__thumb { width: 52px; height: 52px; }
+  .mu-sdrop .mu-ps__name { font-size: 14px; }
+  .mu-sdrop .mu-ps__price .mu-price--sale { display: inline-grid; justify-items: end; }
+  .mu-sdrop .mu-ps__all { position: sticky; bottom: 0; justify-self: stretch; justify-content: center; box-shadow: 0 0 0 8px var(--bg); }
+  .mu-sdrop .mu-ps__all.is-active { outline: 2px solid var(--fg); outline-offset: 2px; }
+}
+
+/* Country / language: a code chip with a popover on desktop; in the menu sheet on phones. */
+.mu-header__loc { position: relative; display: none; }
+.mu-header__loc > summary {
+  display: inline-flex; align-items: center; column-gap: 6px; width: auto; min-width: 44px; aspect-ratio: auto; padding-inline: 11px;
+  border-radius: var(--mu-btn-radius, 999px); white-space: nowrap; list-style: none; cursor: pointer;
+}
+.mu-header__loc > summary > * { flex: none; }
+.mu-header__loc > summary::-webkit-details-marker { display: none; }
+.mu-header__loc > summary .mu-icon { width: 19px; height: 19px; }
+.mu-header__loc-code { font-size: 12px; font-weight: var(--mu-font-body-bold); letter-spacing: 0.04em; }
+.mu-header__loc-pop {
+  position: absolute; z-index: 5; top: calc(100% + 12px); right: 0; width: 320px; padding: 16px; border-radius: var(--mu-radius-lg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fg) 10%, transparent), 0 22px 44px -18px rgb(20 8 4 / 0.35);
+}
+@media (min-width: 990px) { .mu-header__loc { display: block; margin-inline-end: 6px; } }
+
+/* My store: the preferred store and today's hours (shown by mu-stores.js once there is a store list). */
+.mu-header__store { display: none; }
+.mu-header__store-txt { display: grid; min-width: 0; line-height: 1.2; text-align: start; }
+.mu-header__store-k { display: flex; align-items: center; column-gap: 6px; min-width: 0; font-size: 11.5px; color: var(--mu); }
+.mu-header__store-k > span, .mu-header__store-n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mu-header__store-n { font-size: 13.5px; font-weight: var(--mu-font-body-bold); }
+@media (min-width: 990px) {
+  .mu-header__store:not([hidden]) {
+    display: inline-flex; align-items: center; column-gap: 8px; max-width: 240px; min-height: 44px; margin-inline-end: 4px; padding: 0 12px 0 10px;
+    border: 0; border-radius: var(--mu-btn-radius, 999px); background: none; color: inherit; font: inherit; cursor: pointer;
+  }
+  .mu-header__store > .mu-icon { width: 19px; height: 19px; }
+  .mu-header__store > .mu-icon--chevron { width: 13px; height: 13px; }
+  .mu-header__store:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  /* Tight: My store keeps its pin (name and hours stay in its accessible name) and the nav closes up. */
+  .mu-header.is-tools-min .mu-header__store:not([hidden]) { justify-content: center; width: 44px; margin-inline-end: 0; padding: 0; }
+  .mu-header.is-tools-min .mu-header__store > .mu-header__store-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .mu-header.is-tools-min .mu-header__store > .mu-icon--chevron { display: none; }
+  .mu-header.is-tools-min .mu-header__nav { margin-inline-start: 18px; }
+  .mu-header.is-tools-min .mu-header__nav > ul > li > :is(a, details > summary) { padding-inline: 10px; }
+  .mu-header.is-nav-tight .mu-header__nav { margin-inline-start: 10px; }
+  .mu-header.is-nav-tight .mu-header__nav > ul { column-gap: 0; }
+  .mu-header.is-nav-tight .mu-header__nav > ul > li > :is(a, details > summary) { padding-inline: 8px; }
+  .mu-header.is-nav-tight .mu-header__loc { margin-inline-end: 0; }
+  .mu-header.is-nav-tight .mu-header__loc > summary { padding-inline: 8px; }
+  /* Still too wide: the nav moves behind the menu button. */
+  .mu-header.is-nav-off .mu-header__nav { display: none; }
+  .mu-header.is-nav-off .mu-header__menu-btn { display: inline-grid; }
+  .mu-header.is-nav-off .mu-menu[open] { display: flex; }
+}
+@media (hover: hover) and (pointer: fine) { .mu-header__store:hover { background: color-mix(in srgb, var(--fg) 7%, transparent); } }
+.mu-menu__store {
+  display: flex; align-items: center; column-gap: 12px; width: 100%; padding: 10px 14px 10px 10px;
+  border: 0; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--fg) 5%, transparent); color: inherit; font: inherit; text-align: start; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mu-menu__store[hidden] { display: none; }
+.mu-menu__store:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.mu-menu__store-ic { display: grid; place-items: center; flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--mu-h-mid); color: var(--bg); }
+.mu-menu__store-ic .mu-icon { width: 19px; height: 19px; }
+.mu-menu__store .mu-header__store-txt { flex: 1; }
+.mu-menu__store .mu-header__store-n { font-size: 15px; }
+.mu-menu__store > .mu-icon { width: 18px; height: 18px; }
+
+/* Highlight menu item: a small accent-coloured dot that glows (static with reduced motion). */
+.mu-hl-l { display: inline-flex; align-items: center; column-gap: 8px; }
+/* The glow is a copy of the dot that grows and fades (scale and opacity only, so it runs off the main thread). */
+.mu-hl { position: relative; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--mu-h-mid); }
+.mu-hl::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; opacity: 0; animation: mu-glow 2s ease-out infinite; pointer-events: none; }
+.mu-menu__list .mu-hl { width: 10px; height: 10px; }
+.mu-menu__list .mu-hl-l { column-gap: 12px; }
+@keyframes mu-glow { 0% { opacity: .9; transform: scale(1); } 70%, 100% { opacity: 0; transform: scale(2.7); } }
+@media (prefers-reduced-motion: reduce) { .mu-hl::after { animation: none; } }
+
+/* Minimal style: no inline menu; the menu button opens the sheet at every width. */
+@media (min-width: 990px) {
+  .mu-header--min .mu-header__menu-btn { display: inline-grid; }
+  .mu-header--min .mu-menu[open] { display: flex; }
+}
+
+/* Transparent over hero: only when the page opens with a hero, i.e. a first section whose root carries data-mu-over
+   (hero, split hero and stage opt in; any full-bleed hero can). The page is pulled up under the bar, which takes the
+   hero's text color (--mu-ofg) until the page scrolls (is-solid), a dropdown opens or the search drops down. */
+:root:has(.mu-header--over):has(> body > .mu-main > .shopify-section:first-child > [data-mu-over]) { --mu-top-est: var(--mu-ann-h); }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) > .mu-main { margin-top: calc(var(--mu-bar-h) * -1); }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) > .mu-main > .shopify-section:first-child > [data-mu-over] { --mu-over-pad: var(--mu-bar-h); }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header__bar { transition: background-color 0.35s ease, color 0.35s ease, box-shadow 0.35s ease; }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header__bar::after { transition: opacity 0.35s ease; }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__bar { --fg: var(--mu-ofg); background-color: transparent; color: var(--fg); box-shadow: none; }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__bar::after { opacity: 0; }
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__tools .mu-header__bag,
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__nav > ul > li > :is([aria-current], details > summary[aria-current]) {
+  background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1.5px currentColor;
+}
+@media (prefers-reduced-motion: reduce) { .mu-header__bar, .mu-header__bar::after { transition: none !important; } }
+/* Countdown in a message: a compact timer chip after the text, in tabular digits so it doesn't jiggle. */
+.mu-ann__cd { display: inline-flex; flex: none; align-items: center; }
+.mu-ann__cd-out { padding: 3px 8px; border-radius: var(--mu-chip-r); background: color-mix(in srgb, currentColor 14%, transparent); font-variant-numeric: tabular-nums; font-weight: var(--mu-font-body-bold); line-height: 1.2; }
+.mu-ann__cd-out:empty { display: none; }

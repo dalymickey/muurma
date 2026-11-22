@@ -1,0 +1,42 @@
+/* Product media zoom dialog (snippets/mu-pp-media). Split from mu-product.css; loaded only when a product has zoomable images. */
+.mu-pp__zoom { position: absolute; z-index: 3; inset: 6px 8px auto auto; background: color-mix(in srgb, var(--bg) 82%, transparent); color: var(--fg); }
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .mu-pp__zoom { -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); background: color-mix(in srgb, var(--bg) 50%, transparent); } }
+@media (hover: hover) and (pointer: fine) { .mu-pp__zoom.mu-iconbtn:hover { background: var(--fg); color: var(--bg); } }
+.mu-pp__stage--zoom img.mu-pp__img:not(.mu-pp__poster) { cursor: zoom-in; }
+/* Full screen, one image per screen, contained with padding. A tap zooms to full resolution (at least twice the
+   fitted size) and the item then pans both ways. No touch-action limits, so pinch zoom still works on iOS. */
+.mu-zoom { inline-size: 100%; block-size: 100%; max-inline-size: none; max-block-size: none; margin: 0; padding: 0; overflow: hidden; border: 0; background: var(--bg); color: var(--fg); }
+.mu-zoom::backdrop { background: color-mix(in srgb, #000 60%, transparent); }
+html:has(.mu-zoom[open]) { overflow: hidden; }
+.mu-zoom__list { block-size: 100%; overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; }
+.mu-zoom__item { --zp: 64px; --zs: 16px; position: relative; block-size: 100dvh; margin: 0; overflow: hidden; scroll-snap-align: start; background: var(--band, transparent); cursor: zoom-in; }
+@supports not (height: 1dvh) { .mu-zoom__item { block-size: 100vh; } }
+.mu-zoom__item + .mu-zoom__item { box-shadow: 0 -1px 0 var(--bd); }
+.mu-zoom__img { position: absolute; inset: var(--zp) auto auto var(--zs); display: block; inline-size: calc(100% - var(--zs) * 2); block-size: calc(100% - var(--zp) * 2); object-fit: contain; object-position: center !important; }
+/* Unzoomed, the photo is sized to its drawn box (--mu-mr is its ratio) so it rounds like the page's media. */
+@supports (width: 1cqw) {
+  .mu-zoom__item { container-type: size; }
+  .mu-zoom__item:not(.is-zoomed) .mu-zoom__img {
+    --bw: calc(100cqw - var(--zs) * 2); --bh: calc(100cqh - var(--zp) * 2);
+    --dw: min(var(--bw), var(--bh) * var(--mu-mr, 1)); --dh: min(var(--bh), var(--bw) / var(--mu-mr, 1));
+    inset: calc(var(--zp) + (var(--bh) - var(--dh)) / 2) auto auto calc(var(--zs) + (var(--bw) - var(--dw)) / 2);
+    inline-size: var(--dw); block-size: var(--dh); border-radius: var(--mu-media-r);
+  }
+}
+.mu-zoom__item.is-zoomed { display: flex; overflow: auto; overscroll-behavior: contain; scrollbar-width: none; cursor: zoom-out; }
+.mu-zoom__item.is-zoomed::-webkit-scrollbar { display: none; }
+.mu-zoom__item.is-zoomed .mu-zoom__img { position: static; flex: none; inline-size: var(--zw, 200%); block-size: auto; max-inline-size: none; max-block-size: none; margin: auto; }
+/* Controls are solid squircles; at the first or last image the step with nowhere to go fades (mu-product.js marks it .is-end). */
+.mu-zoom__close, .mu-zoom__nav { position: fixed; z-index: 2; }
+.mu-zoom__close { inset: 12px 12px auto auto; }
+.mu-zoom__nav { inset: auto 12px 12px auto; display: flex; flex-direction: column; gap: 6px; }
+.mu-zoom :is(.mu-zoom__close, .mu-zoom__nav button) { background: var(--fg); color: var(--bg); transition: opacity .2s, visibility 0s, scale .2s var(--mu-spring); }
+.mu-zoom__up { rotate: 180deg; }
+.mu-zoom__nav button.is-end { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; }
+@media (hover: hover) and (pointer: fine) { .mu-zoom :is(.mu-zoom__close, .mu-zoom__nav button:not(:disabled)):hover { background: var(--fg); color: var(--bg); scale: 1.08; } }
+@media (min-width: 990px) {
+  .mu-pp__zoom { inset: 14px 16px auto auto; }
+  .mu-zoom__close { inset: 20px 24px auto auto; }
+  .mu-zoom__nav { inset: auto 24px 20px auto; }
+  .mu-zoom__item { --zp: 80px; --zs: 96px; }
+}

@@ -1,0 +1,13 @@
+{%- comment -%}
+  Countdown preview end for the theme editor: 7 days from now in the store's time zone, as an ISO date-time with its
+  offset (2026-11-01T23:59:00+11:00). Used while a countdown's end is blank, so a newly added countdown shows a live
+  timer; the storefront never uses it. Capture the output.
+{%- endcomment -%}
+{%- liquid
+  assign pv_s = 'now' | date: '%s' | plus: 604800
+  assign pv_z = pv_s | date: '%z'
+  assign pv_zh = pv_z | slice: 0, 3
+  assign pv_zm = pv_z | slice: 3, 2
+  echo pv_s | date: '%Y-%m-%dT%H:%M:00'
+  echo pv_zh | append: ':' | append: pv_zm
+-%}

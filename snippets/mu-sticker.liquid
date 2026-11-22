@@ -1,0 +1,40 @@
+{%- comment -%}
+  One sticker. Colour comes from a theme scheme slot (1–3). Rotation falls back to the theme sticker angle.
+  The text is real text, so it stays in the reading order. Reduced motion drops the angle.
+  @param text {String}
+  @param slot {Number} 1, 2 or 3
+  @param rotation {Number} optional degrees, replaces the theme angle
+  @param position {String} top_left, top_right, bottom_left, bottom_right
+  @param block {Block} optional, so the theme editor can select the sticker
+{%- endcomment -%}
+{%- liquid
+  assign label = text | strip
+  if label == blank
+    echo ''
+  else
+    assign n = slot | default: 1 | plus: 0
+    if n < 1 or n > 3
+      assign n = 1
+    endif
+    case n
+      when 2
+        assign scheme = settings.sticker_scheme_2
+      when 3
+        assign scheme = settings.sticker_scheme_3
+      else
+        assign scheme = settings.sticker_scheme_1
+    endcase
+    if rotation == blank
+      assign angle = settings.sticker_rotation | default: -4
+    else
+      assign angle = rotation
+    endif
+    assign style = settings.sticker_style | default: 'tilted'
+    assign font = settings.sticker_font | default: 'heading'
+    assign pos = position | default: 'top_right'
+  endif
+-%}
+{%- if label != blank -%}
+  {{ 'mu-sticker.css' | asset_url | stylesheet_tag }}
+  <p class="mu-sticker mu-sticker--{{ style }} mu-sticker--font-{{ font }} mu-sticker--{{ pos }}{% if settings.sticker_shadow %} mu-sticker--shadow{% endif %} color-{{ scheme }}" style="--mu-sticker-rot: {{ angle }}deg"{% if block %} {{ block.shopify_attributes }}{% endif %}>{{ label | escape }}</p>
+{%- endif -%}

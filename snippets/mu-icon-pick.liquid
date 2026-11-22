@@ -1,0 +1,34 @@
+{%- comment -%}
+  An icon picked in block settings: an uploaded image (which can be connected to a file metafield) or, when there is
+  none, a theme icon from snippets/mu-icon. Uploaded .svg files take the text color when tint is on (a CSS mask);
+  other images show as they are. Renders nothing when there's no image and the theme icon is none or blank.
+  Decorative: the text next to it carries the meaning.
+  @param image {Image} optional uploaded icon
+  @param icon {String} theme icon name, or 'none'
+  @param tint {Boolean} uploaded .svg icons take the text color
+  @param size {Number} icon size in px, for the image width
+  @param cls {String} class prefix: the parts are cls + join + icon, mask and img
+  @param join {String} optional, default '__' (mu-spec__icon); Feature icons pass '-' (mu-pp__feat-icon)
+{%- endcomment -%}
+{%- liquid
+  assign j = join | default: '__'
+  assign c_icon = cls | append: j | append: 'icon'
+  if image != blank
+    assign ext = image.src | split: '?' | first | split: '.' | last | downcase
+    if ext == 'svg' and tint
+      assign c_mask = cls | append: j | append: 'mask'
+      assign url = image | image_url
+      echo '<span class="' | append: c_icon | append: '" aria-hidden="true"><span class="' | append: c_mask | append: '" style="--mu-mask: url(' | append: "'" | append: url | append: "');" | append: '"></span></span>'
+    else
+      assign c_img = cls | append: j | append: 'img'
+      assign w2 = size | default: 32 | times: 2
+      echo '<span class="' | append: c_icon | append: '" aria-hidden="true">'
+      echo image | image_url: width: w2 | image_tag: alt: '', loading: 'lazy', class: c_img
+      echo '</span>'
+    endif
+  elsif icon != blank and icon != 'none'
+    echo '<span class="' | append: c_icon | append: '" aria-hidden="true">'
+    render 'mu-icon', name: icon
+    echo '</span>'
+  endif
+-%}

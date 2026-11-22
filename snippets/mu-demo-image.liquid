@@ -1,0 +1,43 @@
+{% doc %}
+  Fresh-install stand-in for an empty image picker. An image picker cannot default to a
+  file in assets, so sections pass the asset filename from a text setting.
+  @param {string} asset - Theme asset filename, such as mu-hero-back.jpg
+  @param {string} [class] - Class attribute
+  @param {string} [sizes] - Sizes attribute
+  @param {string} [alt] - Alt text. Pass a blank string when the photo is decorative
+  @param {string} [style] - Inline style
+  @param {string} [loading] - lazy or eager
+  @param {string} [fetchpriority] - high, low, or auto
+  @param {number} [width] - Width in pixels
+  @param {number} [height] - Height in pixels
+{% enddoc %}
+{%- if asset != blank -%}
+  {%- liquid
+    assign img_w = width
+    assign img_h = height
+    if img_w == blank
+      case asset
+        when 'mu-hero-back.jpg'
+          assign img_w = 2000
+          assign img_h = 2480
+        when 'mu-hero-front.jpg'
+          assign img_w = 1600
+          assign img_h = 1950
+        when 'mu-grain.jpg'
+          assign img_w = 512
+          assign img_h = 512
+      endcase
+    endif
+  -%}
+  <img
+    src="{{ asset | asset_url }}"
+    alt="{{ alt | escape }}"
+    {% if class != blank %}class="{{ class }}"{% endif %}
+    {% if style != blank %}style="{{ style }}"{% endif %}
+    loading="{{ loading | default: 'lazy' }}"
+    {% if fetchpriority != blank %}fetchpriority="{{ fetchpriority }}"{% endif %}
+    width="{{ img_w | default: 2000 }}"
+    height="{{ img_h | default: 2480 }}"
+    {% if sizes != blank %}sizes="{{ sizes }}"{% endif %}
+  >
+{%- endif -%}

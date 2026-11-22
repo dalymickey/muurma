@@ -1,0 +1,149 @@
+{
+  "sections": {
+    "hero": {
+      "type": "mu-banner",
+      "settings": {
+        "eyebrow": "New drop every Thursday",
+        "study": "Study 001",
+        "heading": "The Break",
+        "heading_tag": "h1",
+        "subheading": "A breaking wave, held in contour. Made to order on the east coast.",
+      "button_label": "Shop Study 001",
+      "button_link": "/collections/all",
+      "button_style": "primary",
+      "button_label_2": "How we make it",
+      "button_link_2": "/pages/story",
+      "button_style_2": "ghost",
+        "fine": "Made to order. Zero dead stock. Shipped worldwide.",
+        "demo_image": "mu-hero-back.jpg",
+        "overlay_color": "#2b2c2b",
+        "overlay_opacity": 80,
+        "show_grain": true,
+        "grain_opacity": 42,
+        "show_contour": true,
+        "contour_opacity": 14,
+        "height": "screen",
+        "height_mobile": "screen",
+        "content_position": "bottom_left",
+        "text_align": "left",
+        "color_scheme": "scheme-4"
+      }
+    },
+    "featured": {
+      "type": "mu-featured-collection",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Study 001",
+        "show_link": true
+      }
+    },
+    "make": {
+      "type": "mu-image-text",
+      "settings": {
+        "color_scheme": "scheme-2",
+        "image_side": "right",
+        "demo_image": "mu-hero-front.jpg",
+        "eyebrow": "How we make it",
+        "heading": "Printed when you order it.",
+        "text": "<p>Each piece is made to order on the east coast. No racks of leftover stock, no colour that wasn't asked for. A new study drops every Thursday and ships worldwide.</p>",
+        "cta_label": "The story"
+      }
+    },
+    "collections": {
+      "type": "mu-collection-list",
+      "blocks": {
+        "hoodies": {
+          "type": "collection",
+          "settings": {
+            "label": "Hoodies"
+          }
+        },
+        "tees": {
+          "type": "collection",
+          "settings": {
+            "label": "Tees"
+          }
+        },
+        "caps": {
+          "type": "collection",
+          "settings": {
+            "label": "Caps"
+          }
+        }
+      },
+      "block_order": [
+        "hoodies",
+        "tees",
+        "caps"
+      ],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Studies",
+        "per_row": 3
+      }
+    },
+    "countdown": {
+      "type": "mu-countdown",
+      "settings": {
+        "color_scheme": "scheme-4",
+        "full_width": true,
+        "layout": "split",
+        "eyebrow": "Next drop",
+      "heading": "Thursday, again.",
+      "end": "2026-11-26T18:00:00+11:00",
+      "button_label": "Shop the studies",
+        "date_label": "Drops",
+        "show_seconds": false,
+        "after_end": "message",
+        "end_title": "It's live",
+        "end_message": "This week's study is up."
+      }
+    },
+    "gallery": {
+      "type": "mu-gallery",
+      "blocks": {
+        "back": {
+          "type": "tile",
+          "settings": {
+            "demo_image": "mu-hero-back.jpg",
+            "caption": "Study 001, back"
+          }
+        },
+        "front": {
+          "type": "tile",
+          "settings": {
+            "demo_image": "mu-hero-front.jpg",
+            "caption": "Study 001, front"
+          }
+        }
+      },
+      "block_order": [
+        "back",
+        "front"
+      ],
+      "settings": {
+        "color_scheme": "scheme-1",
+        "eyebrow": "In contour",
+        "heading": "The break",
+        "caption_style": "overlay"
+      }
+    },
+    "note": {
+      "type": "mu-rich-text",
+      "settings": {
+        "color_scheme": "scheme-5",
+        "heading": "Made to order. Shipped worldwide.",
+        "text": "<p>MUURMA is an independent print-on-demand surf label from Australia's east coast. Zero dead stock. A new design every Thursday.</p>"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured",
+    "make",
+    "collections",
+    "countdown",
+    "gallery",
+    "note"
+  ]
+}

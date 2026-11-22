@@ -1,0 +1,107 @@
+{% doc %}
+  A set of up to four products, added to the cart together, or one bundle product.
+  When a bundle product is chosen, its own price is shown and that product is added.
+  Otherwise the price is the sum of the items, and each item is added in one request.
+{% enddoc %}
+{{ 'mu-bundle.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign b = block.settings
+  assign pack = b.bundle
+  assign items = b.products
+  assign can_add = false
+  assign total = 0
+  assign mode = 'items'
+  if pack != blank
+    assign mode = 'bundle'
+    assign bv = pack.selected_or_first_available_variant
+    if bv and bv.available
+      assign can_add = true
+      assign total = bv.price
+    endif
+  elsif items != blank and items.size > 0
+    assign can_add = true
+    for product in items
+      assign v = product.selected_or_first_available_variant
+      if v == blank or v.available == false or product.gift_card?
+        assign can_add = false
+      elsif can_add
+        assign qty = v.quantity_rule.min | default: 1
+        assign line = v.price | times: qty
+        assign total = total | plus: line
+      endif
+    endfor
+  endif
+  assign heading = b.heading | strip
+  if heading == blank and mode == 'bundle'
+    assign heading = pack.title
+  endif
+  assign button = b.button_label | strip
+  if button == blank
+    assign button = 'products.add_set' | t
+  endif
+-%}
+<div class="mu-bundle color-{{ b.card_scheme }}" {{ block.shopify_attributes }}>
+  <div class="mu-bundle__stickers">{% content_for 'blocks' %}</div>
+  {%- if heading != blank -%}<h3 class="mu-bundle__title">{{ heading | escape }}</h3>{%- endif -%}
+  {%- if items != blank and items.size > 0 -%}
+    <ul class="mu-bundle__list" role="list">
+      {%- for product in items limit: 4 -%}
+        <li>
+          <span>{{ product.title | escape }}</span>
+          {%- if mode == 'items' -%}
+            {%- assign v = product.selected_or_first_available_variant -%}
+            {%- if v -%}<span>{% render 'mu-money', m: v.price %}</span>{%- endif -%}
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  {%- elsif request.design_mode and mode != 'bundle' -%}
+    <p class="mu-bundle__empty">{{ 'products.set_empty' | t }}</p>
+  {%- endif -%}
+  {%- if b.extra_line != blank -%}<p class="mu-bundle__extra">{{ b.extra_line | escape }}</p>{%- endif -%}
+  {%- if can_add -%}
+    <p class="mu-bundle__price">
+      <span class="visually-hidden">{% if mode == 'bundle' %}{{ 'products.regular_price' | t }}{% else %}{{ 'products.set_total' | t }}{% endif %}</span>
+      {% render 'mu-money', m: total %}
+    </p>
+    {%- if b.save_label != blank -%}<p class="mu-bundle__save">{{ b.save_label | escape }}</p>{%- endif -%}
+    <form class="mu-bundle__form" action="{{ routes.cart_add_url }}" method="post" data-mu-add data-ok="{{ 'products.added' | t | escape }}" data-err="{{ 'products.add_error' | t | escape }}">
+      {%- if mode == 'bundle' -%}
+        <input type="hidden" name="id" value="{{ bv.id }}">
+        <input type="hidden" name="quantity" value="{{ bv.quantity_rule.min | default: 1 }}">
+      {%- else -%}
+        {%- assign i = 0 -%}
+        {%- for product in items limit: 4 -%}
+          {%- assign v = product.selected_or_first_available_variant -%}
+          {%- if v and v.available and product.gift_card? == false -%}
+            <input type="hidden" name="items[{{ i }}][id]" value="{{ v.id }}">
+            <input type="hidden" name="items[{{ i }}][quantity]" value="{{ v.quantity_rule.min | default: 1 }}">
+            {%- assign i = i | plus: 1 -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}
+      <button class="mu-btn mu-bundle__btn" type="submit">{{ button | escape }}</button>
+      <p class="mu-bundle__msg" role="status" data-mu-add-msg></p>
+    </form>
+  {%- elsif pack != blank or items != blank -%}
+    <p class="mu-bundle__price" role="status">{{ 'products.sold_out' | t }}</p>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "t:blocks.bundle.name",
+  "tag": null,
+  "settings": [
+    { "type": "text", "id": "heading", "label": "t:sections.common.heading" },
+    { "type": "product_list", "id": "products", "label": "t:blocks.bundle.products", "info": "t:blocks.bundle.products_info", "limit": 4 },
+    { "type": "product", "id": "bundle", "label": "t:blocks.bundle.bundle", "info": "t:blocks.bundle.bundle_info" },
+    { "type": "text", "id": "extra_line", "label": "t:blocks.bundle.extra_line" },
+    { "type": "text", "id": "save_label", "label": "t:blocks.bundle.save_label", "info": "t:blocks.bundle.save_label_info" },
+    { "type": "color_scheme", "id": "card_scheme", "label": "t:blocks.bundle.card_scheme", "default": "scheme-4" },
+    { "type": "text", "id": "button_label", "label": "t:sections.common.button_label", "default": "Add the set" }
+  ],
+  "blocks": [{ "type": "mu-sticker" }],
+  "presets": [{ "name": "t:blocks.bundle.name" }]
+}
+{% endschema %}

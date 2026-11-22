@@ -1,0 +1,20 @@
+{%- comment -%}
+  Ingredients, How to use, Shipping, and Trust. Kept out of mu-pp-block so that snippet stays within Theme Check's
+  complexity limit. Translations are assigned here: a filter is not allowed inside a render argument.
+  @param block {Block}
+{%- endcomment -%}
+{%- liquid
+  assign ingredients_hint = 'products.ingredients_empty' | t
+  assign usage_hint = 'products.usage_empty' | t
+-%}
+{%- case block.type -%}
+  {%- when 'ingredients' -%}
+    {%- render 'mu-pp-copy', block: block, hint: ingredients_hint -%}
+  {%- when 'usage' -%}
+    {%- render 'mu-pp-copy', block: block, hint: usage_hint -%}
+  {%- when 'shipping' -%}
+    {%- render 'mu-pp-shipping', block: block -%}
+  {%- when 'trust' -%}
+    {{ 'mu-pp-features.css' | asset_url | stylesheet_tag }}
+    {%- render 'mu-pp-trust', block: block -%}
+{%- endcase -%}

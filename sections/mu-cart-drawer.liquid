@@ -1,0 +1,25 @@
+{%- comment -%}
+  Bag drawer: a sheet from the bottom on phones (a panel from the right on larger screens when Theme settings > Cart >
+  Cart type is "Drawer"). Rendered in the layout unless the cart type is "Page". The bag links in the header and the
+  tab bar open it (with "Drawer on phones, page on desktop", only below 990px); without JS they go to the cart page.
+{%- endcomment -%}
+{{ 'mu-cart.css' | asset_url | stylesheet_tag }}
+<mu-cart-drawer data-mode="{{ settings.cart_type }}" data-open-on-add="{{ settings.cart_open_on_add }}">
+  <dialog class="mu-drawer color-{{ section.settings.color_scheme }}" aria-labelledby="MuCart-drawer-title" data-drawer>
+    <span class="mu-drawer__handle" aria-hidden="true"></span>
+    <mu-cart data-section="{{ section.id }}" data-updated="{{ 'cart.updated' | t | escape }}" data-error="{{ 'cart.error' | t | escape }}">
+      {%- render 'mu-cart-body', mode: 'drawer', sid: 'drawer', summary_scheme: section.settings.summary_scheme -%}
+    </mu-cart>
+  </dialog>
+</mu-cart-drawer>
+<script src="{{ 'mu-cart.js' | asset_url }}" defer></script>
+{% schema %}
+{
+  "name": "t:sections.cart_drawer.name",
+  "class": "mu-cart-drawer-section",
+  "settings": [
+    { "type": "color_scheme", "id": "color_scheme", "label": "t:settings.colors.scheme", "default": "scheme-2" },
+    { "type": "color_scheme", "id": "summary_scheme", "label": "t:sections.main_cart.summary_scheme", "default": "scheme-1" }
+  ]
+}
+{% endschema %}

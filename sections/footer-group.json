@@ -1,0 +1,53 @@
+{
+  "type": "footer",
+  "name": "t:groups.footer",
+  "sections": {
+    "footer": {
+      "type": "mu-footer",
+      "blocks": {
+        "shop": {
+          "type": "links",
+          "settings": {
+            "heading": "Shop"
+          }
+        },
+        "help": {
+          "type": "links",
+          "settings": {
+            "heading": "Help"
+          }
+        },
+        "about": {
+          "type": "links",
+          "settings": {
+            "heading": "About"
+          }
+        }
+      },
+      "block_order": [
+        "shop",
+        "help",
+        "about"
+      ],
+      "settings": {
+        "background": "scheme",
+        "color_scheme": "scheme-4",
+        "heading": "New drop every Thursday.",
+        "cta_label": "Shop the studies",
+        "newsletter": true,
+        "newsletter_heading": "Thursday, first",
+        "brand_mark": "wordmark",
+        "wordmark": "MUURMA",
+        "show_social": true,
+        "follow_on_shop": true,
+        "payment_icons": true,
+        "show_country": true,
+        "show_language": false,
+        "show_currency": false
+      }
+    }
+  },
+  "order": [
+    "footer"
+  ]
+}

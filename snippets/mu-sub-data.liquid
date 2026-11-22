@@ -1,0 +1,35 @@
+{%- comment -%}
+  One variant's recurring purchase options as JSON for the mix pickers (mu-pp-tiers, mu-mix), keyed by
+  "group id/option value" so the same frequency matches across products: plan ids differ per product only when the
+  products sit in different groups. Each value is [plan id, price in cents, % saved, group name, option name, option
+  value]. Prints {} when the variant has none.
+  @param variant {Variant}
+  @param product {Product}
+{%- endcomment -%}
+{%- liquid
+  assign out = ''
+  for a in variant.selling_plan_allocations
+    assign sp = a.selling_plan
+    if sp.recurring_deliveries == false
+      continue
+    endif
+    assign grp = product.selling_plan_groups | where: 'id', sp.group_id | first
+    assign oval = sp.options.first.value | default: sp.name | append: ''
+    assign oname = grp.options.first.name | default: '' | append: ''
+    assign gname = grp.name | default: sp.name | append: ''
+    assign key = sp.group_id | append: '/' | append: oval
+    assign pct = 0
+    if variant.price > 0 and a.price < variant.price
+      assign pct = variant.price | minus: a.price | times: 100.0 | divided_by: variant.price | round
+    endif
+    assign k_j = key | json
+    assign g_j = gname | json
+    assign o_j = oname | json
+    assign v_j = oval | json
+    if out != ''
+      assign out = out | append: ','
+    endif
+    assign out = out | append: k_j | append: ':[' | append: sp.id | append: ',' | append: a.price | append: ',' | append: pct | append: ',' | append: g_j | append: ',' | append: o_j | append: ',' | append: v_j | append: ']'
+  endfor
+  echo '{' | append: out | append: '}'
+-%}

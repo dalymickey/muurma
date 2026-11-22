@@ -1,0 +1,69 @@
+{%- comment -%}
+  A price in the current currency, shown the way the "Price currency" theme setting asks:
+  store format as is, the symbol with its country where symbols are shared (A$, C$, NZ$), or the currency code after it.
+  @param m {Number} amount in cents
+  @param trim {Boolean} drop ".00" (money_without_trailing_zeros)
+{%- endcomment -%}
+{%- liquid
+  if trim
+    assign out = m | money_without_trailing_zeros
+  else
+    assign out = m | money
+  endif
+  assign iso = cart.currency.iso_code
+  case settings.currency_display
+    when 'country'
+      assign sym = '$'
+      case iso
+        when 'AUD'
+          assign pre = 'A$'
+        when 'NZD'
+          assign pre = 'NZ$'
+        when 'CAD'
+          assign pre = 'C$'
+        when 'HKD'
+          assign pre = 'HK$'
+        when 'SGD'
+          assign pre = 'S$'
+        when 'MXN'
+          assign pre = 'MX$'
+        when 'TWD'
+          assign pre = 'NT$'
+        when 'FJD'
+          assign pre = 'FJ$'
+        when 'JMD'
+          assign pre = 'J$'
+        when 'TTD'
+          assign pre = 'TT$'
+        when 'BBD'
+          assign pre = 'Bds$'
+        when 'BSD'
+          assign pre = 'B$'
+        when 'BND'
+          assign pre = 'B$'
+        when 'ARS'
+          assign pre = 'AR$'
+        when 'CLP'
+          assign pre = 'CL$'
+        when 'COP'
+          assign pre = 'CO$'
+        when 'UYU'
+          assign pre = '$U'
+        when 'BRL'
+          assign pre = 'R$'
+        when 'CNY'
+          assign sym = '¥'
+          assign pre = 'CN¥'
+      endcase
+      if pre and out contains sym
+        unless out contains pre
+          assign out = out | replace_first: sym, pre
+        endunless
+      endif
+    when 'code'
+      unless out contains iso
+        assign out = out | append: ' ' | append: iso
+      endunless
+  endcase
+  echo out
+-%}

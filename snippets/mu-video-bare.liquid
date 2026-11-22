@@ -1,0 +1,37 @@
+{%- comment -%}
+  Prints a video_tag's markup without its poster (the poster attribute and the fallback image inside the video), for
+  videos that show something else until they play: a responsive, lazy image (video cards) or their own first frame
+  (hero, rich text). A poster is one fixed size, always loads at once, and covers the video until it plays (the poster,
+  then a jump to the video).
+  @param html {String} the video_tag output
+  @param keep {Boolean} keep the poster's address as data-poster, for the script to show if the video can't play
+  @param poster {String} optional: a poster address to use instead (kept as a real poster attribute: the merchant's own
+    poster, which shows until the video plays)
+  @param first_frame {Boolean} add #t=0.001 to each mp4 source, so Safari on iPhone paints the first frame before play
+{%- endcomment -%}
+{%- liquid
+  assign out = html
+  assign parts = html | split: ' poster="'
+  if parts.size > 1
+    assign purl = parts[1] | split: '"' | first
+    if purl != blank
+      if poster != blank
+        assign out = html | replace: purl, poster | split: '<img ' | first
+        unless out contains '</video>'
+          assign out = out | append: '</video>'
+        endunless
+      elsif keep
+        assign out = html | replace_first: ' poster="', ' data-poster="' | split: '<img ' | first
+        unless out contains '</video>'
+          assign out = out | append: '</video>'
+        endunless
+      else
+        assign out = html | remove: purl | remove: ' poster=""' | remove: '<img src="">'
+      endif
+    endif
+  endif
+  if first_frame
+    assign out = out | replace: '" type="video/mp4"', '#t=0.001" type="video/mp4"'
+  endif
+  echo out
+-%}

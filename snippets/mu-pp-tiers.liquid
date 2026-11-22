@@ -1,0 +1,262 @@
+{%- comment -%}
+  Volume tiers + option picker (product page and featured product block "tiers"). Up to four tiers typed into the
+  block (quantity, percent off, label, badge) as radio cards, then one chip per choice with a colour dot and a
+  stepper. Choices come from the option named in the block (the first option when blank) (one chip per value, the first available variant with it)
+  or from a collection of single-choice products. Coming soon products (snippets/mu-pp-release) show as unavailable. assets/mu-tiers.js keeps the count against the tier ("Pick 1
+  more", moving up a tier when the mix grows past it), fills the rest evenly ("Fill for me") and adds the whole mix in
+  one /cart/add.js request. When the choices have recurring purchase options (snippets/mu-sub-data), a One-time /
+  Subscribe switch with frequency chips appears (assets/mu-subs.js) and every line goes in on the matching plan;
+  choices without that plan are set aside. Tier savings are for one-time orders: in subscribe mode the cards show
+  the subscription price and say so.
+  Savings are estimates from live prices: per line, rounded to the cent, as discounts are. The theme charges nothing
+  itself; automatic discounts do. After adding, the script reads /cart.js and says what the bag really took off. When
+  the bag shows no discount the savings lines are hidden from then on in this visit, so the page never claims more.
+  @param block {Block}
+  @param product {Product} blank in the featured product placeholder
+  @param v {Variant}
+  @param uid {String}
+{%- endcomment -%}
+{{ 'mu-tiers.css' | asset_url | stylesheet_tag }}
+{{ 'mu-subs.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-subs.js' | asset_url }}" defer></script>
+<script src="{{ 'mu-tier-core.js' | asset_url }}" defer></script>
+<script src="{{ 'mu-tiers.js' | asset_url }}" defer></script>
+{%- liquid
+  assign b = block.settings
+  assign tid = 'MuTiers-' | append: uid | append: '-' | append: block.id
+  assign oname = b.option | downcase | strip
+
+  comment
+    Chips as "id|cents|available|colour|name|url" rows.
+  endcomment
+  assign rows = ''
+  assign subrows = ''
+  assign rqs = ''
+  assign sep = '~~'
+  if b.source == 'collection' and b.collection != blank
+    for fp in b.collection.products limit: 12
+      assign fv = fp.selected_or_first_available_variant
+      capture tn
+        render 'mu-tone', product: fp
+      endcapture
+      assign tn = tn | split: '|'
+      assign col = tn[1] | split: ';' | first | split: ':' | last | strip
+      assign nm = fp.metafields.custom.short_name.value | default: fp.title | escape
+      capture frs
+        render 'mu-pp-release', product: fp
+      endcapture
+      assign fok = fv.available
+      if frs != '0'
+        assign fok = false
+      endif
+      assign row = fv.id | append: '|' | append: fv.price | append: '|' | append: fok | append: '|' | append: col | append: '|' | append: nm | append: '|' | append: fp.url
+      assign rows = rows | append: row | append: sep
+      capture sd
+        render 'mu-sub-data', variant: fv, product: fp
+      endcapture
+      assign subrows = subrows | append: sd | append: sep
+      assign rqs = rqs | append: fp.requires_selling_plan | append: sep
+    endfor
+  elsif product != blank
+    capture prs
+      render 'mu-pp-release', product: product
+    endcapture
+    assign opt = nil
+    for o in product.options_with_values
+      assign on = o.name | downcase | strip
+      # No option named in the block: the product's first option.
+      if on == oname or oname == blank
+        assign opt = o
+        break
+      endif
+    endfor
+    if opt != blank
+      assign oi = opt.position | minus: 1
+      for val in opt.values
+        assign pick = nil
+        for pv in product.variants
+          if pv.options[oi] == val.name
+            if pick == nil
+              assign pick = pv
+            endif
+            if pv.available
+              assign pick = pv
+              break
+            endif
+          endif
+        endfor
+        if pick == nil
+          continue
+        endif
+        assign pok = pick.available
+        if prs != '0'
+          assign pok = false
+        endif
+        assign col = val.swatch.color | default: pick.metafields.custom.accent_color.value | append: ''
+        assign nm = val.name | escape
+        assign row = pick.id | append: '|' | append: pick.price | append: '|' | append: pok | append: '|' | append: col | append: '|' | append: nm | append: '|' | append: pick.url
+        assign rows = rows | append: row | append: sep
+        capture sd
+          render 'mu-sub-data', variant: pick, product: product
+        endcapture
+        assign subrows = subrows | append: sd | append: sep
+        assign rqs = rqs | append: product.requires_selling_plan | append: sep
+      endfor
+    else
+      assign vok = v.available
+      if prs != '0'
+        assign vok = false
+      endif
+      capture tn
+        render 'mu-tone', product: product
+      endcapture
+      assign tn = tn | split: '|'
+      assign col = tn[1] | split: ';' | first | split: ':' | last | strip
+      assign nm = product.metafields.custom.short_name.value | default: product.title | escape
+      assign row = v.id | append: '|' | append: v.price | append: '|' | append: vok | append: '|' | append: col | append: '|' | append: nm | append: '|' | append: product.url
+      assign rows = rows | append: row | append: sep
+      capture sd
+        render 'mu-sub-data', variant: v, product: product
+      endcapture
+      assign subrows = subrows | append: sd | append: sep
+      assign rqs = rqs | append: product.requires_selling_plan | append: sep
+    endif
+  endif
+  assign chips = rows | split: sep
+  assign subs = subrows | split: sep
+  assign rqs = rqs | split: sep
+  assign ref = v.price | default: 0
+  if chips.size > 0
+    assign ref = chips.first | split: '|' | slice: 1 | first | plus: 0
+  endif
+  if product == blank and chips.size == 0
+    assign ref = 1999
+  endif
+
+  comment
+    Tiers: quantity 0 drops one; listed in the order typed, the first one starts selected.
+  endcomment
+  assign last_q = 0
+  for i in (1..4)
+    assign qk = 'q' | append: i
+    assign q = b[qk] | plus: 0
+    if q > last_q
+      assign last_q = q
+    endif
+  endfor
+  assign n_tiers = 0
+  capture ref_m
+    render 'mu-money', m: ref
+  endcapture
+  assign hd = 'tiers.heading' | t
+  if b.heading != blank
+    assign hd = b.heading
+  endif
+  assign add_tpl = 'tiers.add' | t: count: '[n]'
+  assign add_1 = 'tiers.add' | t: count: 1
+-%}
+<div class="mu-tiers" id="{{ tid }}" data-tiers data-key="{{ product.id | default: 'ph' }}" data-money="{%- capture mu_m -%}{%- render 'mu-money', m: 123456 -%}{%- endcapture -%}{{ mu_m | strip_html | escape }}"
+  data-pick="{{ 'tiers.pick_more' | t: count: '[n]' | escape }}" data-ready="{{ 'tiers.ready' | t: count: '[n]' | escape }}"
+  data-add-tpl="{{ add_tpl | escape }}" data-applied="{{ 'tiers.applied' | t: amount: '[a]' | escape }}"
+  data-none="{{ 'tiers.not_applied' | t | escape }}" data-err="{{ 'products.add_error' | t | escape }}"
+  data-sub-note="{{ 'subs.note' | t: pct: '[p]' | escape }}" data-sub-some="{{ 'subs.some' | t | escape }}" data-sub-added="{{ 'subs.added' | t: amount: '[a]' | escape }}"
+  data-each="{{ 'tiers.each' | t: price: '[m]' | escape }}" {{ block.shopify_attributes }}>
+  <form class="mu-tiers__form" action="{{ routes.cart_add_url }}" method="post" data-tiers-form>
+    {%- render 'mu-sub-box' -%}
+    <fieldset class="mu-tiers__set">
+      <legend class="mu-pp__legend">{{ hd | escape }}</legend>
+      <div class="mu-tiers__list">
+        {%- for i in (1..4) -%}
+          {%- liquid
+            assign qk = 'q' | append: i
+            assign pk = 'p' | append: i
+            assign lk = 'l' | append: i
+            assign bk = 'b' | append: i
+            assign q = b[qk] | plus: 0
+            assign p = b[pk] | plus: 0
+            if q == 0
+              continue
+            endif
+            assign n_tiers = n_tiers | plus: 1
+            assign unit = 100 | minus: p | times: ref | divided_by: 100.0 | round
+            assign mu_c = ref | minus: unit | times: q
+            capture save
+              render 'mu-money', m: mu_c
+            endcapture
+            capture unit_m
+              render 'mu-money', m: unit
+            endcapture
+            if q == last_q
+              assign dflt = 'tiers.pack_plus' | t: count: q
+            else
+              assign dflt = 'tiers.pack' | t: count: q
+            endif
+          -%}
+          <label class="mu-tiers__tier">
+            <input class="visually-hidden" type="radio" name="{{ tid }}-tier" value="{{ q }}" data-tier data-pct="{{ p }}"{% if q == last_q %} data-last{% endif %}{% if n_tiers == 1 %} checked{% endif %}>
+            <span class="mu-tiers__top">
+              <span class="mu-tiers__label">{{ b[lk] | default: dflt | escape }}</span>
+              {%- if b[bk] != blank -%}<span class="mu-tiers__badge">{{ b[bk] | escape }}</span>{%- endif -%}
+            </span>
+            {%- if p > 0 -%}
+              <span class="mu-tiers__each" data-claim>{{ 'tiers.each' | t: price: unit_m }} <s class="mu-muted">{% render 'mu-money', m: ref %}</s></span>
+              <span class="mu-tiers__each mu-tiers__plain">{{ 'tiers.each' | t: price: ref_m }}</span>
+            {%- else -%}
+              <span class="mu-tiers__each mu-tiers__once">{{ 'tiers.each' | t: price: ref_m }}</span>
+            {%- endif -%}
+            <span class="mu-tiers__each mu-tiers__subeach" data-subeach></span>
+            {%- if p > 0 -%}
+              <span class="mu-tiers__save" data-claim>{{ 'tiers.save' | t: amount: save }}</span>
+            {%- endif -%}
+          </label>
+        {%- endfor -%}
+      </div>
+    </fieldset>
+
+    <fieldset class="mu-tiers__set">
+      <legend class="mu-pp__legend">{{ 'accent.pick' | t }}</legend>
+      {%- if chips.size > 0 -%}
+        <ul class="mu-tiers__chips" role="list">
+          {%- for c in chips -%}
+            {%- liquid
+              assign cp = c | split: '|'
+              assign cid = tid | append: '-c' | append: forloop.index
+              assign soldout = false
+              if cp[2] != 'true'
+                assign soldout = true
+              endif
+            -%}
+            {%- assign ci = forloop.index0 -%}
+            <li class="mu-tiers__chip{% if soldout %} is-out{% endif %}" data-chip data-id="{{ cp[0] }}" data-price="{{ cp[1] }}" data-subs="{{ subs[ci] | strip | escape }}"{% if rqs[ci] == 'true' %} data-rq{% endif %}{% if soldout %} aria-disabled="true"{% endif %}>
+              <span class="mu-tiers__dot"{% if cp[3] != blank %} style="--c: {{ cp[3] }}"{% endif %} aria-hidden="true"></span>
+              <span class="mu-tiers__name" id="{{ cid }}-n">{{ cp[4] }}</span>
+              {%- if soldout -%}
+                <span class="mu-tiers__out mu-muted">{{ 'products.sold_out' | t }}</span>
+                {%- if b.notify and cp[5] != blank -%}<a class="mu-tiers__notify" href="{{ cp[5] }}">{{ 'products.notify' | t }}<span class="visually-hidden">: {{ cp[4] }}</span></a>{%- endif -%}
+              {%- else -%}
+                <span class="mu-tiers__nosub mu-muted" data-nosub hidden>{{ 'subs.missing' | t }}</span>
+                <span class="mu-tiers__nosub mu-muted" data-onlysub hidden>{{ 'subs.only' | t }}</span>
+                <span class="mu-tiers__step">
+                  <button type="button" class="mu-tiers__btn" data-less aria-label="{{ 'tiers.less' | t: name: cp[4] }}" disabled>{% render 'mu-icon', name: 'minus' %}</button>
+                  <input class="mu-tiers__q" id="{{ cid }}" type="number" inputmode="numeric" min="0" max="99" value="0" aria-labelledby="{{ cid }}-n" data-q>
+                  <button type="button" class="mu-tiers__btn" data-more aria-label="{{ 'tiers.more' | t: name: cp[4] }}">{% render 'mu-icon', name: 'plus' %}</button>
+                </span>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      {%- elsif request.design_mode or product == blank -%}
+        <p class="mu-pp__hint">{{ 'tiers.empty' | t }}</p>
+      {%- endif -%}
+    </fieldset>
+
+    <div class="mu-tiers__foot">
+      <p class="mu-tiers__status" data-status aria-live="polite">{{ 'tiers.pick_more' | t: count: 1 }}</p>
+      {%- if b.fill -%}<button type="button" class="mu-tiers__fill mu-link" data-fill>{{ 'tiers.fill' | t }}</button>{%- endif -%}
+    </div>
+    <p class="mu-tiers__total"><span class="mu-tiers__sum" data-total></span> <s class="mu-muted" data-full data-claim></s></p>
+    <button type="submit" class="mu-btn mu-tiers__add" data-add disabled>{{ add_1 | escape }}</button>
+    <p class="mu-tiers__note mu-muted" data-claim>{{ 'tiers.estimate' | t }}</p>
+    <p class="mu-tiers__msg" data-msg role="status"></p>
+  </form>
+</div>

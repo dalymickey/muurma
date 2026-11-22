@@ -1,0 +1,49 @@
+/* Purchase option controls shared by the product page picker (snippets/mu-pp-plans) and the mix pickers
+   (snippets/mu-pp-tiers, sections/mu-mix): a segmented One-time / Subscribe choice, frequency chips for up to four
+   plans and a styled select past that. Native radios and selects underneath, so keys and screen readers work as usual. */
+.mu-save {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; background: var(--fg); color: var(--bg);
+  font-size: .6875rem; font-weight: var(--mu-font-body-bold); letter-spacing: .02em; line-height: 1.5; white-space: nowrap;
+}
+.mu-save:empty, .mu-save[hidden] { display: none; }
+
+.mu-fchips-set { min-width: 0; margin: 0; padding: 0; border: 0; }
+.mu-fchips-set[hidden] { display: none; }
+.mu-fchips__legend { display: block; padding: 0; margin-bottom: 8px; font-size: .8125rem; font-weight: var(--mu-font-body-bold); }
+.mu-fchips { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.mu-fchip {
+  display: grid; align-content: center; gap: 2px; min-height: var(--mu-ctl); padding: 8px 14px; cursor: pointer;
+  border-radius: var(--mu-field-r, 12px); background: var(--bg); color: var(--fg);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 18%, transparent); transition: box-shadow .2s ease, background-color .2s ease;
+}
+.mu-fchip:hover { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 45%, transparent); }
+.mu-fchip:has(:checked) { box-shadow: inset 0 0 0 2px var(--fg); background: color-mix(in srgb, var(--h, var(--accent, var(--fg))) 16%, var(--bg)); }
+.mu-fchip:has(:focus-visible) { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+.mu-fchip[hidden] { display: none; }
+.mu-fchip__name { font-size: .9375rem; font-weight: var(--mu-font-body-bold); }
+.mu-fchip__meta { font-size: .8125rem; color: var(--mu, currentColor); font-variant-numeric: tabular-nums; }
+.mu-fchip__meta:empty { display: none; }
+
+.mu-fsel { position: relative; }
+.mu-fsel .mu-select { padding-inline-end: 44px; cursor: pointer; }
+.mu-fsel svg { position: absolute; inset-inline-end: 16px; top: 50%; width: 16px; height: 16px; translate: 0 -50%; pointer-events: none; }
+.mu-fsel__meta { margin: 6px 0 0; font-size: .8125rem; color: var(--mu, currentColor); font-variant-numeric: tabular-nums; }
+
+/* Mix pickers: segmented mode switch above the frequency chips. */
+.mu-subp { display: grid; gap: 12px; }
+.mu-subp[hidden] { display: none; }
+.mu-subp__set { min-width: 0; margin: 0; padding: 0; border: 0; }
+.mu-subp__modes {
+  display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 4px; padding: 4px;
+  border-radius: calc(var(--mu-field-r, 12px) + 4px); background: color-mix(in srgb, var(--fg) 7%, transparent);
+}
+.mu-subp__mode {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; min-height: var(--mu-ctl-s, 44px); padding: 6px 12px;
+  border-radius: var(--mu-field-r, 12px); cursor: pointer; text-align: center; font-weight: var(--mu-font-body-bold); font-size: .9375rem;
+  transition: background-color .2s ease, box-shadow .2s ease;
+}
+.mu-subp__mode:has(:checked) { background: var(--bg); box-shadow: inset 0 0 0 2px var(--fg); }
+.mu-subp__mode:has(:focus-visible) { outline: 2px solid var(--focus, currentColor); outline-offset: 2px; }
+.mu-subp__note { margin: 0; font-size: .8125rem; }
+.mu-subp__note[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .mu-fchip, .mu-subp__mode { transition: none; } }

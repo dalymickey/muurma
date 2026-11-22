@@ -1,0 +1,268 @@
+{%- comment -%}
+  The bag, shared by the drawer (mu-cart-drawer) and the cart page (main-cart). mu-cart.js swaps this markup for a
+  fresh copy from the Section Rendering API after each change.
+  Params: mode ('drawer' or 'page'), sid (the section id, for unique ids), summary_scheme, perks (page:
+  the section's perk blocks), show_payments (page), noun (optional, overrides Theme settings > Cart > Count bag items as).
+  Order note and discount code accordions: Theme settings > Cart. With discounts on the bag the summary reads Subtotal
+  (before discounts), one row per discount, then Total; without them it's the plain Subtotal (drawer) or Subtotal to Total (page).
+  Upsell (above the gift wrap): Theme settings > Cart > Upsell product, added with assets/mu-add.js.
+  The empty bag's Shop all button goes to Theme settings > Cart > Empty bag link (all products when blank). Free shipping progress shows when Theme settings > Cart > Free shipping threshold is set (in the store currency).
+{%- endcomment -%}
+{%- liquid
+  assign form = 'MuCart-' | append: sid
+  assign threshold = settings.free_shipping_threshold
+  assign free = false
+  if threshold != blank
+    assign goal = threshold | times: 100 | round
+    if cart.total_price >= goal
+      assign free = true
+    endif
+  endif
+  # Upsell: Theme settings > Cart > Upsell product, while it's available and not in the bag yet.
+  assign up = settings.cart_upsell
+  if up != blank
+    if up.available == false
+      assign up = blank
+    endif
+    for item in cart.items
+      if item.product_id == up.id
+        assign up = blank
+        break
+      endif
+    endfor
+  endif
+  assign tax_key = 'cart.taxes'
+  if cart.taxes_included
+    assign tax_key = 'cart.taxes_included'
+  endif
+-%}
+{%- liquid
+  assign disc_n = 0
+  for d in cart.discount_applications
+    if d.total_allocated_amount > 0
+      assign disc_n = disc_n | plus: 1
+    endif
+  endfor
+-%}
+{%- capture disc -%}
+  {%- comment -%}
+    Discount rows between Subtotal and Total: one per discount application (codes and automatic, on lines or the
+    whole bag), with the amount it takes off the bag. Codes show as a chip; automatic discounts by their title.
+    Subtotal is the bag before discounts (cart.original_total_price), so Subtotal − discounts = Total.
+  {%- endcomment -%}
+  {%- for d in cart.discount_applications -%}
+    {%- if d.total_allocated_amount > 0 -%}
+      <div class="mu-sum__disc{% if d.type == 'discount_code' %} mu-sum__disc--code{% endif %}">
+        <dt>{% render 'mu-icon', name: 'tag' %}<span class="visually-hidden">{% if d.type == 'discount_code' %}{{ 'cart.discount' | t }}{% else %}{{ 'cart.discounts' | t }}{% endif %}: </span><span class="mu-sum__disc-name">{{ d.title | escape }}</span></dt>
+        <dd class="mu-num">−{% render 'mu-money', m: d.total_allocated_amount, trim: true %}</dd>
+      </div>
+    {%- endif -%}
+  {%- endfor -%}
+{%- endcapture -%}
+<div class="mu-cart mu-cart--{{ mode }}" data-cart-body data-count="{{ cart.item_count }}">
+  <div class="mu-cart__head">
+    {%- if mode == 'drawer' -%}
+      <h2 class="mu-cart__title" id="{{ form }}-title">{{ 'cart.title' | t }}{% if cart.item_count > 0 %} <span class="mu-cart__count">· {% render 'mu-cart-count', noun: noun %}</span>{% endif %}</h2>
+      <button class="mu-cart__close" type="button" data-cart-close aria-label="{{ 'general.close' | t }}">{% render 'mu-icon', name: 'close' %}</button>
+    {%- else -%}
+      <h1 class="mu-cart__title">{{ 'cart.title' | t }}{% if cart.item_count > 0 %} <span class="mu-cart__count">· {% render 'mu-cart-count', noun: noun %}</span>{% endif %}</h1>
+      {%- if cart.item_count > 0 -%}<a class="mu-cart__keep mu-link" href="{{ routes.all_products_collection_url }}">{{ 'cart.continue' | t }}</a>{%- endif -%}
+    {%- endif -%}
+  </div>
+  <p class="mu-cart__status" role="status" data-cart-status></p>
+
+  {%- if cart.item_count == 0 -%}
+    <div class="mu-cart__empty color-{{ summary_scheme }}">
+      <span class="mu-cart__empty-icon">{% render 'mu-icon', name: 'bag' %}</span>
+      <p class="mu-cart__empty-title">{{ 'cart.empty' | t }}</p>
+      <p class="mu-muted">{{ 'cart.empty_text' | t }}</p>
+      <a class="mu-btn" href="{{ settings.cart_empty_link | default: routes.all_products_collection_url }}">{{ 'cart.shop_all' | t }}</a>
+    </div>
+  {%- else -%}
+    <form class="mu-cart__form" id="{{ form }}" action="{{ routes.cart_url }}" method="post" novalidate>
+      {%- comment -%} Enter in a field never submits the bag: the first submit button is disabled. {%- endcomment -%}
+      <button type="submit" class="visually-hidden" disabled tabindex="-1" aria-hidden="true"></button>
+      <div class="mu-cart__main">
+        <ul class="mu-cart__lines" role="list">
+          {%- for item in cart.items -%}
+            {%- render 'mu-cart-line', item: item, line: forloop.index, form: form, mode: mode -%}
+          {%- endfor -%}
+        </ul>
+
+        {%- if threshold != blank -%}
+          {%- liquid
+            assign pct = cart.total_price | times: 100 | divided_by: goal
+            if pct > 100
+              assign pct = 100
+            endif
+            assign need = goal | minus: cart.total_price
+          -%}
+          <div class="mu-ship{% if free %} is-done{% endif %}">
+            <p class="mu-ship__text">
+              <span>{% if free %}{% render 'mu-icon', name: 'check' %}{% endif %}{% if free %}{{ 'cart.free_ship_done' | t }}{% else %}{%- capture need_money -%}{%- render 'mu-money', m: need, trim: true -%}{%- endcapture -%}{{ 'cart.free_ship_left' | t: amount: need_money }}{% endif %}</span>
+              <span class="mu-muted mu-num">{% render 'mu-money', m: cart.total_price, trim: true %} / {% render 'mu-money', m: goal, trim: true %}</span>
+            </p>
+            <div class="mu-ship__bar" role="progressbar" aria-label="{{ 'cart.free_ship_label' | t }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}"><span style="width: {{ pct }}%; --p: {{ pct | at_least: 1 }}"></span></div>
+          </div>
+        {%- endif -%}
+
+        {%- if up != blank -%}
+          {%- liquid
+            assign fv = up.selected_or_first_available_variant
+            assign upsell_save = 0
+            if fv.compare_at_price > fv.price
+              assign upsell_save = fv.compare_at_price | minus: fv.price
+            endif
+          -%}
+          <div class="mu-upsell">
+            <span class="mu-upsell__steps" aria-hidden="true"><span class="mu-h-1"></span><span class="mu-h-3"></span><span class="mu-h-5"></span></span>
+            {%- if up.featured_media -%}
+              <a class="mu-upsell__thumb" href="{{ up.url }}" tabindex="-1" aria-hidden="true">{{ up.featured_media.preview_image | image_url: width: 200 | image_tag: loading: 'lazy', alt: '' }}</a>
+            {%- endif -%}
+            <div class="mu-upsell__info">
+              <p class="mu-upsell__kicker">{{ 'cart.upsell_title' | t }}</p>
+              <p class="mu-upsell__title"><a href="{{ up.url }}">{{ up.title | escape }}</a></p>
+              {%- if mode == 'page' -%}<p class="mu-muted mu-upsell__text">{{ 'cart.upsell_text' | t }}</p>{%- endif -%}
+              <p class="mu-upsell__price mu-num">
+                <span>{% render 'mu-money', m: fv.price, trim: true %}</span>
+                {%- if upsell_save > 0 -%}
+                  {%- capture save_money -%}{%- render 'mu-money', m: upsell_save, trim: true -%}{%- endcapture -%}
+                  <s class="mu-muted">{% render 'mu-money', m: fv.compare_at_price, trim: true %}</s> <span class="mu-upsell__save">{{ 'cart.upsell_save' | t: amount: save_money }}</span>
+                {%- endif -%}
+              </p>
+            </div>
+            <button class="mu-btn mu-btn--sm mu-upsell__add" type="submit" form="{{ form }}-upsell">{{ 'cart.upsell_add' | t }}</button>
+          </div>
+        {%- endif -%}
+
+        {%- render 'mu-cart-gift', form: form -%}
+
+        {%- if mode == 'page' and perks.size > 0 -%}
+          <ul class="mu-perks" role="list">
+            {%- for b in perks -%}
+              <li {{ b.shopify_attributes }}><strong>{{ b.settings.title | escape }}</strong><span>{{ b.settings.text | escape }}</span></li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        {%- if mode == 'drawer' -%}
+          <div class="mu-pairs mu-pairs--row" data-pairs="row" data-product="{{ cart.items.first.product_id }}" hidden></div>
+        {%- endif -%}
+      </div>
+
+      <aside class="mu-sum color-{{ summary_scheme }}" aria-labelledby="{{ form }}-sum">
+        {%- if mode == 'page' -%}
+          <h2 class="mu-sum__title" id="{{ form }}-sum">{{ 'cart.summary' | t }}</h2>
+          <dl class="mu-sum__rows">
+            <div><dt>{{ 'cart.subtotal' | t }}</dt><dd class="mu-num">{% render 'mu-money', m: cart.original_total_price, trim: true %}</dd></div>
+            {{- disc -}}
+            <div><dt>{{ 'cart.shipping' | t }}</dt><dd>{% if free %}{{ 'cart.free' | t }}{% else %}{{ 'cart.at_checkout' | t }}{% endif %}</dd></div>
+            <div><dt>{{ 'cart.taxes_label' | t }}</dt><dd>{% if cart.taxes_included %}{{ 'cart.included' | t }}{% else %}{{ 'cart.at_checkout' | t }}{% endif %}</dd></div>
+            <div class="mu-sum__total"><dt>{{ 'cart.total' | t }}</dt><dd class="mu-num">{% render 'mu-money', m: cart.total_price, trim: true %}{% unless settings.currency_display == 'code' %} <small>{{ cart.currency.iso_code }}</small>{% endunless %}</dd></div>
+          </dl>
+        {%- else -%}
+          <h2 class="visually-hidden" id="{{ form }}-sum">{{ 'cart.summary' | t }}</h2>
+          {%- if disc_n > 0 -%}
+            <dl class="mu-sum__rows mu-sum__rows--drawer">
+              <div><dt>{{ 'cart.subtotal' | t }}</dt><dd class="mu-num">{% render 'mu-money', m: cart.original_total_price, trim: true %}</dd></div>
+              {{- disc -}}
+            </dl>
+          {%- endif -%}
+          <div class="mu-sum__sub">
+            <p><span>{% if disc_n > 0 %}{{ 'cart.total' | t }}{% else %}{{ 'cart.subtotal' | t }}{% endif %}</span> <strong class="mu-num">{% render 'mu-money', m: cart.total_price, trim: true %}</strong></p>
+          </div>
+        {%- endif -%}
+        {%- if settings.cart_note or settings.cart_discount -%}
+          <div class="mu-acc">
+            {%- if settings.cart_discount -%}
+              {%- liquid
+                assign code_list = ''
+                for d in cart.discount_applications
+                  if d.type == 'discount_code'
+                    assign code_list = code_list | append: d.title | append: '|'
+                  endif
+                endfor
+                assign codes = code_list | split: '|' | uniq
+                assign invalid = 'cart.discount_invalid' | t: code: '__CODE__'
+              -%}
+              <details class="mu-acc__item" data-keep="discount" data-discount data-invalid="{{ invalid }}" data-dupe="{{ 'cart.discount_dupe' | t | escape }}"{% if codes.size > 0 %} open{% endif %}>
+                <summary>{{ 'cart.discount_add' | t }}<span class="mu-acc__icon" aria-hidden="true">{% render 'mu-icon', name: 'plus' %}</span></summary>
+                <div class="mu-acc__body">
+                  <div class="mu-acc__field">
+                    <label class="visually-hidden" for="{{ form }}-code">{{ 'cart.discount' | t }}</label>
+                    <input class="mu-acc__input" id="{{ form }}-code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="{{ 'cart.discount' | t }}" aria-describedby="{{ form }}-code-msg" data-discount-input>
+                    <button class="mu-btn mu-btn--sm mu-acc__apply" type="button" data-discount-apply>{{ 'cart.discount_apply' | t }}</button>
+                  </div>
+                  <p class="mu-acc__msg" id="{{ form }}-code-msg" aria-live="polite" data-discount-msg></p>
+                  {%- if codes.size > 0 -%}
+                    <ul class="mu-acc__codes" role="list" aria-label="{{ 'cart.discount_applied' | t }}">
+                      {%- for c in codes -%}
+                        <li><span class="mu-num">{{ c | escape }}</span><button type="button" data-discount-remove="{{ c | escape }}" aria-label="{{ 'cart.discount_remove' | t: code: c }}">{% render 'mu-icon', name: 'close' %}</button></li>
+                      {%- endfor -%}
+                    </ul>
+                  {%- endif -%}
+                </div>
+              </details>
+            {%- endif -%}
+            {%- if settings.cart_note -%}
+              <details class="mu-acc__item" data-keep="note"{% if cart.note != blank %} open{% endif %}>
+                <summary>{{ 'cart.note_add' | t }}<span class="mu-acc__icon" aria-hidden="true">{% render 'mu-icon', name: 'plus' %}</span></summary>
+                <div class="mu-acc__body">
+                  <label class="visually-hidden" for="{{ form }}-note">{{ 'cart.note' | t }}</label>
+                  <textarea class="mu-acc__note" id="{{ form }}-note" name="note" rows="3" data-cart-note>{{ cart.note }}</textarea>
+                </div>
+              </details>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+        {%- if cart.requires_shipping -%}
+          {%- assign done_one = false -%}
+          {%- capture store_items -%}[{%- for item in cart.items -%}{%- if item.requires_shipping -%}{% if done_one %},{% endif %}{%- assign done_one = true -%}{"u":{{ item.product.url | json }},"id":{{ item.variant_id }}}{%- endif -%}{%- endfor -%}]{%- endcapture -%}
+          <p class="mu-sum__store" data-store-line data-items="{{ store_items | escape }}" hidden>{% render 'mu-icon', name: 'store' %}<span data-store-line-text></span> <button type="button" class="mu-sum__store-btn" aria-haspopup="dialog" data-store-open hidden>{{ 'stores.change' | t }}</button></p>
+        {%- endif -%}
+        <p class="mu-sum__taxes">{{ tax_key | t }}</p>
+        <button class="mu-btn mu-sum__checkout" type="submit" name="checkout">{% render 'mu-icon', name: 'lock' %}{{ 'cart.checkout' | t }}</button>
+        {%- if settings.cart_express and additional_checkout_buttons -%}
+          <div class="mu-sum__express">{{ content_for_additional_checkout_buttons }}</div>
+        {%- endif -%}
+        {%- if mode == 'drawer' -%}
+          <a class="mu-sum__keep" href="{{ routes.all_products_collection_url }}" data-cart-keep>{{ 'cart.continue' | t }}</a>
+        {%- elsif show_payments and shop.enabled_payment_types.size > 0 -%}
+          <p class="mu-sum__pay">
+            {%- for type in shop.enabled_payment_types -%}
+              {%- liquid
+                case type
+                  when 'american_express'
+                    echo 'Amex'
+                  when 'master'
+                    echo 'Mastercard'
+                  when 'paypal'
+                    echo 'PayPal'
+                  when 'apple_pay'
+                    echo 'Apple Pay'
+                  when 'google_pay'
+                    echo 'Google Pay'
+                  when 'shopify_pay'
+                    echo 'Shop Pay'
+                  when 'diners_club'
+                    echo 'Diners Club'
+                  when 'unionpay'
+                    echo 'UnionPay'
+                  else
+                    echo type | replace: '_', ' ' | capitalize
+                endcase
+              -%}
+              {%- unless forloop.last %} · {% endunless -%}
+            {%- endfor -%}
+          </p>
+        {%- endif -%}
+      </aside>
+    </form>
+    {%- if up != blank -%}
+      <form id="{{ form }}-upsell" action="{{ routes.cart_add_url }}" method="post" data-mu-add hidden>
+        <input type="hidden" name="id" value="{{ up.selected_or_first_available_variant.id }}">
+        <input type="hidden" name="quantity" value="1">
+      </form>
+    {%- endif -%}
+  {%- endif -%}
+</div>

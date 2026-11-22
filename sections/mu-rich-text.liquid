@@ -1,0 +1,543 @@
+{%- comment -%}
+  Rich text and video: a heading, a short text and a button, with an optional muted, looping video (or an image)
+  beside or below it. The video only plays on its own when motion is allowed, and always has a pause button.
+  Layout: media right, media left or centred (media under the text); text alignment and width are settings.
+{%- endcomment -%}
+{{ 'mu-sections.css' | asset_url | stylesheet_tag }}
+{%- assign s = section.settings -%}
+{%- if s.video != blank -%}<script src="{{ 'mu-video.js' | asset_url }}" defer></script>{%- endif -%}
+{%- liquid
+  assign grow = false
+  if s.media_scroll and s.layout == 'media_center'
+    if s.video != blank or s.image != blank
+      assign grow = true
+    endif
+  endif
+-%}
+{%- liquid
+  comment
+    The media sits in the 960px reading column (narrower screens: the stage less its padding); Grow scales it out
+    to the full width as it scrolls in.
+  endcomment
+  assign cf = 1.6
+  if s.image != blank
+    assign cf = s.image.aspect_ratio
+  endif
+  assign cf = cf | divided_by: 1.6 | at_least: 1 | round: 3
+  assign cfm = 1.6
+  if s.image_mobile != blank
+    assign cfm = s.image_mobile.aspect_ratio
+  endif
+  assign cfm = cfm | divided_by: 1.6 | at_least: 1 | round: 3
+  assign rt_px = 960 | times: cf | ceil
+  assign img_sizes = '(min-width: 1130px) ' | append: rt_px | append: 'px, (min-width: 990px) calc((100vw - 168px) * ' | append: cf | append: '), (min-width: 750px) calc((100vw - 88px) * ' | append: cf | append: '), calc((100vw - 68px) * ' | append: cf | append: ')'
+  assign m_sizes = 'calc((100vw - 68px) * ' | append: cfm | append: ')'
+  assign poster = '1200x'
+  if grow
+    assign img_sizes = '100vw'
+    assign m_sizes = '100vw'
+    assign poster = '1800x'
+  endif
+-%}
+{%- if grow -%}<script src="{{ 'mu-grow.js' | asset_url }}" defer></script>{%- endif -%}
+{%- capture demo_rt -%}
+  {%- render 'mu-demo-image', asset: s.demo_image, class: 'mu-rt__media', sizes: img_sizes -%}
+{%- endcapture -%}
+{%- assign demo_rt = demo_rt | strip -%}
+{%- liquid
+  assign has_media = false
+  if s.video != blank or s.image != blank or demo_rt != ''
+    assign has_media = true
+  endif
+  assign layout = s.layout | default: 'media_right'
+  assign align = s.align | default: 'auto'
+  if align == 'auto'
+    assign align = 'center'
+    if has_media and layout != 'media_center'
+      assign align = 'left'
+    endif
+  endif
+-%}
+<div class="mu-sec mu-rt color-{{ s.color_scheme }}{% render 'mu-surface', s: s %} mu-rt--{{ align }} mu-rt--w-{{ s.width | default: 'regular' }}{% if has_media %} mu-rt--video mu-rt--{{ layout | replace: '_', '-' }}{% endif %}{% if grow %} mu-rt--grow{% endif %}"{% render 'mu-surface', s: s, part: 'attr' %}{% render 'mu-anim', on: section.settings.animate, items: '.mu-rt__copy > *' %}>
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  <div class="mu-rt__copy">
+    {%- if s.eyebrow != blank -%}<p class="mu-eyebrow mu-muted">{{ s.eyebrow | escape }}</p>{%- endif -%}
+    {%- if s.heading != blank -%}<h2 class="mu-rt__title mu-h2">{{ s.heading }}</h2>{%- endif -%}
+    {%- if s.text != blank -%}<div class="mu-rte mu-muted">{{ s.text }}</div>{%- endif -%}
+    {%- if s.cta_label != blank -%}<a class="mu-btn mu-rt__cta" href="{{ s.cta_link | default: routes.all_products_collection_url }}">{{ s.cta_label | escape }}{% render 'mu-icon', name: 'arrow' %}</a>{%- endif -%}
+  </div>
+  {%- if s.video != blank -%}
+    <mu-video class="mu-rt__video"{% if grow %} data-mu-grow{% endif %}>
+      {%- comment -%}
+        With an image set, it's the poster: it shows until the video plays (match it to the first frame for no jump).
+        Without one there's no poster over the video: its own first frame shows and playback carries on from it, and
+        the preview's address is kept for mu-video.js to show when the video won't play (reduced motion, paused,
+        refused, no frame after a moment).
+      {%- endcomment -%}
+      {%- assign vtag = s.video | video_tag: muted: true, loop: true, playsinline: true, preload: 'none', image_size: poster, class: 'mu-rt__media' -%}
+      {%- comment -%}
+        Mobile poster image: a poster attribute can't change per screen, so the poster is a sized <picture> over the
+        video instead (phones get the mobile image, wider screens the image), which fades out once the video plays
+        and stays put when it won't. With no image, wider screens keep the video's own first frame.
+      {%- endcomment -%}
+      {%- if s.image_mobile != blank -%}
+        {%- render 'mu-video-bare', html: vtag, keep: true, first_frame: true -%}
+        {%- assign mi = s.image_mobile -%}
+        {%- if s.image != blank -%}
+          <picture class="mu-rt__poster">
+            <source media="(max-width: 749px)" sizes="{{ m_sizes }}" srcset="{% render 'mu-srcset', image: mi %}">
+            {% render 'mu-img', image: s.image, sizes: img_sizes, class: 'mu-rt__media' %}
+          </picture>
+        {%- else -%}
+          <picture class="mu-rt__poster mu-rt__poster--m">{% render 'mu-img', image: mi, sizes: m_sizes, class: 'mu-rt__media' %}</picture>
+        {%- endif -%}
+      {%- elsif s.image != blank -%}
+        {%- assign pw = poster | remove: 'x' | plus: 0 -%}
+        {%- assign purl = s.image | image_url: width: pw -%}
+        {%- render 'mu-video-bare', html: vtag, poster: purl, first_frame: true -%}
+      {%- else -%}
+        {%- render 'mu-video-bare', html: vtag, keep: true, first_frame: true -%}
+      {%- endif -%}
+      <div class="mu-rt__ctl">
+        <button class="mu-btn mu-btn--ghost mu-btn--icon" type="button" data-toggle aria-label="{{ 'sections.rich_text.pause' | t }}" data-pause="{{ 'sections.rich_text.pause' | t }}" data-play="{{ 'sections.rich_text.play' | t }}">
+          <svg class="mu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-icon-pause><path d="M9 6v12M15 6v12"/></svg>
+          <svg class="mu-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-icon-play hidden><path d="M8 5.5v13l10-6.5z"/></svg>
+        </button>
+      </div>
+    </mu-video>
+  {%- elsif s.image != blank -%}
+    <div class="mu-rt__video"{% if grow %} data-mu-grow{% endif %}>{% render 'mu-img', image: s.image, sizes: img_sizes, class: 'mu-rt__media', alt: s.image.alt %}</div>
+  {%- elsif demo_rt != '' -%}
+    <div class="mu-rt__video"{% if grow %} data-mu-grow{% endif %}>{{ demo_rt }}</div>
+  {%- endif -%}
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.rich_text.name",
+  "class": "mu-section",
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.colors.scheme",
+      "default": "scheme-2"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "t:sections.common.bg_full",
+      "info": "t:sections.common.bg_full_info",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_radius",
+      "label": "t:sections.common.custom_radius",
+      "info": "t:sections.common.custom_radius_info",
+      "default": false,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "range",
+      "id": "radius",
+      "label": "t:sections.common.radius",
+      "min": 0,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.full_width == false and section.settings.custom_radius }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tl",
+      "label": "t:sections.common.round_tl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_tr",
+      "label": "t:sections.common.round_tr",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_bl",
+      "label": "t:sections.common.round_bl",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "round_br",
+      "label": "t:sections.common.round_br",
+      "default": true,
+      "visible_if": "{{ section.settings.full_width == false }}"
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "t:sections.hero.eyebrow"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "heading",
+      "label": "t:sections.common.heading",
+      "default": "Go your own way."
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "t:sections.common.text",
+      "default": "<p>Tell your story in a few lines. Keep it short on phones.</p>"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.hero.cta_label"
+    },
+    {
+      "type": "url",
+      "id": "cta_link",
+      "label": "t:sections.hero.cta_link"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "t:sections.rich_text.video",
+      "info": "t:sections.rich_text.video_info"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.rich_text.image",
+      "info": "t:sections.rich_text.image_info"
+    },
+    {
+      "type": "text",
+      "id": "demo_image",
+      "label": "t:sections.common.demo_image",
+      "info": "t:sections.common.demo_image_info"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "t:sections.rich_text.image_mobile",
+      "info": "t:sections.rich_text.image_mobile_info",
+      "visible_if": "{{ section.settings.video != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.rich_text.layout_header"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.rich_text.layout",
+      "options": [
+        {
+          "value": "media_right",
+          "label": "t:sections.rich_text.layout_right"
+        },
+        {
+          "value": "media_left",
+          "label": "t:sections.rich_text.layout_left"
+        },
+        {
+          "value": "media_center",
+          "label": "t:sections.rich_text.layout_center"
+        }
+      ],
+      "default": "media_right"
+    },
+    {
+      "type": "checkbox",
+      "id": "media_scroll",
+      "label": "t:sections.rich_text.media_scroll",
+      "info": "t:sections.rich_text.media_scroll_info",
+      "default": false,
+      "visible_if": "{{ section.settings.layout == 'media_center' }}"
+    },
+    {
+      "type": "select",
+      "id": "align",
+      "label": "t:sections.rich_text.align",
+      "options": [
+        {
+          "value": "auto",
+          "label": "t:sections.rich_text.align_auto"
+        },
+        {
+          "value": "left",
+          "label": "t:sections.rich_text.align_left"
+        },
+        {
+          "value": "center",
+          "label": "t:sections.rich_text.align_center"
+        }
+      ],
+      "default": "auto"
+    },
+    {
+      "type": "select",
+      "id": "width",
+      "label": "t:sections.rich_text.width",
+      "options": [
+        {
+          "value": "narrow",
+          "label": "t:sections.rich_text.width_narrow"
+        },
+        {
+          "value": "regular",
+          "label": "t:sections.rich_text.width_regular"
+        },
+        {
+          "value": "wide",
+          "label": "t:sections.rich_text.width_wide"
+        }
+      ],
+      "default": "regular"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.animation"
+    },
+    {
+      "type": "checkbox",
+      "id": "animate",
+      "label": "t:sections.common.animate",
+      "info": "t:sections.common.animate_info",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_margins"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "t:sections.common.margin_top",
+      "info": "t:sections.common.margin_top_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "bottom_spacing",
+      "label": "t:sections.common.bottom_spacing",
+      "info": "t:sections.common.bottom_spacing_info",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_mobile",
+      "label": "t:sections.common.margin_mobile",
+      "info": "t:sections.common.margin_mobile_info",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "default": 67
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_padding"
+    },
+    {
+      "type": "checkbox",
+      "id": "custom_padding",
+      "label": "t:sections.common.custom_padding",
+      "info": "t:sections.common.custom_padding_info",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "t:sections.common.padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "t:sections.common.padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 64,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_left",
+      "label": "t:sections.common.padding_left",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_right",
+      "label": "t:sections.common.padding_right",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "default": 24,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_top_mobile",
+      "label": "t:sections.common.padding_top_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom_mobile",
+      "label": "t:sections.common.padding_bottom_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "range",
+      "id": "padding_x_mobile",
+      "label": "t:sections.common.padding_x_mobile",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 16,
+      "visible_if": "{{ section.settings.custom_padding }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_background"
+    },
+    {
+      "type": "image_picker",
+      "id": "bg_image",
+      "label": "t:sections.common.bg_image",
+      "info": "t:sections.common.bg_image_info"
+    },
+    {
+      "type": "range",
+      "id": "bg_overlay",
+      "label": "t:sections.common.bg_overlay",
+      "info": "t:sections.common.bg_overlay_info",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "unit": "%",
+      "default": 0,
+      "visible_if": "{{ section.settings.bg_image != blank }}"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.common.section_edges"
+    },
+    {
+      "type": "select",
+      "id": "edge_top",
+      "label": "t:sections.common.edge_top",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "edge_bottom",
+      "label": "t:sections.common.edge_bottom",
+      "default": "none",
+      "options": [
+        {
+          "value": "none",
+          "label": "t:sections.common.edge_none"
+        },
+        {
+          "value": "up",
+          "label": "t:sections.common.edge_up"
+        },
+        {
+          "value": "down",
+          "label": "t:sections.common.edge_down"
+        }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "edge_depth",
+      "label": "t:sections.common.edge_depth",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 40,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "checkbox",
+      "id": "edge_mobile",
+      "label": "t:sections.common.edge_mobile",
+      "info": "t:sections.common.edge_mobile_info",
+      "default": true,
+      "visible_if": "{{ section.settings.edge_top != 'none' or section.settings.edge_bottom != 'none' }}"
+    },
+    {
+      "type": "text",
+      "id": "demo_bg_image",
+      "label": "t:sections.common.demo_image",
+      "info": "t:sections.common.demo_image_info"
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.rich_text.name"
+    }
+  ]
+}
+{% endschema %}

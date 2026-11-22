@@ -1,0 +1,35 @@
+{%- comment -%}
+  A srcset list for one image: steps of about 20% from 180px up to max (default 2400), never past the file's own
+  width (the CDN doesn't upscale, so a bigger step would only repeat the largest file under a wrong w descriptor).
+  The file's own width closes the list when it falls between steps.
+  @param image {Image} the image (or media with a preview image)
+  @param max {Number} the widest file the slot can need (optional, default 2400)
+  @param steps {String} comma-separated widths to use instead of the default ladder, or 'pre' for the shorter ladder a
+    preloaded image uses, which keeps its Link header short (optional)
+{%- endcomment -%}
+{%- liquid
+  assign src = image
+  if image.preview_image
+    assign src = image.preview_image
+  endif
+  assign cap = max | default: 2400
+  if src.width and src.width < cap
+    assign cap = src.width
+  endif
+  assign ladder = steps | default: '180,240,360,480,600,720,840,960,1080,1200,1440,1680,1920,2160,2400'
+  if ladder == 'pre'
+    assign ladder = '360,540,720,840,1080,1200,1440,1800,2160'
+  endif
+  assign ladder = ladder | split: ','
+  assign out = ''
+  for st in ladder
+    assign w = st | plus: 0
+    if w < cap
+      assign u = src | image_url: width: w
+      assign out = out | append: ', ' | append: u | append: ' ' | append: w | append: 'w'
+    endif
+  endfor
+  assign u = src | image_url: width: cap
+  assign out = out | append: ', ' | append: u | append: ' ' | append: cap | append: 'w'
+  echo out | remove_first: ', '
+-%}

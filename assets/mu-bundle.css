@@ -1,0 +1,34 @@
+/* Bundle card. Sits on a hotspot image or an image-with-text photo. The price is either the
+   bundle product's price or the sum of the items that the form adds. */
+
+.mu-hs__frame:has(.mu-bundle),
+.mu-it__media:has(.mu-bundle) { position: relative; }
+.mu-bundle {
+  position: relative; z-index: 3; width: min(100%, 360px); margin: 16px;
+  padding: 20px 18px 16px; background: var(--bg); color: var(--fg);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--fg) 85%, transparent);
+}
+.mu-hs__frame > .mu-bundle,
+.mu-it__media > .mu-bundle,
+.mu-it__media .shopify-block:has(.mu-bundle),
+.mu-hs__frame .shopify-block:has(.mu-bundle) {
+  position: absolute; inset: auto 16px 16px auto; width: min(100% - 32px, 360px); margin: 0;
+}
+.mu-bundle__stickers { position: absolute; inset: 0; pointer-events: none; }
+.mu-bundle__stickers .mu-sticker { pointer-events: auto; position: absolute; }
+.mu-bundle__title {
+  margin: 0 0 12px; font-family: var(--mu-font-heading); font-weight: var(--mu-font-heading-weight);
+  font-size: calc(1.75rem * var(--mu-heading-scale)); line-height: .95;
+}
+.mu-bundle__list { margin: 0; padding: 0; list-style: none; border-top: 2px solid color-mix(in srgb, var(--fg) 35%, transparent); }
+.mu-bundle__list li {
+  display: flex; justify-content: space-between; gap: 12px; padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 22%, transparent); font-size: .875rem; font-weight: var(--mu-font-body-bold);
+}
+.mu-bundle__extra, .mu-bundle__save, .mu-bundle__empty { margin: 10px 0 0; font-size: .8125rem; }
+.mu-bundle__price { margin: 12px 0 8px; font-family: var(--mu-font-heading); font-size: calc(2rem * var(--mu-heading-scale)); line-height: 1; }
+.mu-bundle__btn { width: 100%; justify-content: center; }
+.mu-bundle__msg { min-height: 1.2em; margin: 8px 0 0; font-size: .8125rem; }
+.mu-bundle__msg:empty { display: none; }
+.mu-bundle__msg.is-error { font-weight: var(--mu-font-body-bold); }
+.mu-bundle__form:has([aria-busy="true"]) { opacity: .7; }

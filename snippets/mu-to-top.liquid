@@ -1,0 +1,102 @@
+{%- comment -%}
+  Back to top: a round button pinned to a bottom corner (Theme settings > Back to top; bottom right by default). It
+  appears once the page has scrolled about a screen and a half and goes again within a screen of the top, so it never
+  sits over the hero. It steps aside while the cookie banner is open and wherever it would cover
+  footer links or text. On phones
+  it rides above the tab bar and the product add bar; the raised position leaves the bottom right corner free for a
+  chat button. Scrolling is smooth unless the visitor prefers reduced motion. From the keyboard, focus moves to the
+  skip link at the top of the page so the next Tab carries on from the header. Without JavaScript it stays hidden.
+  With Show scroll progress, a ring on the border fills clockwise from 12 o'clock as the page scrolls (decorative).
+  The script reads the button's computed corner radius: a true circle keeps the ring, any other shape (square or
+  rounded square) gets an outline that traces the button's own edge and corners instead, redrawn when the size or
+  radius changes.
+{%- endcomment -%}
+<button
+  type="button"
+  class="mu-totop mu-iconbtn mu-totop--{{ settings.back_to_top_position }}{% unless settings.back_to_top_phone %} mu-totop--desk{% endunless %}{% if settings.back_to_top_progress %} mu-totop--ring{% endif %} color-{{ settings.back_to_top_scheme | default: 'scheme-1' }}"
+  aria-label="{{ 'accessibility.back_to_top' | t }}"
+  data-totop
+>
+  {%- if settings.back_to_top_progress -%}
+    <svg class="mu-totop__ring" viewBox="0 0 44 44" aria-hidden="true" focusable="false" data-totop-circle>
+      <circle class="mu-totop__track" cx="22" cy="22" r="20.75" pathLength="100"></circle>
+      <circle class="mu-totop__fill" cx="22" cy="22" r="20.75" pathLength="100" data-totop-fill></circle>
+    </svg>
+    <svg class="mu-totop__ring mu-totop__ring--edge" aria-hidden="true" focusable="false" data-totop-edge>
+      <path class="mu-totop__track" pathLength="100"></path>
+      <path class="mu-totop__fill" pathLength="100" data-totop-fill></path>
+    </svg>
+  {%- endif -%}
+  {%- render 'mu-icon', name: 'arrow-up' -%}
+</button>
+<script>
+  (() => {
+    const btn = document.querySelector('[data-totop]');
+    if (!btn) return;
+    const fills = btn.querySelectorAll('[data-totop-fill]');
+    const fill = fills[0];
+    const edge = btn.querySelector('[data-totop-edge]');
+    let edgeKey = '';
+    /* Outline just inside the button's border box, starting at 12 o'clock and running clockwise, with corners that
+       follow the button's own radius (0 when square). Redrawn only when the size or radius changes. */
+    const drawEdge = () => {
+      const w = btn.offsetWidth, h = btn.offsetHeight;
+      const raw = getComputedStyle(btn).borderTopLeftRadius.split(' ')[0];
+      const rad = raw.endsWith('%') ? (parseFloat(raw) / 100) * Math.min(w, h) : parseFloat(raw) || 0;
+      const key = w + ',' + h + ',' + rad;
+      if (!w || key === edgeKey) return;
+      edgeKey = key;
+      /* A real circle (radius at least half the button) keeps the round ring; every other shape traces its edge. */
+      const round = rad >= Math.min(w, h) / 2 - 0.5;
+      btn.classList.toggle('mu-totop--edge', !round);
+      if (round) return;
+      const s = 1.5, x0 = s, y0 = s, x1 = w - s, y1 = h - s;
+      const r = Math.max(0, Math.min(rad, w / 2, h / 2) - s);
+      const arc = (x, y) => (r ? `A${r} ${r} 0 0 1 ${x} ${y}` : '');
+      const d = `M${w / 2} ${y0}H${x1 - r}${arc(x1, y0 + r)}V${y1 - r}${arc(x1 - r, y1)}H${x0 + r}${arc(x0, y1 - r)}V${y0 + r}${arc(x0 + r, y0)}Z`;
+      edge.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      edge.querySelectorAll('path').forEach((el) => el.setAttribute('d', d));
+    };
+    const foot = document.querySelector('.mu-footer');
+    const CONTENT = 'a, button, input, select, label, img, svg, p, li, h2, h3, h4, small, span';
+    let on = false, queued = false;
+    /* Footer content under the button (centre and the four edge midpoints)? Then it fades so it never hides a link. */
+    const overFooter = () => {
+      if (!foot || foot.getBoundingClientRect().top > innerHeight) return false;
+      const r = btn.getBoundingClientRect();
+      if (!r.width) return false;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2, d = r.width / 2 + 4;
+      const pts = [[cx, cy], [cx - d, cy], [cx + d, cy], [cx, cy - d], [cx, cy + d]];
+      return pts.some(([x, y]) => document.elementsFromPoint(x, y).some((el) => el !== btn && !btn.contains(el) && foot.contains(el) && el.matches(CONTENT)));
+    };
+    const check = () => {
+      queued = false;
+      const h = innerHeight, y = scrollY;
+      const v = on ? y > h : y > h * 1.5;
+      btn.classList.toggle('is-foot', v && overFooter());
+      if (v !== on) { on = v; btn.classList.toggle('is-on', v); }
+      if (fill) {
+        drawEdge();
+        /* Share of the page scrolled, 0 to 100 (the circles use pathLength 100). */
+        const max = document.documentElement.scrollHeight - h;
+        const p = max > 0 ? Math.min(1, Math.max(0, y / max)) : 1;
+        fills.forEach((el) => { el.style.strokeDashoffset = (100 - p * 100).toFixed(2); });
+      }
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(check); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue, { passive: true });
+    /* Content that grows or shrinks (images, filters, load more) changes the page height. */
+    if (fill && 'ResizeObserver' in window) new ResizeObserver(queue).observe(document.body);
+    /* First check on the next frame, not mid-parse, so reading the page height doesn't force an early layout. */
+    queue();
+    btn.addEventListener('click', (e) => {
+      const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      scrollTo({ top: 0, behavior: still ? 'auto' : 'smooth' });
+      const skip = document.querySelector('.mu-skip');
+      /* Keyboard (detail 0): hand focus to the top of the page. A pointer click just lets the button go. */
+      if (e.detail === 0 && skip) skip.focus({ preventScroll: true });
+      else btn.blur();
+    });
+  })();
+</script>

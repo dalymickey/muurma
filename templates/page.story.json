@@ -1,0 +1,34 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "settings": {
+        "color_scheme": "scheme-1"
+      }
+    },
+    "image_text": {
+      "type": "mu-image-text",
+      "settings": {
+        "color_scheme": "scheme-2",
+        "image_side": "left",
+        "demo_image": "mu-hero-front.jpg",
+        "eyebrow": "East coast",
+        "heading": "Held in contour.",
+        "text": "<p>MUURMA prints each piece when you order it. The drawings come from the coastline we live on, and the garments leave Australia for wherever you are.</p>"
+      }
+    },
+    "rich": {
+      "type": "mu-rich-text",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "Zero dead stock.",
+        "text": "<p>Nothing is made ahead. A new study goes up every Thursday, is printed to order, and ships worldwide.</p>"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "image_text",
+    "rich"
+  ]
+}

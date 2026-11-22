@@ -1,0 +1,14 @@
+{%- comment -%}
+  SKU and vendor product blocks (split out of mu-pp-block to keep its complexity down).
+  @param block {Block}
+  @param product {Product}
+  @param v {Variant} selected variant
+  @param ph {Boolean} placeholder product (no SKU line)
+{%- endcomment -%}
+{%- if block.type == 'sku' -%}
+    {%- unless ph -%}
+      <p class="mu-pp__sku mu-muted" data-sku-wrap{% if v.sku == blank %} hidden{% endif %} {{ block.shopify_attributes }}>{{ 'products.sku' | t }} <span data-sku>{{ v.sku | escape }}</span></p>
+    {%- endunless -%}
+{%- elsif product.vendor != blank -%}
+      <p class="mu-pp__vendor" {{ block.shopify_attributes }}>{{ product.vendor | link_to_vendor }}</p>
+{%- endif -%}

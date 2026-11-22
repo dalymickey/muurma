@@ -1,0 +1,38 @@
+{%- comment -%}
+  Product share block: Facebook, X and Pinterest links, and the device share sheet (or Copy link where there is
+  none, swapped in by assets/mu-product.js). Each is a block setting. When the row is narrower than 430px (phones) the
+  network links drop their visible names to 44px icon buttons so the row fits on one line; screen readers keep the full names. Renders nothing without a product (placeholder).
+  @param block {Block} the share block
+  @param product {Product}
+{%- endcomment -%}
+{%- if product != blank -%}
+{%- assign b = block.settings -%}
+{%- liquid
+  assign share_url = request.origin | append: product.url
+  assign share_u = share_url | url_encode
+  assign share_t = product.title | url_encode
+  assign share_img = product.featured_image | image_url: width: 1200 | prepend: 'https:' | url_encode
+-%}
+<div class="mu-pp__share" {{ block.shopify_attributes }}>
+  <ul class="mu-share" role="list">
+    {%- if b.share_facebook -%}
+      <li><a class="mu-share__link mu-share__link--net" href="https://www.facebook.com/sharer/sharer.php?u={{ share_u }}" target="_blank" rel="noopener">{%- render 'mu-icon', name: 'facebook' -%}<span class="mu-share__name" aria-hidden="true">Facebook</span><span class="visually-hidden">{{ 'products.share_on' | t: network: 'Facebook' }}</span></a></li>
+    {%- endif -%}
+    {%- if b.share_x -%}
+      <li><a class="mu-share__link mu-share__link--net" href="https://x.com/intent/post?text={{ share_t }}&url={{ share_u }}" target="_blank" rel="noopener">{%- render 'mu-icon', name: 'x' -%}<span class="mu-share__name" aria-hidden="true">X</span><span class="visually-hidden">{{ 'products.share_on' | t: network: 'X' }}</span></a></li>
+    {%- endif -%}
+    {%- if b.share_pinterest -%}
+      <li><a class="mu-share__link mu-share__link--net" href="https://pinterest.com/pin/create/button/?url={{ share_u }}{% if product.featured_image %}&media={{ share_img }}{% endif %}&description={{ share_t }}" target="_blank" rel="noopener">{%- render 'mu-icon', name: 'pinterest' -%}<span class="mu-share__name" aria-hidden="true">Pinterest</span><span class="visually-hidden">{{ 'products.share_on' | t: network: 'Pinterest' }}</span></a></li>
+    {%- endif -%}
+    {%- if b.share_native -%}
+      {%- comment -%} The device share sheet where there is one, otherwise Copy link. Shown by the script. {%- endcomment -%}
+      <li data-share-wrap hidden>
+        <button type="button" class="mu-share__link" data-share data-url="{{ share_url }}" data-title="{{ product.title | escape }}">
+          <span data-share-icon>{%- render 'mu-icon', name: 'share' -%}</span><span hidden data-copy-icon>{%- render 'mu-icon', name: 'link' -%}</span><span data-share-label>{{ 'products.share' | t }}</span>
+        </button>
+      </li>
+    {%- endif -%}
+  </ul>
+  <span class="mu-pp__share-msg mu-muted" role="status" data-share-msg></span>
+</div>
+{%- endif -%}
