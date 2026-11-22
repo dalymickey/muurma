@@ -78,12 +78,23 @@
   endif
 -%}
 {%- if s.video != blank -%}<script src="{{ 'mu-video.js' | asset_url }}" defer></script>{%- endif -%}
+{%- liquid
+  assign ht = s.header_text | default: 'auto'
+  if ht == 'dark'
+    assign hero_fg = '#2b2c2b'
+  else
+    assign hero_fg = '#d8d5cf'
+  endif
+-%}
 {%- if section.index == 1 -%}
-  <style>:root { --mu-hero-fg: {{ settings.color_schemes[s.color_scheme].settings.text }}; }</style>
+  <style>:root { --mu-hero-fg: {{ hero_fg }}; }</style>
 {%- endif -%}
 <div
   class="mu-sec mu-banner mu-bleed mu-banner--{{ hero_size }} mu-banner--m-{{ hero_size_m }} mu-banner--at-{{ s.content_position }} mu-banner--align-{{ s.text_align }} color-{{ s.color_scheme }}"
   data-mu-over
+  data-header-text="{{ ht | escape }}"
+  data-overlay-color="{{ ov | escape }}"
+  data-overlay-opacity="{{ strength }}"
   style="--mu-b-h: {{ hero_h }}; --mu-b-h-m: {{ hero_h_m }}; --mu-banner-focal: {{ focal }};{% if s.image == blank %} --mu-banner-focal-m: 50% 28%;{% endif %} --mu-banner-ov: {{ ov }}; --mu-grain-a: {{ grain_a }}; --mu-contour-a: {{ contour_a }}; --mu-grain: url('{{ grain_url }}');"
 >
   {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
@@ -317,6 +328,18 @@
       "step": 5,
       "unit": "%",
       "default": 80
+    },
+    {
+      "type": "select",
+      "id": "header_text",
+      "label": "Header text over hero",
+      "info": "Auto samples the photo behind the header. Light is pale text on a dark hero; dark is charcoal text on a light one.",
+      "default": "auto",
+      "options": [
+        { "value": "auto", "label": "Auto" },
+        { "value": "light", "label": "Light" },
+        { "value": "dark", "label": "Dark" }
+      ]
     },
     {
       "type": "checkbox",

@@ -28,7 +28,7 @@
   if minimal
     assign sbar = false
   endif
-  assign ofg = 'var(--mu-hero-fg, var(--fg))'
+  assign ofg = 'var(--mu-hero-fg, #d8d5cf)'
   if section.settings.overlay_text == 'scheme'
     assign o_id = section.settings.overlay_scheme | append: ''
     assign ofg = settings.color_schemes[o_id].settings.text
@@ -136,7 +136,7 @@
       </div>
   {%- endcapture -%}
 {%- assign sticky = section.settings.sticky_mode | default: 'desktop' -%}
-<mu-header class="mu-header{% if sticky == 'always' or sticky == 'desktop' %} mu-header--sd{% endif %}{% if sticky == 'always' or sticky == 'mobile' %} mu-header--sm{% endif %}{% if ann_bar %} mu-header--ann{% endif %}{% if ann_d_only %} mu-header--ann-d{% endif %}{% if sbar %} mu-header--sbar{% endif %}{% if section.settings.show_border == false %} mu-header--nb{% endif %}{% if minimal %} mu-header--min{% endif %}{% if section.settings.overlay %} mu-header--over{% endif %}" data-section="{{ section.id }}" style="{% if section.settings.overlay %}--mu-ofg: {{ ofg }};{% endif %}">
+<mu-header class="mu-header{% if sticky == 'always' or sticky == 'desktop' %} mu-header--sd{% endif %}{% if sticky == 'always' or sticky == 'mobile' %} mu-header--sm{% endif %}{% if ann_bar %} mu-header--ann{% endif %}{% if ann_d_only %} mu-header--ann-d{% endif %}{% if sbar %} mu-header--sbar{% endif %}{% if section.settings.show_border == false %} mu-header--nb{% endif %}{% if minimal %} mu-header--min{% endif %}{% if section.settings.overlay %} mu-header--over mu-header--ht-light{% endif %}" data-section="{{ section.id }}" style="{% if section.settings.overlay %}--mu-ofg: {{ ofg }};{% endif %}">
   {%- if ann_bar -%}
     {%- if ann_cd -%}<script src="{{ 'mu-countdown.js' | asset_url }}" defer></script>{%- endif -%}
     {%- comment -%} Announcement bar: a slim strip above the pill on every page; it scrolls away while the pill stays. {%- endcomment -%}

@@ -446,7 +446,8 @@ html:has(.mu-menu[open]) { overflow: hidden; }
 
 /* Transparent over hero: only when the page opens with a hero, i.e. a first section whose root carries data-mu-over
    (hero, split hero and stage opt in; any full-bleed hero can). The page is pulled up under the bar, which takes the
-   hero's text color (--mu-ofg) until the page scrolls (is-solid), a dropdown opens or the search drops down. */
+   hero's text color (--mu-ofg) until the hero leaves the bar (is-solid), a dropdown opens or the search drops down. */
+.mu-header--over { --mu-ofg: var(--mu-hero-fg, #d8d5cf); }
 :root:has(.mu-header--over):has(> body > .mu-main > .shopify-section:first-child > [data-mu-over]) { --mu-top-est: var(--mu-ann-h); }
 body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) > .mu-main { margin-top: calc(var(--mu-bar-h) * -1); }
 body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) > .mu-main > .shopify-section:first-child > [data-mu-over] { --mu-over-pad: var(--mu-bar-h); }
@@ -457,6 +458,13 @@ body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data
 body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__tools .mu-header__bag,
 body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__nav > ul > li > :is([aria-current], details > summary[aria-current]) {
   background: transparent; color: var(--fg); box-shadow: inset 0 0 0 1.5px currentColor;
+}
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__bar :is(.mu-header__menu-btn, .mu-header__sicon, .mu-header__account, [data-cart-count], .mu-header__logo-link, .mu-header__wordmark, .mu-header__nav a, .mu-header__nav summary) {
+  color: inherit;
+}
+body:has(.mu-header--over):has(> .mu-main > .shopify-section:first-child > [data-mu-over]) .mu-header--over:not(.is-solid, .is-sdrop-open):not(:has(.mu-header__bar details[open])) .mu-header__bar svg {
+  color: inherit;
+  fill: currentColor;
 }
 @media (prefers-reduced-motion: reduce) { .mu-header__bar, .mu-header__bar::after { transition: none !important; } }
 /* Countdown in a message: a compact timer chip after the text, in tabular digits so it doesn't jiggle. */

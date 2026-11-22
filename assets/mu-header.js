@@ -24,13 +24,8 @@ class MuHeader extends HTMLElement {
       wide.addEventListener('change', onScroll);
       onScroll();
     }
-    // Transparent over hero: solid once the page scrolls past the announcement strip.
-    if (this.classList.contains('mu-header--over')) {
-      const top = this.classList.contains('mu-header--ann') ? 36 : 4;
-      const solid = () => this.classList.toggle('is-solid', window.scrollY > top);
-      window.addEventListener('scroll', solid, { passive: true });
-      solid();
-    }
+    // Transparent over hero: solid once the hero leaves the bar, with auto contrast on the photo.
+    if (this.classList.contains('mu-header--over')) this.initHeroOverlay();
     document.addEventListener('cart:updated', (e) => {
       const count = e.detail?.item_count;
       if (typeof count !== 'number') return;
@@ -383,6 +378,119 @@ class MuHeader extends HTMLElement {
     matchMedia('(min-width: 750px)').addEventListener('change', queue);
     set();
   }
+  initHeroOverlay() {
+    const hero = document.querySelector('.mu-main > .shopify-section:first-child > [data-mu-over]');
+    if (!hero) return;
+    const apply = (kind) => {
+      const color = kind === 'dark' ? '#2b2c2b' : '#d8d5cf';
+      this.style.setProperty('--mu-ofg', color);
+      this.classList.toggle('mu-header--ht-dark', kind === 'dark');
+      this.classList.toggle('mu-header--ht-light', kind !== 'dark');
+      document.documentElement.style.setProperty('--mu-hero-fg', color);
+    };
+    const mode = hero.dataset.headerText || 'auto';
+    if (mode === 'light' || mode === 'dark') apply(mode);
+    else {
+      apply('light');
+      this.sampleHeroContrast(hero).then(apply).catch(() => apply('light'));
+    }
+    const barH = () => Math.ceil(this.querySelector('.mu-header__bar')?.getBoundingClientRect().height || 72);
+    let io;
+    const watch = () => {
+      if (io) io.disconnect();
+      io = new IntersectionObserver((entries) => {
+        const e = entries[0];
+        if (!e) return;
+        this.classList.toggle('is-solid', !e.isIntersecting);
+      }, { root: null, threshold: 0, rootMargin: `-${barH()}px 0px 0px 0px` });
+      io.observe(hero);
+    };
+    watch();
+    matchMedia('(min-width: 750px)').addEventListener('change', watch);
+  }
+
+  hexLum(hex) {
+    const h = String(hex || '').replace('#', '').trim();
+    let r, g, b;
+    if (h.length === 3) {
+      r = parseInt(h[0] + h[0], 16); g = parseInt(h[1] + h[1], 16); b = parseInt(h[2] + h[2], 16);
+    } else if (h.length >= 6) {
+      r = parseInt(h.slice(0, 2), 16); g = parseInt(h.slice(2, 4), 16); b = parseInt(h.slice(4, 6), 16);
+    } else return 0.1;
+    if ([r, g, b].some((n) => Number.isNaN(n))) return 0.1;
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  }
+
+  sampleHeroContrast(hero) {
+    return new Promise((resolve, reject) => {
+      const img = hero.querySelector('.mu-banner__img, .mu-banner__media img, .mu-banner__vid');
+      if (!img || img.tagName === 'VIDEO') {
+        reject(new Error('no image'));
+        return;
+      }
+      const run = () => {
+        const src = img.currentSrc || img.src;
+        if (!src) { reject(new Error('no src')); return; }
+        const im = new Image();
+        im.crossOrigin = 'anonymous';
+        im.onload = () => {
+          try {
+            const header = this.querySelector('.mu-header__bar') || this;
+            const media = hero.querySelector('.mu-banner__media') || hero;
+            const mediaRect = media.getBoundingClientRect();
+            const headRect = header.getBoundingClientRect();
+            const nw = im.naturalWidth;
+            const nh = im.naturalHeight;
+            if (!nw || !nh || mediaRect.width < 2 || headRect.height < 2) { reject(new Error('size')); return; }
+            const scale = Math.max(mediaRect.width / nw, mediaRect.height / nh);
+            const dw = nw * scale;
+            const dh = nh * scale;
+            let posX = 0.5;
+            let posY = 0.38;
+            const pos = (getComputedStyle(img).objectPosition || '50% 38%').trim().split(/\s+/);
+            if (pos[0] && pos[0].endsWith('%')) posX = parseFloat(pos[0]) / 100;
+            if (pos[1] && pos[1].endsWith('%')) posY = parseFloat(pos[1]) / 100;
+            if (Number.isNaN(posX)) posX = 0.5;
+            if (Number.isNaN(posY)) posY = 0.38;
+            const offX = (mediaRect.width - dw) * posX;
+            const offY = (mediaRect.height - dh) * posY;
+            const sx = ((headRect.left - mediaRect.left) - offX) / scale;
+            const sy = ((headRect.top - mediaRect.top) - offY) / scale;
+            const sw = headRect.width / scale;
+            const sh = Math.max(1, headRect.height / scale);
+            const canvas = document.createElement('canvas');
+            const sampleW = 64;
+            const sampleH = Math.max(8, Math.round(64 * (headRect.height / Math.max(1, headRect.width))));
+            canvas.width = sampleW;
+            canvas.height = sampleH;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(im, sx, sy, sw, sh, 0, 0, sampleW, sampleH);
+            const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+            let sum = 0;
+            let n = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i + 3] < 16) continue;
+              sum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+              n += 1;
+            }
+            if (!n) { reject(new Error('empty')); return; }
+            const lum = sum / n / 255;
+            let op = parseFloat(hero.dataset.overlayOpacity || '0');
+            if (op > 1) op = op / 100;
+            if (Number.isNaN(op)) op = 0;
+            const veil = Math.min(1, Math.max(0, op) * 0.9);
+            const blended = this.hexLum(hero.dataset.overlayColor || '#2b2c2b') * veil + lum * (1 - veil);
+            resolve(blended < 0.45 ? 'light' : 'dark');
+          } catch (err) { reject(err); }
+        };
+        im.onerror = () => reject(new Error('cors'));
+        im.src = src;
+      };
+      if (img.complete && img.naturalWidth) run();
+      else img.addEventListener('load', run, { once: true });
+    });
+  }
+
   open() { this.menu?.showModal(); }
   close() { this.menu?.close(); }
 }

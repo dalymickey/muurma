@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "type": "footer",
   "name": "t:groups.footer",
@@ -8,25 +17,20 @@
         "shop": {
           "type": "links",
           "settings": {
-            "heading": "Shop"
-          }
-        },
-        "help": {
-          "type": "links",
-          "settings": {
-            "heading": "Help"
+            "heading": "Shop",
+            "menu": "footer-shop"
           }
         },
         "about": {
           "type": "links",
           "settings": {
-            "heading": "About"
+            "heading": "About",
+            "menu": "footer"
           }
         }
       },
       "block_order": [
         "shop",
-        "help",
         "about"
       ],
       "settings": {
@@ -34,6 +38,7 @@
         "color_scheme": "scheme-4",
         "heading": "New drop every Thursday.",
         "cta_label": "Shop the studies",
+        "cta_link": "/collections/studies",
         "newsletter": true,
         "newsletter_heading": "Thursday, first",
         "brand_mark": "wordmark",

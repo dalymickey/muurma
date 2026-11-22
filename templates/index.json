@@ -18,7 +18,8 @@
         "heading_tag": "h1",
         "subheading": "A breaking wave, held in contour. Designed on the east coast.",
       "button_label": "Shop Study 001",
-      "button_link": "/collections/all",
+      "button_link": "/collections/study-001-the-break",
+        "header_text": "auto",
       "button_style": "primary",
       "button_label_2": "How we make it",
       "button_link_2": "/pages/story",
@@ -43,6 +44,7 @@
       "settings": {
         "color_scheme": "scheme-1",
         "heading": "Study 001",
+        "collection": "study-001-the-break",
         "show_link": true
       }
     },
@@ -65,18 +67,21 @@
         "hoodies": {
           "type": "collection",
           "settings": {
+            "collection": "hoodies",
             "label": "Hoodies"
           }
         },
         "tees": {
           "type": "collection",
           "settings": {
+            "collection": "tees",
             "label": "Tees"
           }
         },
         "caps": {
           "type": "collection",
           "settings": {
+            "collection": "caps",
             "label": "Caps"
           }
         }
@@ -102,6 +107,7 @@
       "heading": "Thursday, again.",
       "end": "2026-11-26T18:00:00+11:00",
       "button_label": "Shop the studies",
+        "link": "/collections/studies",
         "date_label": "Drops",
         "show_seconds": false,
         "after_end": "message",
