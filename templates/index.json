@@ -16,7 +16,7 @@
         "study": "Study 001",
         "heading": "The Break",
         "heading_tag": "h1",
-        "subheading": "A breaking wave, held in contour. Made on the east coast.",
+        "subheading": "A breaking wave, held in contour. Designed on the east coast.",
       "button_label": "Shop Study 001",
       "button_link": "/collections/all",
       "button_style": "primary",
@@ -54,7 +54,7 @@
         "demo_image": "mu-hero-front.jpg",
         "eyebrow": "How we make it",
         "heading": "Made for you. Not for a warehouse.",
-        "text": "<p>Each Study is made in small runs on the east coast — for you, not for a warehouse. No dead stock, and a new one every Thursday.</p>",
+        "text": "<p>Each Study is designed on the east coast and made in small runs — for you, not for a warehouse. No dead stock, and a new one every Thursday.</p>",
         "cta_label": "The story",
         "cta_link": "/pages/story"
       }
