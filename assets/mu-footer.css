@@ -69,36 +69,34 @@
 
 /* Wordmark: lower case, filling the width, sitting on the base line. The estimate below is deliberately wide per
    character so it never overflows; the section's script then scales it to fit exactly. Extra room for descenders. */
+/* Giant wordmark: an SVG that always scales to the footer content width.
+   The viewBox is padded so letter-spacing and glyph overhang on the last letter stay inside. */
 .mu-footer__wordmark {
   display: block;
   width: 100%;
   max-width: 100%;
-  box-sizing: border-box;
+  height: auto;
   margin: 56px 0 0;
-  padding: 0.1em 0;
+  padding: 0;
+  overflow: visible;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  color: inherit;
+}
+.mu-footer__wordmark text {
+  fill: currentColor;
   font-family: var(--mu-font-wordmark, var(--mu-font-heading));
   font-weight: 400;
-  /* Conservative width: 0.83em caps + 0.42em tracking including the trailing space, so it never overflows. JS then tightens to the exact content width. */
-  --wm-ls: 0.42em;
-  font-size: calc((100vw - 2 * var(--fx, var(--gutter, 24px))) / (var(--chars, 6) * 1.42));
-  line-height: 1; letter-spacing: var(--wm-ls); text-indent: 0;
-  white-space: nowrap; text-transform: uppercase;
-  overflow-x: hidden; overflow-y: visible;
-  text-box: initial;
+  font-size: 80px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
 }
-.mu-hup .mu-footer__wordmark,
-.mu-footer__wordmark.mu-display { letter-spacing: var(--wm-ls, 0.42em); }
-.mu-footer__wordmark span { display: inline-block; margin-right: calc(var(--wm-ls, 0.42em) * -1); }
-.mu-footer__wordmark.is-desc { padding-bottom: 0.2em; }
-/* Decorative only: the font's tall text box reaches above the line box, so it never takes clicks meant for the menus,
-   and the columns stack above it. Where supported, the box is trimmed to the letters (cap height to baseline). */
-.mu-footer__wordmark { position: relative; z-index: 0; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.mu-hup .mu-footer__wordmark text { letter-spacing: 0.42em; }
 .mu-footer__grid { position: relative; z-index: 1; }
-@supports (text-box: trim-both cap alphabetic) {
-  .mu-footer__wordmark { margin-top: 64px; line-height: 1; text-box: initial; }
-  .mu-footer__wordmark span { text-box: initial; }
-}
-.mu-pagew .mu-footer__wordmark { --fit: calc(min(100vw - 2 * var(--gutter), var(--mu-page-width)) / (var(--chars) * 0.7)); }
 .mu-footer__logo { margin-top: 56px; }
 
 /* Scrolling wordmark. The first word is read once; the copies are hidden. A pause button is always

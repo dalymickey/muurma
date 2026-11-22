@@ -120,32 +120,30 @@
     </script>
   {%- elsif mark == 'wordmark' -%}
     {%- comment -%}
-      CSS sizes it from the character count (a safe estimate that never overflows); the script then measures the
-      rendered text and scales it to fill the width exactly, again on resize and once the font has loaded.
+      SVG wordmark: width 100% of the footer. After the font loads, the script pads the viewBox so
+      tracking and the last glyph's overhang stay inside a small safe inset on every breakpoint.
     {%- endcomment -%}
-    <p class="mu-footer__wordmark mu-display{% if desc %} is-desc{% endif %}" aria-hidden="true" style="--chars: {{ chars }}" data-fit><span>{{ wordmark | escape }}</span></p>
+    <svg class="mu-footer__wordmark{% if desc %} is-desc{% endif %}" viewBox="-40 -20 720 140" preserveAspectRatio="xMidYMid meet" focusable="false" aria-hidden="true" data-fit>
+      <text x="0" y="80">{{ wordmark | escape }}</text>
+    </svg>
     <script>
       (() => {
-        const el = document.currentScript.previousElementSibling, t = el.firstElementChild;
+        const svg = document.currentScript.previousElementSibling;
+        const text = svg && svg.querySelector('text');
+        if (!svg || !text) return;
         const fit = () => {
-          const vw = document.documentElement.clientWidth || window.innerWidth;
-          const max = Math.min(el.clientWidth, vw);
-          if (!max || !t) return;
-          const probe = document.createElement('span');
-          const cs = getComputedStyle(el);
-          probe.textContent = t.textContent;
-          probe.setAttribute('aria-hidden', 'true');
-          probe.style.cssText = 'position:absolute;left:-9999px;top:0;white-space:nowrap;font-family:' + cs.fontFamily + ';font-weight:' + cs.fontWeight + ';font-size:100px;letter-spacing:' + cs.letterSpacing + ';text-transform:uppercase;visibility:hidden;pointer-events:none;';
-          document.body.appendChild(probe);
-          const w = probe.getBoundingClientRect().width;
-          probe.remove();
-          if (!w) return;
-          el.style.fontSize = (100 * max / w * 0.94) + 'px';
+          try {
+            const box = text.getBBox();
+            if (!box.width || !box.height) return;
+            const padX = Math.max(box.width * 0.04, 8);
+            const padY = Math.max(box.height * 0.14, 4);
+            svg.setAttribute('viewBox', [box.x - padX, box.y - padY, box.width + padX * 2, box.height + padY * 2].join(' '));
+          } catch (e) { /* getBBox can fail before the SVG is laid out */ }
         };
         let raf;
         const queue = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fit); };
-        if ('ResizeObserver' in window) new ResizeObserver(queue).observe(el.parentElement);
-        document.fonts?.ready.then(queue);
+        if ('ResizeObserver' in window) new ResizeObserver(queue).observe(svg.parentElement);
+        document.fonts && document.fonts.ready.then(queue);
         queue();
       })();
     </script>
