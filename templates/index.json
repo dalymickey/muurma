@@ -30,7 +30,7 @@
         "header_text": "auto",
         "show_grain": true,
         "grain_opacity": 24,
-        "show_contour": true,
+        "show_contour": false,
         "contour_opacity": 14,
         "height": "screen",
         "height_mobile": "screen",
