@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "type": "header",
   "name": "t:groups.header",
@@ -6,20 +15,28 @@
       "type": "mu-header",
       "settings": {
         "logo_text": "MUURMA",
+        "logo_width": 140,
         "menu": "main-menu",
+        "highlight_items": "",
+        "ann_scheme": "",
+        "ann_social": "none",
+        "ann_speed": 5,
+        "ann_arrows": true,
         "style": "standard",
         "overlay": true,
         "overlay_text": "hero",
+        "overlay_scheme": "",
         "sticky_mode": "always",
         "cart_total": "off",
         "search_bar": false,
         "predictive_search": true,
-        "show_country": false,
-        "show_language": false,
+        "show_country": true,
+        "show_language": true,
         "color_scheme": "scheme-4",
         "show_border": false,
         "store_desktop": false,
-        "store_mobile": false
+        "store_mobile": false,
+        "store_icon": "pin"
       }
     }
   },
