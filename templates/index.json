@@ -29,7 +29,7 @@
         "overlay_opacity": 90,
         "header_text": "auto",
         "show_grain": true,
-        "grain_opacity": 80,
+        "grain_opacity": 24,
         "show_contour": true,
         "contour_opacity": 14,
         "height": "screen",
