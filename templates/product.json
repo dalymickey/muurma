@@ -15,6 +15,8 @@
         "title": {
           "type": "title",
           "settings": {
+            "eyebrow": "",
+            "subtitle": "",
             "show_rating": false
           }
         },
@@ -28,9 +30,28 @@
         "variant_picker": {
           "type": "variant_picker",
           "settings": {
+            "size_chart": "",
             "size_label": "Size chart",
             "size_style": "popup",
             "size_option": "Size"
+          }
+        },
+        "podpartner_print_on_demand_customizer_Y7xLhp": {
+          "type": "shopify://apps/podpartner-print-on-demand/blocks/customizer/7e465cc5-9b1c-4d62-a6d8-4415ecbc64e0",
+          "settings": {
+            "title_color": "#515151",
+            "border_radius": 0,
+            "default_font_color": "#121212",
+            "default_background_color": "#ffffff",
+            "default_border_color": "#121212",
+            "added_font_color": "#121212",
+            "added_background_color": "#FAFFF7",
+            "added_border_color": "#121212",
+            "added_icon": "icon-1.svg",
+            "common_width": 100,
+            "common_title_button_gap": 4,
+            "common_top_gap": 0,
+            "common_bottom_gap": 0
           }
         },
         "also_in": {
@@ -61,19 +82,49 @@
         "trust": {
           "type": "trust",
           "settings": {
-            "label_1": "Small runs",
+            "heading": "",
             "icon_1": "box",
-            "label_2": "Shipped worldwide",
+            "label_1": "Small runs",
+            "sub_1": "",
             "icon_2": "truck",
+            "label_2": "Shipped worldwide",
+            "sub_2": "",
+            "icon_3": "check",
             "label_3": "Zero dead stock",
-            "icon_3": "check"
+            "sub_3": "",
+            "icon_4": "none",
+            "label_4": "",
+            "sub_4": ""
           }
         },
         "details": {
           "type": "collapsible",
           "settings": {
+            "heading": "Details",
             "source": "description",
-            "heading": "Details"
+            "content": "",
+            "page": "",
+            "metafield_key": ""
+          }
+        },
+        "materials": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Materials",
+            "source": "metafield",
+            "content": "",
+            "page": "",
+            "metafield_key": "custom.materials"
+          }
+        },
+        "care": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Care",
+            "source": "metafield",
+            "content": "",
+            "page": "",
+            "metafield_key": "custom.care"
           }
         },
         "delivery": {
@@ -81,6 +132,8 @@
           "settings": {
             "heading": "Shipping and delivery",
             "text": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
+            "source": "",
+            "estimate": "",
             "show_policy": true,
             "open": false
           }
@@ -93,28 +146,13 @@
             "share_pinterest": true,
             "share_native": true
           }
-        },
-        "materials": {
-          "type": "collapsible",
-          "settings": {
-            "heading": "Materials",
-            "source": "metafield",
-            "metafield_key": "custom.materials"
-          }
-        },
-        "care": {
-          "type": "collapsible",
-          "settings": {
-            "heading": "Care",
-            "source": "metafield",
-            "metafield_key": "custom.care"
-          }
         }
       },
       "block_order": [
         "title",
         "price",
         "variant_picker",
+        "podpartner_print_on_demand_customizer_Y7xLhp",
         "also_in",
         "quantity",
         "buy_buttons",
@@ -133,18 +171,52 @@
         "image_zoom": true,
         "panel_scheme": "scheme-1",
         "low_stock": 5,
+        "low_stock_label": "",
         "price_in_button": true,
         "rows_layout": "accordion",
         "notify": true,
         "sticky_bar": true,
-        "bar_scheme": "scheme-4"
+        "bar_scheme": "scheme-4",
+        "margin_top": 24,
+        "bottom_spacing": 0,
+        "margin_mobile": 67,
+        "custom_padding": false,
+        "padding_top": 64,
+        "padding_bottom": 64,
+        "padding_left": 24,
+        "padding_right": 24,
+        "padding_top_mobile": 40,
+        "padding_bottom_mobile": 40,
+        "padding_x_mobile": 16
       }
     },
     "related": {
       "type": "mu-related-products",
       "settings": {
         "color_scheme": "scheme-1",
-        "heading": "More from the sketch"
+        "full_width": false,
+        "custom_radius": false,
+        "radius": 24,
+        "round_tl": true,
+        "round_tr": true,
+        "round_bl": true,
+        "round_br": true,
+        "heading": "More from the sketch",
+        "layout": "grid",
+        "limit": 4,
+        "collection": "",
+        "animate": true,
+        "margin_top": 0,
+        "bottom_spacing": 0,
+        "margin_mobile": 67,
+        "custom_padding": false,
+        "padding_top": 64,
+        "padding_bottom": 64,
+        "padding_left": 24,
+        "padding_right": 24,
+        "padding_top_mobile": 40,
+        "padding_bottom_mobile": 40,
+        "padding_x_mobile": 16
       }
     }
   },
