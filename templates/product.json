@@ -93,6 +93,22 @@
             "share_pinterest": true,
             "share_native": true
           }
+        },
+        "materials": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Materials",
+            "source": "metafield",
+            "metafield_key": "custom.materials"
+          }
+        },
+        "care": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Care",
+            "source": "metafield",
+            "metafield_key": "custom.care"
+          }
         }
       },
       "block_order": [
@@ -105,6 +121,8 @@
         "timing",
         "trust",
         "details",
+        "materials",
+        "care",
         "delivery",
         "share"
       ],
@@ -135,4 +153,3 @@
     "related"
   ]
 }
-

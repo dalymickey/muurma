@@ -304,6 +304,15 @@
         assign body = product.description
       elsif b.source == 'page' and b.page != blank
         assign body = b.page.content
+      elsif b.source == 'metafield' and b.metafield_key != blank and product != blank
+        assign body = ''
+        assign mf_parts = b.metafield_key | strip | split: '.'
+        if mf_parts.size == 2
+          assign mf = product.metafields[mf_parts[0]][mf_parts[1]]
+          if mf != blank
+            assign body = mf | metafield_tag
+          endif
+        endif
       endif
     -%}
     {%- comment -%} Product page > Collapsible rows layout: Tabs turns the group into a tablist from 750px (assets/mu-product.js). The wrapper opens on the first row of a run and closes on the last, so the tags sit in different branches. {%- endcomment -%}

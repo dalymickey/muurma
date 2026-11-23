@@ -1,0 +1,84 @@
+{%- comment -%}
+  Collapsible content (FAQ): a panel with the heading on the left and the questions as disclosure rows on the right.
+  Native <details>, so it works without JavaScript; "one open at a time" uses the details name attribute.
+  Optional button under the heading: on desktop it sticks with the heading column (so the two never overlap while the
+  questions scroll); on phones it follows the questions.
+{%- endcomment -%}
+{{ 'mu-pages.css' | asset_url | stylesheet_tag }}
+{%- liquid
+  assign s = section.settings
+  assign group = 'mu-faq-' | append: section.id
+-%}
+<div class="mu-sec mu-faq color-{{ s.color_scheme }}{% render 'mu-surface', s: s %}"{% render 'mu-surface', s: s, part: 'attr' %}{% render 'mu-anim', on: section.settings.animate, items: '.mu-faq__head > *, .mu-faq__list > *' %}>
+  {%- render 'mu-section-style', s: section.settings, part: 'bg' -%}
+  <div class="mu-faq__side">
+    <div class="mu-faq__head">
+      {%- if s.eyebrow != blank -%}<p class="mu-eyebrow mu-muted">{{ s.eyebrow | escape }}</p>{%- endif -%}
+      {%- if s.heading != blank -%}<h2 class="mu-faq__title mu-h2">{{ s.heading }}</h2>{%- endif -%}
+      {%- if s.text != blank -%}<div class="mu-rte mu-muted mu-faq__text">{{ s.text }}</div>{%- endif -%}
+    </div>
+    {%- if s.cta_label != blank -%}
+      <a class="mu-btn mu-faq__cta" href="{{ s.cta_link | default: routes.root_url }}">{{ s.cta_label | escape }}{% render 'mu-icon', name: 'arrow' %}</a>
+    {%- endif -%}
+  </div>
+  <div class="mu-faq__list">
+    {%- for block in section.blocks -%}
+      <details class="mu-faq__item"{% if s.one_open %} name="{{ group }}"{% endif %}{% if forloop.first and s.open_first %} open{% endif %} {{ block.shopify_attributes }}>
+        <summary class="mu-faq__q">
+          <span>{{ block.settings.question | escape }}</span>
+          <span class="mu-faq__icon" aria-hidden="true">{% render 'mu-icon', name: 'plus' %}</span>
+        </summary>
+        <div class="mu-faq__a mu-rte mu-muted">{{ block.settings.answer }}</div>
+      </details>
+    {%- endfor -%}
+  </div>
+</div>
+{%- render 'mu-section-style', s: section.settings, id: section.id -%}
+
+{% schema %}
+{
+  "name": "t:sections.faq.name",
+  "class": "mu-section",
+  "max_blocks": 16,
+  "settings": [
+    { "type": "color_scheme", "id": "color_scheme", "label": "t:settings.colors.scheme", "default": "scheme-5" },
+    { "type": "header", "content": "t:sections.common.layout" },
+    { "type": "checkbox", "id": "full_width", "label": "t:sections.common.bg_full", "info": "t:sections.common.bg_full_info", "default": false },
+    { "type": "checkbox", "id": "custom_radius", "label": "t:sections.common.custom_radius", "info": "t:sections.common.custom_radius_info", "default": false, "visible_if": "{{ section.settings.full_width == false }}" },
+    { "type": "range", "id": "radius", "label": "t:sections.common.radius", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 24, "visible_if": "{{ section.settings.full_width == false and section.settings.custom_radius }}" },
+    { "type": "checkbox", "id": "round_tl", "label": "t:sections.common.round_tl", "default": true, "visible_if": "{{ section.settings.full_width == false }}" },
+    { "type": "checkbox", "id": "round_tr", "label": "t:sections.common.round_tr", "default": true, "visible_if": "{{ section.settings.full_width == false }}" },
+    { "type": "checkbox", "id": "round_bl", "label": "t:sections.common.round_bl", "default": true, "visible_if": "{{ section.settings.full_width == false }}" },
+    { "type": "checkbox", "id": "round_br", "label": "t:sections.common.round_br", "default": true, "visible_if": "{{ section.settings.full_width == false }}" },
+    { "type": "text", "id": "eyebrow", "label": "t:sections.hero.eyebrow", "default": "Help" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.common.heading", "default": "Questions, answered" },
+    { "type": "richtext", "id": "text", "label": "t:sections.common.text" },
+    { "type": "checkbox", "id": "open_first", "label": "t:sections.faq.open_first", "default": true },
+    { "type": "checkbox", "id": "one_open", "label": "t:sections.faq.one_open", "info": "t:sections.faq.one_open_info", "default": true },
+    { "type": "text", "id": "cta_label", "label": "t:sections.hero.cta_label" },
+    { "type": "url", "id": "cta_link", "label": "t:sections.hero.cta_link" },
+    { "type": "header", "content": "t:sections.common.animation" },
+    { "type": "checkbox", "id": "animate", "label": "t:sections.common.animate", "info": "t:sections.common.animate_info", "default": true }
+  ],
+  "blocks": [
+    {
+      "type": "question",
+      "name": "t:sections.faq.question",
+      "settings": [
+        { "type": "text", "id": "question", "label": "t:sections.faq.question", "default": "What is your return policy?" },
+        { "type": "richtext", "id": "answer", "label": "t:sections.faq.answer", "default": "<p>[placeholder: confirm policy]</p>" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.faq.name",
+      "blocks": [
+        { "type": "question", "settings": { "question": "How long does making and delivery take?", "answer": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>" } },
+        { "type": "question", "settings": { "question": "How are MUURMA pieces made?", "answer": "<p>Each Sketch is designed on the east coast and made in small runs, so less fabric is left sitting.</p>" } },
+        { "type": "question", "settings": { "question": "What is your returns and exchanges policy?", "answer": "<p>[placeholder: confirm policy]</p>" } }
+      ]
+    }
+  ]
+}
+{% endschema %}
