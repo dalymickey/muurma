@@ -47,7 +47,7 @@
     const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const picks = () => {
       const p = [];
-      radios.forEach((r) => { if (r.checked) p[+r.dataset.option] = r.value; });
+      radios.forEach((r) => { if (r.checked || r.type === 'hidden') p[+r.dataset.option] = r.value; });
       return p;
     };
     const current = () => {
@@ -331,6 +331,7 @@
       // Each value: is there an available variant with it and the other current picks?
       const p = picks();
       radios.forEach((r) => {
+        if (r.type === 'hidden') return;
         const oi = +r.dataset.option;
         // A combined-listing value with no variant here belongs to a sibling product: its stock isn't known, so don't mark it out.
         const sibling = r.dataset.productUrl && !variants.some((v) => v.options[oi] === r.value);

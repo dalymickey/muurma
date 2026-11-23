@@ -94,7 +94,10 @@
       <div class="mu-pp__opts" {{ block.shopify_attributes }}>
         {%- for option in product.options_with_values -%}
           {%- assign oi = forloop.index0 -%}
-          {%- if oi == colour_index -%}
+          {%- assign opt_key = option.name | strip | downcase -%}
+          {%- if option.values.size == 1 and opt_key != 'size' -%}
+            <input type="hidden" name="mu-{{ uid }}-o{{ oi }}" value="{{ option.values.first | escape }}" data-option="{{ oi }}" data-value-id="{{ option.values.first.id }}" data-product-url="{{ option.values.first.product_url }}">
+          {%- elsif oi == colour_index -%}
             <fieldset class="mu-pp__opt mu-pp__colours">
               <legend class="visually-hidden">{{ option.name | escape }}</legend>
               <div class="mu-pp__colour-row">

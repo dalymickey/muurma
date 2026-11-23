@@ -18,11 +18,11 @@
 .mu-qa__close { flex: none; }
 .mu-qv > .mu-qa__close { position: -webkit-sticky; position: sticky; inset-block-start: 10px; z-index: 3; display: grid; margin: 0 8px -52px auto; }
 /* Close and gallery steps sit over the photo, so they carry a halo in the panel colour: the two-tone edge stays visible on any image in any scheme. */
-.mu-qv > .mu-qa__close, .mu-qv__step { --mu-ib-halo: 0 0 0 2px var(--bg); background: var(--fg); color: var(--bg); box-shadow: var(--mu-ib-halo); }
+.mu-qv > .mu-qa__close, .mu-qv__step { --mu-ib-halo: 0 0 0 2px var(--mu-pp-media-bg, #ffffff); background: var(--fg); color: var(--bg); box-shadow: var(--mu-ib-halo); }
 
 /* ---------- Photos ---------- */
-.mu-qv__media { position: relative; overflow: hidden; border-radius: var(--mu-radius); background: color-mix(in srgb, var(--h, var(--fg)) 16%, var(--band)); }
-.mu-qv__media::before { content: ""; position: absolute; inset: 20% 10%; border-radius: 50%; background: var(--h, transparent); opacity: .35; filter: blur(48px); pointer-events: none; }
+.mu-qv__media { position: relative; overflow: hidden; border-radius: var(--mu-radius); background: var(--mu-pp-media-bg, #ffffff); }
+.mu-qv__media::before { content: none; }
 .mu-qv__track { position: relative; display: flex; aspect-ratio: var(--qv-ar, 1); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .mu-qv__track::-webkit-scrollbar { display: none; }
 .mu-qv__track:focus-visible { outline-offset: -4px; }
@@ -37,7 +37,7 @@
 .mu-qv__defer > .mu-qv__img { position: absolute; inset: 0; padding: 0; rotate: none; filter: none; }
 .mu-qv__defer.is-on > :is(.mu-qv__img, .mu-qv__play) { visibility: hidden; }
 .mu-qv__frame, .mu-qv__defer > .shopify-model-viewer-ui { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; border: 0; }
-.mu-qv__model { background: var(--bg); }
+.mu-qv__model { background: var(--mu-pp-media-bg, #ffffff); }
 .mu-qv__defer > .shopify-model-viewer-ui > .mu-qv__model { position: static; display: block; }
 /* Play: a solid square key in the level colour. */
 .mu-qv__play { position: relative; z-index: 1; display: grid; place-items: center; inline-size: 68px; block-size: 68px; border-radius: var(--mu-radius); background: var(--h, var(--fg)); color: var(--h-fg, var(--bg)); box-shadow: 0 14px 30px -10px color-mix(in srgb, #000 45%, transparent); transition: scale .25s var(--mu-spring); }
@@ -121,8 +121,8 @@
   .mu-qv__step--prev .mu-icon { scale: -1 1; }
   .mu-qv__step.is-end { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity .2s, visibility 0s .2s; }
   /* Thumbnails: a glass tray floating at the bottom centre of the photo card. */
-  .mu-qv__thumbs { inset: auto 50% 14px auto; z-index: 2; gap: 6px; max-inline-size: calc(100% - 140px); padding: 6px; overflow-x: auto; border-radius: calc(var(--mu-radius) + 2px); background: color-mix(in srgb, var(--bg) 70%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); scrollbar-width: none; translate: 50% 0; }
-  .mu-qv__thumb { position: relative; flex: none; inline-size: 52px; block-size: 52px; overflow: hidden; border-radius: calc(var(--mu-radius) - 6px); background: var(--bg); transition: translate .2s var(--mu-glide); }
+  .mu-qv__thumbs { inset: auto 50% 14px auto; z-index: 2; gap: 6px; max-inline-size: calc(100% - 140px); padding: 6px; overflow-x: auto; border-radius: calc(var(--mu-radius) + 2px); background: var(--mu-pp-media-bg, #ffffff); scrollbar-width: none; translate: 50% 0; }
+  .mu-qv__thumb { position: relative; flex: none; inline-size: 52px; block-size: 52px; overflow: hidden; border-radius: calc(var(--mu-radius) - 6px); background: var(--mu-pp-media-bg, #ffffff); transition: translate .2s var(--mu-glide); }
   .mu-qv__thumb::before { position: absolute; inset: auto 6px 4px; z-index: 1; inline-size: auto; block-size: 4px; background: var(--mu-g-hero); opacity: 0; }
   .mu-qv__thumb[aria-current="true"] { translate: 0 -2px; }
   .mu-qv__thumb[aria-current="true"]::before { inline-size: auto; opacity: 1; }
