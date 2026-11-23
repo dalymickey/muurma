@@ -93,11 +93,12 @@
         endunless
         assign next_block = section.blocks[forloop.index]
       -%}
-      {%- if block.type == '@app' -%}
-        <div class="mu-pp__app">{% render block %}</div>
+      {%- case block.type -%}
+      {%- when '@app' -%}
+        <div class="mu-pp__app" {{ block.shopify_attributes }}>{% render block %}</div>
       {%- else -%}
         {%- render 'mu-pp-block', block: block, product: product, v: v, uid: uid, s: s, form_id: form_id, colour_index: colour_index, coming: coming, release_s: release_s, prev_block: prev_block, next_block: next_block, plans_auto: plans_auto, feature: false -%}
-      {%- endif -%}
+      {%- endcase -%}
     {%- endfor -%}
   </div>
 
@@ -125,9 +126,10 @@
           assign prev_block = section.blocks[pi]
         endunless
         assign next_block = section.blocks[forloop.index]
-        if block.type == '@app'
+        case block.type
+          when '@app'
           capture bh
-            echo '<div class="mu-pp__app">'
+            echo '<div class="mu-pp__app" {{ block.shopify_attributes }}>'
             render block
             echo '</div>'
           endcapture
@@ -142,7 +144,7 @@
               assign below_shown = true
             endif
           endif
-        endif
+        endcase
         assign below_html = below_html | append: bh
       endfor
       if request.design_mode

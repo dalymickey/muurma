@@ -109,6 +109,24 @@
             "source": "metafield",
             "metafield_key": "custom.care"
           }
+        },
+        "podpartner_print_on_demand_customizer_Y7xLhp": {
+          "type": "shopify://apps/podpartner-print-on-demand/blocks/customizer/7e465cc5-9b1c-4d62-a6d8-4415ecbc64e0",
+          "settings": {
+            "title_color": "#515151",
+            "border_radius": 0,
+            "default_font_color": "#121212",
+            "default_background_color": "#ffffff",
+            "default_border_color": "#121212",
+            "added_font_color": "#121212",
+            "added_background_color": "#FAFFF7",
+            "added_border_color": "#121212",
+            "added_icon": "icon-1.svg",
+            "common_width": 100,
+            "common_title_button_gap": 4,
+            "common_top_gap": 0,
+            "common_bottom_gap": 0
+          }
         }
       },
       "block_order": [
@@ -116,6 +134,7 @@
         "price",
         "variant_picker",
         "also_in",
+        "podpartner_print_on_demand_customizer_Y7xLhp",
         "quantity",
         "buy_buttons",
         "timing",
