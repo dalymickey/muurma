@@ -50,9 +50,30 @@
         "show_language": false,
         "show_currency": false
       }
+    },
+    "popup": {
+      "type": "mu-popup",
+      "disabled": true,
+      "settings": {
+        "type": "newsletter",
+        "color_scheme": "scheme-1",
+        "auto_open": true,
+        "delay": 8,
+        "exit_intent": false,
+        "frequency": "week",
+        "show_image": false,
+        "eyebrow": "First to know",
+        "heading": "New Sketches, when they're ready.",
+        "text": "<p>Join the list for new Sketches, small-run restocks and subscriber codes.</p>",
+        "customer_tags": "newsletter, popup",
+        "code": "",
+        "copied_text": "Copied",
+        "show_tag": false
+      }
     }
   },
   "order": [
-    "footer"
+    "footer",
+    "popup"
   ]
 }

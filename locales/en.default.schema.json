@@ -1296,7 +1296,11 @@
       "tag_mobile_info": "Under 750px wide. Bottom center shows the icon and label.",
       "m_same": "Same as desktop",
       "m_center": "Bottom center",
-      "m_hidden": "Hidden"
+      "m_hidden": "Hidden",
+      "exit_intent": "Open on exit intent",
+      "exit_intent_info": "Desktop only: also opens if the cursor moves toward the top edge to leave.",
+      "customer_tags": "Customer tags",
+      "customer_tags_info": "Comma-separated Shopify customer tags added on signup, e.g. newsletter, popup."
     },
     "features": {
       "info": "Icon and label items. Connect them to product metafields. Empty items hide, and the block hides when all are empty.",
