@@ -75,7 +75,7 @@
         # Low stock tip label: [count] is the number; empty uses the locale's "Last N".
         assign tip_text = 'products.last' | t: count: tip_count
         assign tip_text = tip_label | escape | replace: '[count]', tip_count | default: tip_text
-        # Size chart opener: beside the option named in the block (Size by default), or under the options.
+        # Size chart opener: on its own line under the size buttons for the option named in the block (Size by default), or under the options.
         capture sc_link
           render 'mu-size-chart', product: product, block: block, uid: uid, part: 'link'
         endcapture
@@ -152,7 +152,6 @@
           {%- else -%}
             <fieldset class="mu-pp__opt">
               <legend class="mu-pp__legend">{{ option.name | escape }}</legend>
-              {%- if oi == sc_at -%}{{ sc_link }}{%- endif -%}
               {%- liquid
                 # Words, not sizes: w1 when values average more than four characters ("150 ml kit", not "10.5").
                 assign all_v = option.values | join: ''
@@ -170,6 +169,7 @@
                   {%- endfor -%}
                 </div>
               </div>
+              {%- if oi == sc_at -%}{{ sc_link }}{%- endif -%}
             </fieldset>
           {%- endif -%}
         {%- endfor -%}

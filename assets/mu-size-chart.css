@@ -1,11 +1,11 @@
 /* Size chart for the variant picker (snippets/mu-size-chart). Split from mu-product.css; loaded with the chart. */
-/* The opener sits at the end of its option's legend row (or under the options); the chart opens in the sheet above,
+/* The opener sits on its own line under the size buttons (or under the options if no Size option); the chart opens in the sheet above,
    or as a drawer from the inline end. */
 .mu-sc__link { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; padding: 0; border: 0; background: none; color: inherit; font-size: .8125rem; font-weight: var(--mu-font-body-bold); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .mu-sc__link .mu-icon { width: 18px; height: 18px; flex: none; }
 .mu-sc__link:hover { text-decoration-thickness: 2px; }
 .mu-sc__link:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 3px; border-radius: 4px; }
-.mu-pp__opt > .mu-sc__link { position: absolute; inset: -4px 0 auto auto; }
+.mu-pp__opt > .mu-sc__link { display: inline-flex; margin-top: 10px; }
 .mu-pp__opts > .mu-sc__link { margin-top: 14px; }
 .mu-sc__for { font-size: .8125rem; margin-bottom: 4px; }
 .mu-sg--drawer { inline-size: min(520px, 100%); block-size: 100%; max-block-size: none; margin: 0 0 0 auto; border-radius: var(--mu-radius-lg) 0 0 var(--mu-radius-lg); }
