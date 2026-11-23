@@ -342,6 +342,10 @@
   {%- when 'sku', 'vendor' -%}
     {%- render 'mu-pp-meta', block: block, product: product, v: v, ph: ph -%}
 
+  {%- when 'also_in' -%}
+    {%- render 'mu-pp-also', block: block, product: product -%}
+
   {%- else -%}
     {%- render 'mu-pp-info', block: block -%}
 {%- endcase -%}
+

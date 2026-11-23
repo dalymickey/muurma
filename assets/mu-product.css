@@ -149,6 +149,10 @@
 .mu-pp__colour-name { font-size: .6875rem; line-height: 1.2; text-align: center; color: var(--mu); }
 .mu-pp__colour:has(:checked) .mu-pp__tile { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg); }
 .mu-pp__colour:has(:checked) .mu-pp__colour-name { color: var(--fg); font-weight: var(--mu-font-body-bold); }
+.mu-pp__colour.is-current .mu-pp__tile { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--fg); }
+.mu-pp__colour.is-current .mu-pp__colour-name { color: var(--fg); font-weight: var(--mu-font-body-bold); }
+a.mu-pp__colour { text-decoration: none; color: inherit; }
+.mu-pp__also-now { font-weight: var(--mu-font-body); letter-spacing: 0; text-transform: none; }
 .mu-pp__colour.is-out .mu-pp__tile { opacity: .45; }
 .mu-pp__colour:has(:focus-visible) .mu-pp__tile { outline: 2px solid var(--focus); outline-offset: 5px; }
 
@@ -453,3 +457,4 @@
   .mu-pp--feature .mu-pp__stage--adapt { align-self: stretch; max-height: none; }
   .mu-section--fp .mu-pp--feature .mu-pp__panel { min-height: 620px; padding-inline: var(--pp-pad); }
 }
+

@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin language editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "groups": {
     "header": "Header",
@@ -990,6 +999,9 @@
       "show_installments": "Show Shop Pay installments",
       "show_installments_info": "Shows when Shop Pay Installments is on in your payment settings.",
       "variant_picker": "Variant picker",
+      "also_in": "Also in",
+      "also_in_heading": "Heading",
+      "also_in_info": "Shows colour swatches that link to the same design, garment and gender in other colours. Hidden when there are no siblings.",
       "variant_picker_info": "A color option shows as thumbnails, other options as a scrolling row of chips.",
       "quantity": "Quantity selector",
       "quantity_info": "Placed right before the buy buttons, it sits beside the add to bag button.",
@@ -1674,3 +1686,4 @@
     }
   }
 }
+

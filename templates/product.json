@@ -33,6 +33,12 @@
             "size_option": "Size"
           }
         },
+        "also_in": {
+          "type": "also_in",
+          "settings": {
+            "heading": "Also in"
+          }
+        },
         "quantity": {
           "type": "quantity",
           "settings": {}
@@ -93,6 +99,7 @@
         "title",
         "price",
         "variant_picker",
+        "also_in",
         "quantity",
         "buy_buttons",
         "timing",
@@ -128,3 +135,4 @@
     "related"
   ]
 }
+

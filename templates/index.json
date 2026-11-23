@@ -151,11 +151,11 @@
             "fill_scheme": ""
           }
         },
-        "caps": {
+        "crews": {
           "type": "collection",
           "settings": {
-            "collection": "caps",
-            "label": "Caps",
+            "collection": "crews",
+            "label": "Crews",
             "fill": "band",
             "fill_scheme": ""
           }
@@ -163,8 +163,8 @@
       },
       "block_order": [
         "hoodies",
-        "tees",
-        "caps"
+        "crews",
+        "tees"
       ],
       "settings": {
         "color_scheme": "scheme-1",
