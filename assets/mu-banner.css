@@ -15,19 +15,21 @@
 .mu-banner--small { --mu-b-h: clamp(280px, 42svh, 460px); }
 .mu-banner--medium { --mu-b-h: clamp(380px, 58svh, 620px); }
 .mu-banner--large { --mu-b-h: clamp(480px, 74svh, 820px); }
-/* Full viewport. When the header overlays the first banner, the photo sits behind
-   the nav (padding-top is --mu-over-pad) and the block still fills 100svh. */
-/* Fill the viewport, and on a 1440-wide desktop never sit shorter than the
-   1440x900 study mockup (62.5vw, capped at 900px) when the viewport is short. */
-.mu-banner--screen { --mu-b-h: max(100svh, min(62.5vw, 900px)); }
-@supports not (height: 100svh) { .mu-banner--screen { --mu-b-h: max(100vh, min(62.5vw, 900px)); } }
+/* Full viewport. Overlay header padding is inside 100svh (border-box).
+   100vh is the fallback when svh is unsupported. A 480px floor only
+   applies on very short screens so the copy is not clipped. The frame
+   does not also use 100svh, or the overlay padding would overflow. */
+.mu-banner--screen { --mu-b-h: 100vh; --mu-b-h: 100svh; min-height: max(480px, var(--mu-b-h)); }
+@supports not (height: 100svh) { .mu-banner--screen { --mu-b-h: 100vh; } }
+.mu-banner--screen .mu-banner__frame { min-height: 0; }
 @media (max-width: 749px) {
   .mu-banner--m-small { --mu-b-h: clamp(240px, 48svh, 420px); }
   .mu-banner--m-medium { --mu-b-h: clamp(320px, 60svh, 520px); }
   .mu-banner--m-large { --mu-b-h: clamp(400px, 74svh, 640px); }
-  .mu-banner--m-screen { --mu-b-h: 100svh; }
+  .mu-banner--m-screen { --mu-b-h: 100vh; --mu-b-h: 100svh; min-height: max(480px, var(--mu-b-h)); }
   .mu-banner { min-height: var(--mu-b-h-m, var(--mu-b-h)); }
   .mu-banner__frame { min-height: var(--mu-b-h-m, var(--mu-b-h)); }
+  .mu-banner--m-screen .mu-banner__frame { min-height: 0; }
 }
 
 .mu-banner__media { position: absolute; inset: 0; z-index: 0; }
@@ -83,7 +85,7 @@
 .mu-banner__title {
   margin: 0; max-inline-size: none;
   font-family: var(--mu-font-heading);
-  font-weight: 400; font-size: clamp(56px, 6.2vw, 88px);
+  font-weight: 400; font-size: clamp(48px, 9.8vh, 88px);
   line-height: 0.92; letter-spacing: 0.04em; text-transform: uppercase; text-wrap: balance;
   color: var(--fg);
 }
@@ -135,7 +137,7 @@
   .mu-banner__motif { left: -20%; right: -5%; bottom: -6%; height: 48%; }
   .mu-banner__frame { padding: 20px; }
   .mu-banner__copy { left: 0; right: 0; max-inline-size: none; gap: 14px; }
-  .mu-banner__title { font-size: 56px; letter-spacing: 0.035em; }
+  .mu-banner__title { font-size: clamp(40px, 11vw, 56px); letter-spacing: 0.035em; }
   .mu-banner__titles { gap: 6px; }
   .mu-banner__sub { font-size: 14px; max-inline-size: none; }
   .mu-banner__eyebrow { font-size: 9px; }
@@ -145,6 +147,16 @@
   .mu-banner__fine { font-size: 10px; letter-spacing: 0.06em; }
 }
 
+@media (max-height: 800px) {
+  .mu-banner--screen .mu-banner__frame { padding: clamp(16px, 3vh, 32px) var(--gutter) clamp(16px, 3.5vh, 36px); }
+  .mu-banner--screen .mu-banner__copy { gap: 12px; }
+  .mu-banner--screen .mu-banner__actions { gap: 16px; }
+}
+@media (max-height: 700px) and (max-width: 749px) {
+  .mu-banner--m-screen .mu-banner__title { font-size: 40px; }
+  .mu-banner--m-screen .mu-banner__copy { gap: 10px; }
+  .mu-banner--m-screen .mu-banner__frame { padding: 16px var(--gutter) 20px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .mu-banner__grain { display: none; }
 }

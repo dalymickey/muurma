@@ -22,6 +22,9 @@ body {
   --hole: var(--bg);
 }
 @media (min-width: 750px) { body { --gutter: 24px; --mu-gap: var(--mu-gap-d, 20px); } }
+/* Inner gutters. Matches the header bar (--hx) and homepage container. */
+.mu-in { box-sizing: border-box; padding-inline: var(--gutter); }
+.mu-pagew .mu-in { padding-inline: max(var(--gutter), calc((100% - var(--mu-page-width)) / 2)); }
 
 /* ---------- Reset ---------- */
 *, ::before, ::after { box-sizing: border-box; margin: 0; }

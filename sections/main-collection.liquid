@@ -45,7 +45,10 @@
   assign eyebrow = s.eyebrow
   # Banner colours (see the comment above). b_cls/b_sty go on the banner.
   assign mode = s.banner_colors | default: 'auto'
-  assign b_cls = 'mu-fill-hero'
+  assign b_cls = ''
+  if mode == 'auto' and img != blank
+    assign b_cls = 'mu-fill-hero'
+  endif
   assign b_sty = ''
   assign r_sty = ''
   if mode == 'auto' and settings.scale_mode == 'colors'

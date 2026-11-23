@@ -3,7 +3,7 @@
 
 /* Title band: the scale gradient, title left, the collection image standing on the right. */
 .mu-cl__stage { position: relative; overflow: hidden; background: var(--bg); color: var(--fg); }
-.mu-cl__stage-in { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: center; padding-block: clamp(36px, 6vw, 88px); }
+.mu-cl__stage-in { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: center; padding-block: clamp(20px, 3vw, 40px); }
 .mu-cl__head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; justify-items: start; }
 .mu-cl__title { margin: 0; overflow-wrap: anywhere; }
 .mu-cl__desc { max-width: 52ch; opacity: .9; }
@@ -127,7 +127,8 @@
   html.mu-lock { overflow: hidden; }
 }
 @media (min-width: 990px) {
-  .mu-cl__stage-in { grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); min-height: 340px; }
+  .mu-cl__stage-in { grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); }
+  .mu-cl__stage--img .mu-cl__stage-in { min-height: 340px; padding-block: clamp(36px, 6vw, 88px); }
   .mu-cl__stage--img .mu-cl__img { display: block; align-self: stretch; position: relative; min-height: 260px; }
   .mu-cl__img-el { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 50% !important; rotate: -6deg; filter: drop-shadow(0 30px 34px rgb(11 11 12 / .3)); }
   .mu-cl__navlist { flex-wrap: wrap; overflow: visible; }
@@ -150,5 +151,7 @@
   html.mu-lock { overflow: hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .mu-f { transition: none !important; } }
-.mu-cl__stage.mu-fill-hero { background: var(--mu-g-hero); color: var(--mu-g-hero-fg-aa, var(--mu-g-hero-fg, #fff)); }
+.mu-cl__stage:not(.mu-fill-hero) { background: var(--bg, #d8d5cf); color: #2b2c2b; }
+.mu-cl__stage:not(.mu-fill-hero) :is(.mu-cl__title, .mu-crumbs, .mu-cl__desc, .mu-kicker, .mu-muted) { color: #2b2c2b; }
+.mu-cl__stage.mu-fill-hero { background: var(--mu-g-hero, #2b2c2b); color: var(--mu-g-hero-fg-aa, var(--mu-g-hero-fg, #d8d5cf)); }
 .mu-cl__stage.mu-fill-hero .mu-kicker { background: var(--mu-paper); color: var(--mu-ink); }

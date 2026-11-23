@@ -42,7 +42,7 @@
 
 <mu-results class="mu-cl mu-cl--search color-{{ s.color_scheme | default: settings.page_scheme }}{% if has_filters %} mu-cl--rail{% endif %}" data-section="{{ section.id }}"{% if s.load_auto %} data-auto-load{% endif %}>
   <p class="visually-hidden" role="status" data-more-status data-msg="{{ 'collections.loaded' | t: shown: '__N__', total: '__T__' }}"></p>
-  <header class="mu-cl__stage mu-cl__stage--search mu-bleed mu-fill-hero">
+  <header class="mu-cl__stage mu-cl__stage--search mu-bleed">
     <div class="mu-in mu-cl__stage-in">
       <div class="mu-cl__head">
         {%- if s.show_breadcrumbs -%}{%- assign crumb_title = 'search.title' | t -%}{%- render 'mu-crumbs', current: crumb_title -%}{%- endif -%}
