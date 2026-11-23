@@ -36,6 +36,12 @@
             "size_option": "Size"
           }
         },
+        "also_in": {
+          "type": "also_in",
+          "settings": {
+            "heading": "Also in"
+          }
+        },
         "podpartner_print_on_demand_customizer_Y7xLhp": {
           "type": "shopify://apps/podpartner-print-on-demand/blocks/customizer/7e465cc5-9b1c-4d62-a6d8-4415ecbc64e0",
           "settings": {
@@ -52,12 +58,6 @@
             "common_title_button_gap": 4,
             "common_top_gap": 0,
             "common_bottom_gap": 0
-          }
-        },
-        "also_in": {
-          "type": "also_in",
-          "settings": {
-            "heading": "Also in"
           }
         },
         "quantity": {
@@ -152,8 +152,8 @@
         "title",
         "price",
         "variant_picker",
-        "podpartner_print_on_demand_customizer_Y7xLhp",
         "also_in",
+        "podpartner_print_on_demand_customizer_Y7xLhp",
         "quantity",
         "buy_buttons",
         "timing",
