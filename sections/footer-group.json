@@ -43,17 +43,28 @@
         "newsletter_heading": "First to know",
         "brand_mark": "wordmark",
         "wordmark": "MUURMA",
+        "wordmark_marquee": false,
+        "wordmark_style": "alternate",
+        "wordmark_speed": 40,
+        "disclaimer": "",
+        "logo_width": 240,
         "show_social": true,
         "follow_on_shop": true,
         "payment_icons": true,
         "show_country": true,
         "show_language": false,
-        "show_currency": false
+        "show_currency": false,
+        "margin_top": 0,
+        "bottom_spacing": 0,
+        "margin_mobile": 67,
+        "edge_top": "none",
+        "edge_bottom": "none",
+        "edge_depth": 40,
+        "edge_mobile": true
       }
     },
     "popup": {
       "type": "mu-popup",
-      "disabled": true,
       "settings": {
         "type": "newsletter",
         "color_scheme": "scheme-1",
@@ -65,10 +76,22 @@
         "eyebrow": "First to know",
         "heading": "New Sketches, when they're ready.",
         "text": "<p>Join the list for new Sketches, small-run restocks and subscriber codes.</p>",
+        "submit_label": "",
+        "success_text": "",
         "customer_tags": "newsletter, popup",
         "code": "",
         "copied_text": "Copied",
-        "show_tag": false
+        "products": [],
+        "button_label": "Continue shopping",
+        "button_link": "",
+        "show_tag": true,
+        "tag_visibility": "always",
+        "tag_position": "middle_right",
+        "tag_label": "",
+        "tag_icon": "mail",
+        "tag_pulse": true,
+        "tag_scroll": "fixed",
+        "tag_mobile": "same"
       }
     }
   },
