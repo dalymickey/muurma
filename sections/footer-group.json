@@ -18,19 +18,27 @@
           "type": "links",
           "settings": {
             "heading": "Shop",
-            "menu": "footer-shop"
+            "menu": "footer-shop-links"
+          }
+        },
+        "help": {
+          "type": "links",
+          "settings": {
+            "heading": "Help",
+            "menu": "footer-help"
           }
         },
         "about": {
           "type": "links",
           "settings": {
             "heading": "About",
-            "menu": "footer"
+            "menu": "footer-about"
           }
         }
       },
       "block_order": [
         "shop",
+        "help",
         "about"
       ],
       "settings": {
