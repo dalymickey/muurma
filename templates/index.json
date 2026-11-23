@@ -146,7 +146,7 @@
         "crews": {
           "type": "collection",
           "settings": {
-            "collection": "crews",
+            "collection": "mens-crews",
             "label": "Crews",
             "fill": "scheme",
             "fill_scheme": "scheme-5"
