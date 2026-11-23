@@ -58,7 +58,7 @@
     when 'large'
       assign hero_h = 'clamp(480px, 74svh, 820px)'
     when 'screen'
-      assign hero_h = '100svh'
+      assign hero_h = 'calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px)))'
   endcase
   assign hero_size_m = s.height_mobile | default: 'screen'
   if hero_size_m == blank or hero_size_m == 'same'
@@ -73,7 +73,7 @@
       when 'large'
         assign hero_h_m = 'clamp(400px, 74svh, 640px)'
       when 'screen'
-        assign hero_h_m = '100svh'
+        assign hero_h_m = 'calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px)))'
     endcase
   endif
 -%}

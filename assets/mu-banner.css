@@ -15,18 +15,20 @@
 .mu-banner--small { --mu-b-h: clamp(280px, 42svh, 460px); }
 .mu-banner--medium { --mu-b-h: clamp(380px, 58svh, 620px); }
 .mu-banner--large { --mu-b-h: clamp(480px, 74svh, 820px); }
-/* Full viewport. Overlay header padding is inside 100svh (border-box).
-   100vh is the fallback when svh is unsupported. A 480px floor only
-   applies on very short screens so the copy is not clipped. The frame
-   does not also use 100svh, or the overlay padding would overflow. */
-.mu-banner--screen { --mu-b-h: 100vh; --mu-b-h: 100svh; min-height: max(480px, var(--mu-b-h)); }
-@supports not (height: 100svh) { .mu-banner--screen { --mu-b-h: 100vh; } }
+/* Full viewport minus the announcement bar and header, so the hero fits the first screen.
+   --mu-head-h is measured at runtime; --mu-top-est is the CSS fallback (announcement only
+   when the header overlays the hero). 100vh, then 100dvh, then 100svh. A 480px floor only
+   applies on very short screens so the copy is not clipped. The frame does not also use
+   100svh, or the overlay padding would overflow. */
+.mu-banner--screen { --mu-b-h: calc(100vh - var(--mu-head-h, var(--mu-top-est, 0px))); --mu-b-h: calc(100dvh - var(--mu-head-h, var(--mu-top-est, 0px))); --mu-b-h: calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px))); min-height: max(480px, var(--mu-b-h)); }
+@supports not (height: 100svh) { .mu-banner--screen { --mu-b-h: calc(100vh - var(--mu-head-h, var(--mu-top-est, 0px))); } }
+@supports not (height: 100svh) and (height: 100dvh) { .mu-banner--screen { --mu-b-h: calc(100dvh - var(--mu-head-h, var(--mu-top-est, 0px))); } }
 .mu-banner--screen .mu-banner__frame { min-height: 0; }
 @media (max-width: 749px) {
   .mu-banner--m-small { --mu-b-h: clamp(240px, 48svh, 420px); }
   .mu-banner--m-medium { --mu-b-h: clamp(320px, 60svh, 520px); }
   .mu-banner--m-large { --mu-b-h: clamp(400px, 74svh, 640px); }
-  .mu-banner--m-screen { --mu-b-h: 100vh; --mu-b-h: 100svh; min-height: max(480px, var(--mu-b-h)); }
+  .mu-banner--m-screen { --mu-b-h: calc(100vh - var(--mu-head-h, var(--mu-top-est, 0px))); --mu-b-h: calc(100dvh - var(--mu-head-h, var(--mu-top-est, 0px))); --mu-b-h: calc(100svh - var(--mu-head-h, var(--mu-top-est, 0px))); min-height: max(480px, var(--mu-b-h)); }
   .mu-banner { min-height: var(--mu-b-h-m, var(--mu-b-h)); }
   .mu-banner__frame { min-height: var(--mu-b-h-m, var(--mu-b-h)); }
   .mu-banner--m-screen .mu-banner__frame { min-height: 0; }

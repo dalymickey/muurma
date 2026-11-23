@@ -345,16 +345,22 @@ class MuHeader extends HTMLElement {
   }
 
   // --mu-head-h: how far the page content starts from the top (header, announcement bar and anything else in the
-  // header group). The hero uses it to end at the bottom of the first screen. Re-measured whenever those resize.
-  // --mu-sticky-h: how much of the screen top the stuck header covers (0 where it doesn't stick), so sticky
-  // product cards can sit just under it. Its height doesn't change when stuck, so it's safe to measure any time.
+  // header group). Full-viewport heroes use it to end at the bottom of the first screen: height is
+  // calc(100svh - var(--mu-head-h, var(--mu-top-est))). Re-measured whenever those resize, and when the
+  // announcement bar is dismissed or hidden (the height is 0 when the bar is off).
+  // --mu-announcement-height / --mu-ann-h: the announcement strip.
+  // --mu-header-height / --mu-bar-h: the header bar, so overlay padding stays in sync with the real bar.
+  // --mu-sticky-h: how much of the screen top the stuck header covers (0 where it does not stick), so sticky
+  // product cards can sit just under it. Its height does not change when stuck, so it is safe to measure any time.
   measure() {
     const main = document.getElementById('main');
     if (!main || !('ResizeObserver' in window)) return;
     const root = document.documentElement;
     const sec = this.closest('.mu-header-section') || this;
+    const ann = this.querySelector('.mu-header__ann');
+    const bar = this.querySelector('.mu-header__bar');
     let frame = 0;
-    // Read every geometry value first, then write the two custom properties. Writing --mu-sticky-h before
+    // Read every geometry value first, then write the custom properties. Writing a property before
     // getBoundingClientRect used to force a second layout on load and on every header resize.
     const set = () => {
       frame = 0;
@@ -362,20 +368,31 @@ class MuHeader extends HTMLElement {
       const sticky = cs.position === 'sticky';
       const top = parseFloat(cs.top) || 0;
       const height = sec.offsetHeight;
+      const annH = ann ? Math.round(ann.getBoundingClientRect().height) : 0;
+      const barH = bar ? Math.round(bar.getBoundingClientRect().height) : 0;
       const head = this.classList.contains('is-stuck') ? null : Math.round(main.getBoundingClientRect().top + window.scrollY);
       const h = sticky ? Math.max(0, Math.round(height + top)) : 0;
-      const sh = `${h}px`;
-      if (root.style.getPropertyValue('--mu-sticky-h') !== sh) root.style.setProperty('--mu-sticky-h', sh);
-      if (head != null) {
-        const hh = `${head}px`;
-        if (root.style.getPropertyValue('--mu-head-h') !== hh) root.style.setProperty('--mu-head-h', hh);
+      const write = (name, value) => {
+        const v = value + 'px';
+        if (root.style.getPropertyValue(name) !== v) root.style.setProperty(name, v);
+      };
+      write('--mu-sticky-h', h);
+      write('--mu-announcement-height', annH);
+      write('--mu-ann-h', annH);
+      if (barH) {
+        write('--mu-header-height', barH);
+        write('--mu-bar-h', barH);
       }
+      if (head != null) write('--mu-head-h', head);
     };
     const queue = () => { if (!frame) frame = requestAnimationFrame(set); };
     const ro = new ResizeObserver(queue);
     document.querySelectorAll('.shopify-section-group-header-group').forEach((el) => ro.observe(el));
     ro.observe(this);
+    if (ann) ro.observe(ann);
+    if (bar) ro.observe(bar);
     matchMedia('(min-width: 750px)').addEventListener('change', queue);
+    window.addEventListener('resize', queue, { passive: true });
     set();
   }
   initHeroOverlay() {
