@@ -256,7 +256,7 @@
           "settings": {
             "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
             "demo_image": "mu-hero-back.jpg",
-            "caption": "Sketch 001, front",
+            "caption": "",
             "link": "",
             "products": []
           }
@@ -266,7 +266,17 @@
           "settings": {
             "image": "shopify://shop_images/1795430604972-ic9cuqbklw8.png",
             "demo_image": "mu-hero-front.jpg",
-            "caption": "Sketch 001, back",
+            "caption": "",
+            "link": "",
+            "products": []
+          }
+        },
+        "tile_8c6iid": {
+          "type": "tile",
+          "settings": {
+            "image": "shopify://shop_images/1795432022945-664nugnmpld.png",
+            "demo_image": "mu-hero-front.jpg",
+            "caption": "",
             "link": "",
             "products": []
           }
@@ -274,7 +284,8 @@
       },
       "block_order": [
         "back",
-        "front"
+        "front",
+        "tile_8c6iid"
       ],
       "settings": {
         "color_scheme": "scheme-1",
@@ -285,7 +296,7 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
-        "layout": "grid",
+        "layout": "mosaic",
         "columns": 3,
         "columns_mobile": "2",
         "ratio": "square",
