@@ -151,11 +151,11 @@
             "fill_scheme": ""
           }
         },
-        "caps": {
+        "crews": {
           "type": "collection",
           "settings": {
-            "collection": "caps",
-            "label": "Caps",
+            "collection": "crews",
+            "label": "Crews",
             "fill": "band",
             "fill_scheme": ""
           }
@@ -163,8 +163,8 @@
       },
       "block_order": [
         "hoodies",
-        "tees",
-        "caps"
+        "crews",
+        "tees"
       ],
       "settings": {
         "color_scheme": "scheme-1",
@@ -349,6 +349,21 @@
         "edge_mobile": true,
         "demo_bg_image": ""
       }
+    },
+    "journal": {
+      "type": "mu-blog-posts",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "layout": "grid",
+        "heading": "From the journal",
+        "blog": "journal",
+        "limit": 3,
+        "show_link": true,
+        "show_date": true,
+        "show_tag": true,
+        "show_excerpt": false,
+        "animate": true
+      }
     }
   },
   "order": [
@@ -358,6 +373,7 @@
     "collections",
     "countdown",
     "gallery",
-    "note"
+    "note",
+    "journal"
   ]
 }

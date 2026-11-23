@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin language editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "groups": {
     "header": "Header",
@@ -125,6 +134,10 @@
     },
     "cards": {
       "name": "Product cards",
+      "media_bg": "Product card image background",
+      "media_bg_info": "Fills the card image area behind product photos. Use white to match pack shots.",
+      "product_media_bg": "Product page image background",
+      "product_media_bg_info": "Fills the main product gallery behind the photos.",
       "hover_image": "Show second media on hover",
       "hover_image_info": "Mouse only. Shows the second image or video.",
       "badge_prefix": "Badge tag prefix",
@@ -137,7 +150,7 @@
       "reviews_namespace": "Review namespace",
       "reviews_namespace_info": "Leave empty for reviews.rating, reviews.rating_count and the custom.reviews list. A namespace reads rating, rating_count and reviews from there instead.",
       "sale_badge": "Sale badge",
-      "sale_badge_info": "Percentage off uses the compare-at price. When variants are discounted differently, the card shows the biggest discount as \u201cUp to\u201d.",
+      "sale_badge_info": "Percentage off uses the compare-at price. When variants are discounted differently, the card shows the biggest discount as “Up to”.",
       "sale_badge_percent": "Percentage off",
       "sale_badge_text": "Sale",
       "badge_colors": "Badge colors",
@@ -158,7 +171,7 @@
       "badge_position_image": "Top left on the image",
       "badge_position_title": "Above title",
       "rating_empty": "Show empty ratings",
-      "rating_empty_info": "Products without a rating show empty stars and \u201cNo reviews\u201d.",
+      "rating_empty_info": "Products without a rating show empty stars and “No reviews”.",
       "quick_view": "Show quick view button",
       "quick_view_info": "An outline button under the price that opens quick view.",
       "quick_view_label": "Button label",
@@ -285,7 +298,7 @@
       "backorder": "Out-of-stock pre-orders",
       "backorder_info": "For sold-out variants set to continue selling. Pick tagged products only to keep overselling others without the pre-order label.",
       "note": "Shipping note",
-      "note_info": "Shows next to the pre-order badge and in the bag, for example \"Ships in 3\u20134 weeks\".",
+      "note_info": "Shows next to the pre-order badge and in the bag, for example \"Ships in 3–4 weeks\".",
       "mode_off": "Off",
       "mode_tagged": "Tagged products only",
       "mode_all": "All products that keep selling",
@@ -294,7 +307,7 @@
     },
     "cookie": {
       "name": "Cookie banner",
-      "info": "The theme\u2019s own consent banner, shown only to visitors who need to consent. Turn off Shopify\u2019s banner in Settings > Customer privacy.",
+      "info": "The theme’s own consent banner, shown only to visitors who need to consent. Turn off Shopify’s banner in Settings > Customer privacy.",
       "show": "Show cookie banner",
       "show_info": "Accept and decline set all consent types at once. Shopify saves the choice, so it shows once per visitor.",
       "editor": "Show in theme editor",
@@ -429,7 +442,7 @@
       "search_bar": "Search bar",
       "search_bar_info": "Shows a search field instead of the icon, with suggestions as you type. Folds back to the icon on phones or when space runs out.",
       "ann_social": "Social media icons",
-      "ann_social_info": "Shown at the bar\u2019s left, from Theme settings > Social media. Phones show up to 3.",
+      "ann_social_info": "Shown at the bar’s left, from Theme settings > Social media. Phones show up to 3.",
       "ann_social_none": "Off",
       "ann_social_desktop": "Desktop only",
       "ann_social_all": "Desktop and mobile",
@@ -625,7 +638,10 @@
       "rows_layout": "Collapsible rows layout",
       "rows_layout_info": "Tabs show on desktop and tablets. Phones keep accordions.",
       "rows_accordion": "Accordion",
-      "rows_tabs": "Tabs"
+      "rows_tabs": "Tabs",
+      "source_metafield": "Product metafield",
+      "metafield_key": "Metafield namespace and key",
+      "metafield_key_info": "For example custom.materials or custom.care."
     },
     "main_collection": {
       "name": "Collection",
@@ -815,7 +831,7 @@
       "per_row_info": "Columns in a grid, or collections in view in a slideshow.",
       "see_all_link": "See all link",
       "see_all_link_info": "Shown top right. Leave empty to hide it.",
-      "link_label_info": "Leave empty for \u201cSee all\u201d.",
+      "link_label_info": "Leave empty for “See all”.",
       "fill_scheme": "Color scheme"
     },
     "image_text": {
@@ -829,7 +845,7 @@
       "pos_center": "Center",
       "pos_top": "Top left",
       "overlay_opacity": "Image tint",
-      "overlay_opacity_info": "Tints the image with the color scheme\u2019s background so the text stays readable. Use a dark scheme for light text.",
+      "overlay_opacity_info": "Tints the image with the color scheme’s background so the text stays readable. Use a dark scheme for light text.",
       "max_height": "Max image height on desktop",
       "max_height_info": "From 990px wide. The image crops around its focal point and the section still grows if the text needs more room.",
       "max_height_mobile": "Max image height on mobile",
@@ -990,6 +1006,9 @@
       "show_installments": "Show Shop Pay installments",
       "show_installments_info": "Shows when Shop Pay Installments is on in your payment settings.",
       "variant_picker": "Variant picker",
+      "also_in": "Also in",
+      "also_in_heading": "Heading",
+      "also_in_info": "Shows colour swatches that link to the same design, garment and gender in other colours. Hidden when there are no siblings.",
       "variant_picker_info": "A color option shows as thumbnails, other options as a scrolling row of chips.",
       "quantity": "Quantity selector",
       "quantity_info": "Placed right before the buy buttons, it sits beside the add to bag button.",
@@ -1009,7 +1028,7 @@
       "tile_3": "Tile 3",
       "tile_4": "Tile 4",
       "complementary": "Complementary products",
-      "complementary_info": "Complementary uses each product\u2019s complementary products metafield; Related is picked by Shopify. Hidden when empty.",
+      "complementary_info": "Complementary uses each product’s complementary products metafield; Related is picked by Shopify. Hidden when empty.",
       "limit": "Products to show",
       "text": "Text",
       "text_style": "Style",
@@ -1030,7 +1049,7 @@
       "below_media": "Below media",
       "below_media_info": "Blocks after this sit in a card under the media on desktop, filling the gap under the gallery. Phones keep the same order.",
       "show_rating": "Show rating",
-      "show_rating_info": "Stars under the title from the product\u2019s reviews.rating and reviews.rating_count metafields. Hidden when the product has no rating.",
+      "show_rating_info": "Stars under the title from the product’s reviews.rating and reviews.rating_count metafields. Hidden when the product has no rating.",
       "comp_source": "Products",
       "comp_source_both": "Complementary, then related",
       "comp_source_complementary": "Complementary",
@@ -1155,7 +1174,7 @@
       "coords": "Coordinates",
       "coords_info": "Latitude, longitude, for example 40.7128, -74.0060. Used for the map and distances.",
       "hours": "Opening hours",
-      "hours_info": "For example 10:00\u201318:00 or 9am\u20135pm. Leave a day empty or write Closed when the store is closed.",
+      "hours_info": "For example 10:00–18:00 or 9am–5pm. Leave a day empty or write Closed when the store is closed.",
       "mon": "Monday",
       "tue": "Tuesday",
       "wed": "Wednesday",
@@ -1277,7 +1296,11 @@
       "tag_mobile_info": "Under 750px wide. Bottom center shows the icon and label.",
       "m_same": "Same as desktop",
       "m_center": "Bottom center",
-      "m_hidden": "Hidden"
+      "m_hidden": "Hidden",
+      "exit_intent": "Open on exit intent",
+      "exit_intent_info": "Desktop only: also opens if the cursor moves toward the top edge to leave.",
+      "customer_tags": "Customer tags",
+      "customer_tags_info": "Comma-separated Shopify customer tags added on signup, e.g. newsletter, popup."
     },
     "features": {
       "info": "Icon and label items. Connect them to product metafields. Empty items hide, and the block hides when all are empty.",

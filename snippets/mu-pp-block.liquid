@@ -75,7 +75,7 @@
         # Low stock tip label: [count] is the number; empty uses the locale's "Last N".
         assign tip_text = 'products.last' | t: count: tip_count
         assign tip_text = tip_label | escape | replace: '[count]', tip_count | default: tip_text
-        # Size chart opener: beside the option named in the block (Size by default), or under the options.
+        # Size chart opener: on its own line under the size buttons for the option named in the block (Size by default), or under the options.
         capture sc_link
           render 'mu-size-chart', product: product, block: block, uid: uid, part: 'link'
         endcapture
@@ -94,7 +94,10 @@
       <div class="mu-pp__opts" {{ block.shopify_attributes }}>
         {%- for option in product.options_with_values -%}
           {%- assign oi = forloop.index0 -%}
-          {%- if oi == colour_index -%}
+          {%- assign opt_key = option.name | strip | downcase -%}
+          {%- if option.values.size == 1 and opt_key != 'size' -%}
+            <input type="hidden" name="mu-{{ uid }}-o{{ oi }}" value="{{ option.values.first | escape }}" data-option="{{ oi }}" data-value-id="{{ option.values.first.id }}" data-product-url="{{ option.values.first.product_url }}">
+          {%- elsif oi == colour_index -%}
             <fieldset class="mu-pp__opt mu-pp__colours">
               <legend class="visually-hidden">{{ option.name | escape }}</legend>
               <div class="mu-pp__colour-row">
@@ -149,7 +152,6 @@
           {%- else -%}
             <fieldset class="mu-pp__opt">
               <legend class="mu-pp__legend">{{ option.name | escape }}</legend>
-              {%- if oi == sc_at -%}{{ sc_link }}{%- endif -%}
               {%- liquid
                 # Words, not sizes: w1 when values average more than four characters ("150 ml kit", not "10.5").
                 assign all_v = option.values | join: ''
@@ -167,6 +169,7 @@
                   {%- endfor -%}
                 </div>
               </div>
+              {%- if oi == sc_at -%}{{ sc_link }}{%- endif -%}
             </fieldset>
           {%- endif -%}
         {%- endfor -%}
@@ -301,6 +304,15 @@
         assign body = product.description
       elsif b.source == 'page' and b.page != blank
         assign body = b.page.content
+      elsif b.source == 'metafield' and b.metafield_key != blank and product != blank
+        assign body = ''
+        assign mf_parts = b.metafield_key | strip | split: '.'
+        if mf_parts.size == 2
+          assign mf = product.metafields[mf_parts[0]][mf_parts[1]]
+          if mf != blank
+            assign body = mf | metafield_tag
+          endif
+        endif
       endif
     -%}
     {%- comment -%} Product page > Collapsible rows layout: Tabs turns the group into a tablist from 750px (assets/mu-product.js). The wrapper opens on the first row of a run and closes on the last, so the tags sit in different branches. {%- endcomment -%}
@@ -342,6 +354,10 @@
   {%- when 'sku', 'vendor' -%}
     {%- render 'mu-pp-meta', block: block, product: product, v: v, ph: ph -%}
 
+  {%- when 'also_in' -%}
+    {%- render 'mu-pp-also', block: block, product: product -%}
+
   {%- else -%}
     {%- render 'mu-pp-info', block: block -%}
 {%- endcase -%}
+

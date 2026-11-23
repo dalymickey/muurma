@@ -84,9 +84,9 @@ p { text-wrap: pretty; }
 .rte li + li { margin-top: .35em; }
 .rte li > :is(ul, ol) { margin-top: .35em; }
 .rte li::marker { color: var(--acc); }
-.rte table { display: block; overflow-x: auto; max-inline-size: 100%; border-collapse: collapse; font-size: .94em; }
-.rte :is(th, td) { padding: 10px 14px; border-block-end: 1px solid var(--bd); text-align: start; vertical-align: top; }
-.rte th { background: color-mix(in srgb, var(--fg) 6%, transparent); font-weight: var(--mu-font-body-bold); }
+.mu-rte table, .rte table { display: block; overflow-x: auto; max-inline-size: 100%; border-collapse: collapse; font-size: .94em; }
+.mu-rte :is(th, td), .rte :is(th, td) { padding: 10px 14px; border-block-end: 1px solid var(--bd); text-align: start; vertical-align: top; }
+.mu-rte th, .rte th { background: color-mix(in srgb, var(--fg) 6%, transparent); font-weight: var(--mu-font-body-bold); }
 .rte blockquote { padding: 4px 0 4px 18px; border-inline-start: 4px solid var(--acc); font-size: 1.1em; }
 .rte hr { height: 4px; border: 0; border-radius: 4px; background: var(--mu-g-hero); opacity: .5; }
 .rte img { border-radius: var(--mu-radius); }

@@ -570,6 +570,20 @@
       ]
     },
     {
+      "type": "also_in",
+      "name": "t:sections.product_blocks.also_in",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "t:sections.product_blocks.also_in_heading",
+          "default": "Also in",
+          "info": "t:sections.product_blocks.also_in_info"
+        }
+      ]
+    },
+    {
       "type": "quantity",
       "name": "t:sections.product_blocks.quantity",
       "limit": 1,
@@ -917,6 +931,10 @@
             {
               "value": "page",
               "label": "t:sections.main_product.source_page"
+            },
+            {
+              "value": "metafield",
+              "label": "t:sections.main_product.source_metafield"
             }
           ]
         },
@@ -929,6 +947,14 @@
           "type": "page",
           "id": "page",
           "label": "t:sections.main_product.page"
+        },
+        {
+          "type": "text",
+          "id": "metafield_key",
+          "label": "t:sections.main_product.metafield_key",
+          "info": "t:sections.main_product.metafield_key_info",
+          "placeholder": "custom.materials",
+          "visible_if": "{{ block.settings.source == 'metafield' }}"
         }
       ]
     },
@@ -2209,3 +2235,4 @@
   ]
 }
 {% endschema %}
+

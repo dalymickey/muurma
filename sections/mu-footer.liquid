@@ -40,7 +40,16 @@
           <h3 class="mu-eyebrow mu-muted">{{ block.settings.heading | default: block.settings.menu.title | escape }}</h3>
           <ul role="list">
             {%- for link in block.settings.menu.links -%}
-              <li><a href="{{ link.url }}">{{ link.title | escape }}</a></li>
+              <li>
+                <a href="{{ link.url }}">{{ link.title | escape }}</a>
+                {%- if link.links.size > 0 -%}
+                  <ul role="list" class="mu-footer__sub">
+                    {%- for child in link.links -%}
+                      <li><a href="{{ child.url }}">{{ child.title | escape }}</a></li>
+                    {%- endfor -%}
+                  </ul>
+                {%- endif -%}
+              </li>
             {%- endfor -%}
           </ul>
         </nav>
@@ -506,3 +515,4 @@
   ]
 }
 {% endschema %}
+

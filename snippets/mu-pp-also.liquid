@@ -1,0 +1,93 @@
+{%- comment -%}
+  Colour swatches that link to sibling products in the same design family
+  (same design, garment and gender, other colours). Reads custom.also_in
+  (list of product references) and paints each swatch from custom.colour_hex
+  / custom.colour_name. Hidden when there are no siblings. The current product
+  is marked, not linked.
+  Params: block, product.
+{%- endcomment -%}
+{%- liquid
+  assign also_in = product.metafields.custom.also_in.value
+  assign also_count = 0
+  assign has_current = false
+  if also_in != blank
+    for sib in also_in
+      if sib != blank
+        if sib.id == product.id
+          assign has_current = true
+        else
+          assign also_count = also_count | plus: 1
+        endif
+      endif
+    endfor
+  endif
+  assign colour_now = product.metafields.custom.colour_name.value
+  assign heading = block.settings.heading | default: ''
+  if heading == blank or heading == 'also_in' or heading == 'products.also_in'
+    assign heading = 'products.also_in' | t
+  endif
+  if heading == blank or heading contains 'translation missing'
+    assign heading = 'Also in'
+  endif
+-%}
+{%- if also_count > 0 -%}
+  <div class="mu-pp__opts mu-pp__also" {{ block.shopify_attributes }}>
+    <div class="mu-pp__opt mu-pp__colours">
+      <p class="mu-pp__legend">
+        {{ heading | escape }}{% if colour_now != blank %}<span class="mu-pp__also-now"> — {{ colour_now | escape }}</span>{% endif %}
+      </p>
+      <div class="mu-pp__colour-row" role="list">
+        {%- unless has_current -%}
+          {%- assign hex = product.metafields.custom.colour_hex.value -%}
+          {%- assign cname = colour_now | default: product.title -%}
+          <span class="mu-pp__colour is-current" role="listitem" aria-current="page">
+            <span class="mu-pp__tile" aria-hidden="true">
+              {%- if hex != blank -%}
+                <i style="background-color: {{ hex }};"></i>
+              {%- elsif product.featured_image -%}
+                <img src="{{ product.featured_image | image_url: width: 220 }}" alt="" width="66" height="66" loading="lazy">
+              {%- endif -%}
+            </span>
+            <span class="mu-pp__colour-name">{{ cname | escape }}</span>
+          </span>
+        {%- endunless -%}
+        {%- for sib in also_in -%}
+          {%- if sib == blank -%}{%- continue -%}{%- endif -%}
+          {%- assign is_current = false -%}
+          {%- if sib.id == product.id -%}{%- assign is_current = true -%}{%- endif -%}
+          {%- assign hex = sib.metafields.custom.colour_hex.value -%}
+          {%- assign cname = sib.metafields.custom.colour_name.value | default: sib.title -%}
+          {%- if is_current -%}
+            <span class="mu-pp__colour is-current" role="listitem" aria-current="page">
+              <span class="mu-pp__tile" aria-hidden="true">
+                {%- if hex != blank -%}
+                  <i style="background-color: {{ hex }};"></i>
+                {%- elsif sib.featured_image -%}
+                  <img src="{{ sib.featured_image | image_url: width: 220 }}" alt="" width="66" height="66" loading="lazy">
+                {%- endif -%}
+              </span>
+              <span class="mu-pp__colour-name">{{ cname | escape }}</span>
+            </span>
+          {%- else -%}
+            <a class="mu-pp__colour" href="{{ sib.url }}" role="listitem" aria-label="{{ cname | escape }}">
+              <span class="mu-pp__tile" aria-hidden="true">
+                {%- if hex != blank -%}
+                  <i style="background-color: {{ hex }};"></i>
+                {%- elsif sib.featured_image -%}
+                  <img src="{{ sib.featured_image | image_url: width: 220 }}" alt="" width="66" height="66" loading="lazy">
+                {%- endif -%}
+              </span>
+              <span class="mu-pp__colour-name">{{ cname | escape }}</span>
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+{%- elsif request.design_mode -%}
+  <div class="mu-pp__opts mu-pp__also mu-pp__also--placeholder" {{ block.shopify_attributes }}>
+    <p class="mu-pp__legend">{{ heading | escape }}</p>
+    <p class="mu-muted">Add sibling colourways to the Also in metafield to show swatches here. This note only shows in the editor.</p>
+  </div>
+{%- endif -%}
+

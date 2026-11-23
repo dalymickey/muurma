@@ -1046,6 +1046,20 @@
         ]
       },
       {
+        "type": "color",
+        "id": "card_media_bg",
+        "label": "t:settings.cards.media_bg",
+        "info": "t:settings.cards.media_bg_info",
+        "default": "#ffffff"
+      },
+      {
+        "type": "color",
+        "id": "product_media_bg",
+        "label": "t:settings.cards.product_media_bg",
+        "info": "t:settings.cards.product_media_bg_info",
+        "default": "#ffffff"
+      },
+      {
         "type": "select",
         "id": "card_mobile_size",
         "label": "t:settings.cards.mobile_size",

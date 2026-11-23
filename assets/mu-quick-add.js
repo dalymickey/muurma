@@ -195,7 +195,7 @@
 
     const current = () => {
       const picked = [];
-      radios.forEach((r) => { if (r.checked) picked[+r.dataset.qaOption] = r.value; });
+      radios.forEach((r) => { if (r.checked || r.type === 'hidden') picked[+r.dataset.qaOption] = r.value; });
       return variants.find((v) => v.options.every((o, i) => o === picked[i]));
     };
     const update = (changed) => {

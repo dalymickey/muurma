@@ -65,13 +65,16 @@
     if (design) return;
     if (d.dataset.openNow && location.hash === '#' + d.dataset.openNow) { open(d); return; }
     const delay = Number(d.dataset.auto);
-    if (delay < 0 || muted(d)) return;
-    // One overlay at a time: age verification, then the cookie banner, then this (it waits for the shopper's choice).
     const go = () => { if (!document.querySelector('dialog[open]') && !muted(d)) open(d); };
     const timed = () => {
       if (window.kzConsentWait) document.addEventListener('ks:consent-done', () => setTimeout(go, 800), { once: true });
       else go();
     };
+    if (d.dataset.exit === 'true') {
+      const onExit = (e) => { if (e.clientY <= 0) { document.removeEventListener('mouseleave', onExit); timed(); } };
+      document.addEventListener('mouseleave', onExit);
+    }
+    if (delay < 0 || muted(d)) return;
     // The delay counts from the shopper's first scroll, tap, click or key press, so a page nobody has touched yet
     // (a background tab, a speed test) never opens a popup over the first paint.
     const evs = ['scroll', 'pointerdown', 'keydown', 'touchstart'];
@@ -83,13 +86,13 @@
   const tags = (() => {
     const list = new Set();
     let lastY = window.scrollY, anchor = lastY, raf = 0;
-    const dlg = (t) => document.getElementById('MuPopup-' + t.dataset.kzPopupTag);
+    const dlg = (t) => document.getElementById('MuPopup-' + t.dataset.muPopupTag);
     const wanted = (t) => {
       const d = dlg(t);
       if (!d || d.open) return false;
       if (design) return true;
       if (t.dataset.kind === 'newsletter' && getL(SIGNED)) return false;
-      if (t.dataset.when === 'closed' && !getL(CLOSED + t.dataset.kzPopupTag)) return false;
+      if (t.dataset.when === 'closed' && !getL(CLOSED + t.dataset.muPopupTag)) return false;
       return true;
     };
     const shown = (el) => {
@@ -200,13 +203,13 @@
     // The header turns solid, sticks or opens its search in its own scroll handler; follow its classes.
     const hd = document.querySelector('.mu-header');
     if (hd) mo.observe(hd, { attributes: true, attributeFilter: ['class'] });
-    const remove = (id) => list.forEach((t) => { if (t.dataset.kzPopupTag === id) { t.remove(); list.delete(t); } });
+    const remove = (id) => list.forEach((t) => { if (t.dataset.muPopupTag === id) { t.remove(); list.delete(t); } });
     return { add, update, watch, remove };
   })();
 
   const strings = (d) => { try { return JSON.parse(d.querySelector('[data-strings]').textContent); } catch (e) { return {}; } };
   const copyCode = async (d, btn) => {
-    const code = btn.dataset.kzPopupCopy;
+    const code = btn.dataset.muPopupCopy;
     const live = d.querySelector('[data-mu-popup-live]');
     const t = strings(d);
     let ok = false;

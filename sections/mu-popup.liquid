@@ -1,0 +1,206 @@
+{%- comment -%}
+  Popup: a newsletter sign-up or a promo, in a modal dialog (focus stays inside, Esc and the backdrop close it, the
+  page behind can't scroll). Where you add it sets where it can appear: in the footer group it's on every page; in a
+  template it's on every page that uses that template. It can open by itself after a delay (counted from the first
+  scroll, tap or key press) and/or on exit intent, at most once per visit, week or ever (counted from when a shopper
+  closes it), and its tag opens it at any time.
+  Discount code: an optional discount code in a pill that copies it (works in both promo and newsletter modes).
+{%- endcomment -%}
+{%- liquid
+  assign s = section.settings
+  assign kind = s.type | default: 'newsletter'
+  assign img = blank
+  if s.show_image and s.image != blank
+    assign img = s.image
+  endif
+  assign form_id = 'mu-pop-form-' | append: section.id
+  assign title_id = 'mu-pop-title-' | append: section.id
+  assign open_now = false
+  assign signed = false
+  assign code = s.code | strip
+  assign picks = s.products
+  if kind == 'promo'
+    assign picks_n = 0
+    for p in picks limit: 4
+      assign picks_n = picks_n | plus: 1
+    endfor
+  endif
+-%}
+{%- capture body -%}
+  {%- if s.eyebrow != blank -%}<p class="mu-pop__eyebrow mu-chip">{{ s.eyebrow | escape }}</p>{%- endif -%}
+  {%- if s.heading != blank -%}<h2 class="mu-pop__title" id="{{ title_id }}">{{ s.heading }}</h2>{%- endif -%}
+  {%- liquid
+    assign pop_text = s.text
+    if kind == 'promo' and pop_text == '<p>New drops, restocks and members-only codes. One email a week, tops.</p>'
+      if code != blank
+        assign pop_text = 'popup.promo_text' | t | prepend: '<p>' | append: '</p>'
+      else
+        assign pop_text = 'popup.promo_text_picks' | t | prepend: '<p>' | append: '</p>'
+      endif
+    endif
+  -%}
+  {%- if pop_text != blank -%}<div class="mu-pop__text mu-muted">{{ pop_text }}</div>{%- endif -%}
+  {%- if code != blank -%}
+    <button type="button" class="mu-pop__code" data-mu-popup-copy="{{ code | escape }}">
+      <span class="mu-pop__code-text mu-num">{{ code | escape }}</span>
+      <span class="mu-pop__code-ic" aria-hidden="true">
+        {%- render 'mu-icon', name: 'copy', class: 'mu-pop__i-copy' -%}
+        {%- render 'mu-icon', name: 'check', class: 'mu-pop__i-done' -%}
+        {%- if s.copied_text != blank -%}<span class="mu-pop__code-done">{{ s.copied_text | escape }}</span>{%- endif -%}
+      </span>
+      <span class="visually-hidden">{{ 'popup.copy' | t }}</span>
+    </button>
+  {%- endif -%}
+  {%- if kind == 'promo' -%}
+    {%- if picks_n > 0 -%}
+      <ul class="mu-pop__picks mu-pop__picks--{{ picks_n }}" role="list" style="--picks: {{ picks_n }}">
+        {%- for p in picks limit: 4 -%}
+          <li>
+            <a class="mu-pop__pick" href="{{ p.url }}">
+              <span class="mu-pop__pick-media">
+                {%- assign pimg = p.featured_media.preview_image -%}
+                {%- if pimg -%}{{ pimg | image_url: width: 400 | image_tag: class: 'mu-pop__pick-img', loading: 'lazy', widths: '160, 240, 320, 400', sizes: '(min-width: 750px) 140px, 28vw', alt: '' }}{%- endif -%}
+              </span>
+              <span class="mu-pop__pick-title">{{ p.title | escape }}</span>
+              {%- render 'mu-price', product: p -%}
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+    {%- if s.button_label != blank -%}
+      {%- if s.button_link != blank -%}
+        <a class="mu-btn mu-pop__btn" href="{{ s.button_link }}">{{ s.button_label | escape }}</a>
+      {%- else -%}
+        <button type="button" class="mu-btn mu-pop__btn" data-mu-popup-close>{{ s.button_label | escape }}</button>
+      {%- endif -%}
+    {%- endif -%}
+  {%- else -%}
+    {%- assign nl_tags = s.customer_tags | strip | default: 'newsletter, popup' -%}
+    {%- form 'customer', class: 'mu-pop__form', id: form_id -%}
+      <input type="hidden" name="contact[tags]" value="{{ nl_tags | escape }}">
+      {%- if form.posted_successfully? -%}
+        {%- assign open_now = true -%}
+        {%- assign signed = true -%}
+        <p class="mu-pop__done" role="status">{% if s.success_text != blank %}{{ s.success_text | escape }}{% else %}{{ 'newsletter.success' | t }}{% endif %}</p>
+      {%- else -%}
+        {%- if form.errors -%}{%- assign open_now = true -%}{%- endif -%}
+        <label class="visually-hidden" for="mu-pop-email-{{ section.id }}">{{ 'newsletter.email' | t }}</label>
+        <input class="mu-input" id="mu-pop-email-{{ section.id }}" type="email" name="contact[email]" autocomplete="email" required placeholder="{{ 'newsletter.email' | t }}"{% if form.errors %} aria-invalid="true" aria-describedby="mu-pop-err-{{ section.id }}"{% endif %}>
+        <button class="mu-btn" type="submit">{% if s.submit_label != blank %}{{ s.submit_label | escape }}{% else %}{{ 'newsletter.submit' | t }}{% endif %}</button>
+        {%- assign terms_id = 'mu-pop-terms-' | append: section.id -%}
+        {%- render 'mu-nl-terms', id: terms_id -%}
+        {%- if form.errors -%}<p class="mu-pop__err" id="mu-pop-err-{{ section.id }}">{{ form.errors.translated_fields.email | capitalize }} {{ form.errors.messages.email }}</p>{%- endif -%}
+      {%- endif -%}
+    {%- endform -%}
+  {%- endif -%}
+{%- endcapture -%}
+{{ 'mu-popup.css' | asset_url | stylesheet_tag }}
+<dialog
+  class="mu-pop color-{{ s.color_scheme }}{% if img != blank %} mu-pop--img{% endif %}"
+  id="MuPopup-{{ section.id }}"
+  data-mu-popup="{{ kind }}"
+  data-section="{{ section.id }}"
+  data-auto="{% if s.auto_open %}{{ s.delay }}{% else %}-1{% endif %}"
+  data-exit="{{ s.exit_intent }}"
+  data-freq="{{ s.frequency }}"
+  {%- if open_now %} data-open-now="{{ form_id }}"{% endif %}
+  {%- if signed %} data-signed{% endif %}
+  {%- if s.heading != blank %} aria-labelledby="{{ title_id }}"{% else %} aria-label="{% if kind == 'promo' %}{{ 'popup.label_promo' | t }}{% else %}{{ 'popup.label_newsletter' | t }}{% endif %}"{% endif %}
+>
+  <div class="mu-pop__panel">
+    <button type="button" class="mu-btn mu-btn--ghost mu-btn--icon mu-pop__close" data-mu-popup-close autofocus>{% render 'mu-icon', name: 'close' %}<span class="visually-hidden">{{ 'general.close' | t }}</span></button>
+    {%- if img != blank -%}
+      {%- assign img_alt = img.alt | default: '' -%}
+      <div class="mu-pop__media">
+        {% render 'mu-img', image: img, max: 1200, class: 'mu-pop__img', sizes: '(min-width: 750px) 400px, 100vw', alt: img_alt %}
+      </div>
+    {%- endif -%}
+    <div class="mu-pop__body">
+      {{ body }}
+      <span class="visually-hidden" aria-live="polite" data-mu-popup-live></span>
+    </div>
+  </div>
+  <script type="application/json" data-strings>{"copied":{% if s.copied_text != blank %}{{ s.copied_text | json }}{% else %}{{ 'popup.copied' | t | json }}{% endif %},"failed":{{ 'popup.copy_failed' | t | json }}}</script>
+</dialog>
+{%- if s.show_tag -%}
+  {%- liquid
+    assign tag_label = s.tag_label | strip
+    if tag_label == blank
+      assign tag_label = s.heading | strip_html | strip | truncate: 32
+    endif
+    if tag_label == blank
+      if kind == 'promo'
+        assign tag_label = 'popup.tag_promo' | t
+      else
+        assign tag_label = 'popup.tag_newsletter' | t
+      endif
+    endif
+    assign tag_pos = s.tag_position | default: 'middle_right'
+    assign tag_parts = tag_pos | split: '_'
+    assign tag_shape = 'corner'
+    if tag_parts[0] == 'middle'
+      assign tag_shape = 'edge'
+    endif
+    assign tag_m = s.tag_mobile | default: 'same'
+  -%}
+  <button
+    type="button"
+    class="mu-ptag mu-ptag--{{ tag_pos }} mu-ptag--{{ tag_shape }} mu-ptag--{{ tag_parts[0] }} mu-ptag--{{ tag_parts[1] }} mu-ptag--s-{{ s.tag_scroll | default: 'fixed' }} mu-ptag--m-{{ tag_m }}{% if s.tag_pulse %} mu-ptag--pulse{% endif %} color-{{ s.color_scheme }}"
+    data-mu-popup-tag="{{ section.id }}"
+    data-kind="{{ kind }}"
+    data-when="{{ s.tag_visibility | default: 'always' }}"
+    data-pos="{{ tag_pos }}"
+    data-scroll="{{ s.tag_scroll | default: 'fixed' }}"
+    data-mobile="{{ tag_m }}"
+    aria-haspopup="dialog"
+    aria-controls="MuPopup-{{ section.id }}"
+    {%- if tag_shape == 'corner' %} aria-label="{{ tag_label | escape }}"{% endif %}
+    hidden
+  >
+    {%- render 'mu-icon', name: s.tag_icon, class: 'mu-ptag__i' -%}
+    {%- if tag_shape == 'edge' or tag_m == 'center' -%}<span class="mu-ptag__label">{{ tag_label | escape }}</span>{%- endif -%}
+  </button>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "t:sections.popup.name",
+  "class": "mu-popup-section",
+  "disabled_on": { "groups": ["header"] },
+  "settings": [
+    { "type": "paragraph", "content": "t:sections.popup.info" },
+    { "type": "select", "id": "type", "label": "t:sections.popup.type", "options": [{ "value": "newsletter", "label": "t:sections.popup.type_newsletter" }, { "value": "promo", "label": "t:sections.popup.type_promo" }], "default": "newsletter" },
+    { "type": "color_scheme", "id": "color_scheme", "label": "t:settings.colors.scheme", "default": "scheme-1" },
+    { "type": "header", "content": "t:sections.popup.opening" },
+    { "type": "checkbox", "id": "auto_open", "label": "t:sections.popup.auto_open", "info": "t:sections.popup.auto_open_info", "default": true },
+    { "type": "range", "id": "delay", "label": "t:sections.popup.delay", "info": "t:sections.popup.delay_info", "min": 0, "max": 60, "step": 1, "unit": "s", "default": 8, "visible_if": "{{ section.settings.auto_open }}" },
+    { "type": "checkbox", "id": "exit_intent", "label": "t:sections.popup.exit_intent", "info": "t:sections.popup.exit_intent_info", "default": false, "visible_if": "{{ section.settings.auto_open }}" },
+    { "type": "select", "id": "frequency", "label": "t:sections.popup.frequency", "info": "t:sections.popup.frequency_info", "options": [{ "value": "session", "label": "t:sections.popup.freq_session" }, { "value": "week", "label": "t:sections.popup.freq_week" }, { "value": "once", "label": "t:sections.popup.freq_once" }], "default": "week", "visible_if": "{{ section.settings.auto_open }}" },
+    { "type": "header", "content": "t:sections.popup.content" },
+    { "type": "checkbox", "id": "show_image", "label": "t:sections.popup.show_image", "default": false },
+    { "type": "image_picker", "id": "image", "label": "t:sections.common.image", "visible_if": "{{ section.settings.show_image }}" },
+    { "type": "text", "id": "eyebrow", "label": "t:sections.common.eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.common.heading", "default": "New Sketches, when they're ready." },
+    { "type": "richtext", "id": "text", "label": "t:sections.common.text", "default": "<p>New drops, restocks and members-only codes. One email a week, tops.</p>" },
+    { "type": "text", "id": "submit_label", "label": "t:sections.popup.submit_label", "info": "t:sections.popup.submit_label_info", "visible_if": "{{ section.settings.type == 'newsletter' }}" },
+    { "type": "text", "id": "success_text", "label": "t:sections.popup.success_text", "info": "t:sections.popup.success_text_info", "visible_if": "{{ section.settings.type == 'newsletter' }}" },
+    { "type": "text", "id": "customer_tags", "label": "t:sections.popup.customer_tags", "info": "t:sections.popup.customer_tags_info", "default": "newsletter, popup", "visible_if": "{{ section.settings.type == 'newsletter' }}" },
+    { "type": "text", "id": "code", "label": "t:sections.popup.code", "info": "t:sections.popup.code_info" },
+    { "type": "text", "id": "copied_text", "label": "t:sections.popup.copied_text", "default": "Copied" },
+    { "type": "product_list", "id": "products", "label": "t:sections.popup.products", "info": "t:sections.popup.products_info", "limit": 4 },
+    { "type": "text", "id": "button_label", "label": "t:sections.common.button_label", "default": "Continue shopping", "visible_if": "{{ section.settings.type == 'promo' }}" },
+    { "type": "url", "id": "button_link", "label": "t:sections.common.link", "info": "t:sections.popup.button_link_info", "visible_if": "{{ section.settings.type == 'promo' }}" },
+    { "type": "header", "content": "t:sections.popup.tag" },
+    { "type": "checkbox", "id": "show_tag", "label": "t:sections.popup.show_tag", "info": "t:sections.popup.show_tag_info", "default": false },
+    { "type": "select", "id": "tag_visibility", "label": "t:sections.popup.tag_visibility", "info": "t:sections.popup.tag_visibility_info", "options": [{ "value": "always", "label": "t:sections.popup.tag_vis_always" }, { "value": "closed", "label": "t:sections.popup.tag_vis_closed" }], "default": "always", "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "select", "id": "tag_position", "label": "t:sections.popup.tag_position", "info": "t:sections.popup.tag_position_info", "options": [{ "value": "middle_left", "label": "t:sections.popup.pos_middle_left" }, { "value": "middle_right", "label": "t:sections.popup.pos_middle_right" }, { "value": "top_left", "label": "t:sections.popup.pos_top_left" }, { "value": "top_right", "label": "t:sections.popup.pos_top_right" }, { "value": "bottom_left", "label": "t:sections.popup.pos_bottom_left" }, { "value": "bottom_right", "label": "t:sections.popup.pos_bottom_right" }], "default": "middle_right", "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "text", "id": "tag_label", "label": "t:sections.popup.tag_label", "info": "t:sections.popup.tag_label_info", "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "select", "id": "tag_icon", "label": "t:sections.popup.tag_icon", "options": [{ "value": "gift", "label": "t:sections.popup.icon_gift" }, { "value": "mail", "label": "t:sections.popup.icon_mail" }, { "value": "percent", "label": "t:sections.popup.icon_percent" }], "default": "gift", "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "checkbox", "id": "tag_pulse", "label": "t:sections.popup.tag_pulse", "info": "t:sections.popup.tag_pulse_info", "default": true, "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "select", "id": "tag_scroll", "label": "t:sections.popup.tag_scroll", "info": "t:sections.popup.tag_scroll_info", "options": [{ "value": "fixed", "label": "t:sections.popup.scroll_fixed" }, { "value": "page", "label": "t:sections.popup.scroll_page" }, { "value": "hide", "label": "t:sections.popup.scroll_hide" }], "default": "fixed", "visible_if": "{{ section.settings.show_tag }}" },
+    { "type": "select", "id": "tag_mobile", "label": "t:sections.popup.tag_mobile", "info": "t:sections.popup.tag_mobile_info", "options": [{ "value": "same", "label": "t:sections.popup.m_same" }, { "value": "center", "label": "t:sections.popup.m_center" }, { "value": "hidden", "label": "t:sections.popup.m_hidden" }], "default": "same", "visible_if": "{{ section.settings.show_tag }}" }
+  ],
+  "presets": [{ "name": "t:sections.popup.name" }]
+}
+{% endschema %}

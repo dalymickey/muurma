@@ -18,7 +18,7 @@
         "logo_width": 140,
         "menu": "main-menu",
         "highlight_items": "",
-        "ann_scheme": "",
+        "ann_scheme": "scheme-1",
         "ann_social": "none",
         "ann_speed": 5,
         "ann_arrows": true,
@@ -37,7 +37,19 @@
         "store_desktop": false,
         "store_mobile": false,
         "store_icon": "pin"
-      }
+      },
+      "blocks": {
+        "ann_1": {
+          "type": "announcement",
+          "settings": {
+            "text": "Sketch 001 / The Break — out now. Designed on the east coast.",
+            "link": "/collections/sketch-001-the-break"
+          }
+        }
+      },
+      "block_order": [
+        "ann_1"
+      ]
     }
   },
   "order": [

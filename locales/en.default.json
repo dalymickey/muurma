@@ -1,4 +1,14 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin language editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
+  "also_in": "Also in",
   "accessibility": {
     "skip": "Skip to content",
     "back_to_top": "Back to top"
@@ -66,6 +76,7 @@
     "trust_empty": "Add a label to at least one item. This message only shows in the theme editor.",
     "email": "Email",
     "value_sold_out": "{{ value }}, sold out",
+    "also_in": "Also in",
     "last": "Last {{ count }}",
     "low_stock": "Only {{ count }} left of this option",
     "gallery": "Product images",
@@ -542,3 +553,4 @@
     "no": "No"
   }
 }
+

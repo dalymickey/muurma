@@ -63,7 +63,10 @@
     {%- unless single -%}
       {%- for option in product.options_with_values -%}
         {%- assign oi = forloop.index0 -%}
-        {%- if oi == colour_index -%}
+        {%- assign opt_key = option.name | strip | downcase -%}
+        {%- if option.values.size == 1 and opt_key != 'size' -%}
+          <input type="hidden" name="option{{ forloop.index }}" value="{{ option.values.first | escape }}" data-qa-option="{{ oi }}" data-value-id="{{ option.values.first.id }}"{% if option.values.first.product_url != blank %} data-product-url="{{ option.values.first.product_url }}"{% endif %}>
+        {%- elsif oi == colour_index -%}
           {%- comment -%} Colour: the product page's thumbnail tiles (variant image, else the swatch), name underneath. {%- endcomment -%}
           <fieldset class="mu-qa__opt">
             <legend>{{ option.name | escape }}</legend>

@@ -27,6 +27,8 @@
     "cookie_editor": false,
     "animations": true,
     "card_style": "plain",
+    "card_media_bg": "#ffffff",
+    "product_media_bg": "#ffffff",
     "card_quick_view": true,
     "social_instagram": "https://instagram.com/muurma.apparel",
     "social_facebook": "https://facebook.com/muurma.apparel",
@@ -136,7 +138,12 @@
           "sale": "#2b2c2b"
         }
       }
-    }
+    },
+    "back_to_top": true,
+    "back_to_top_phone": true,
+    "back_to_top_position": "right",
+    "back_to_top_progress": true,
+    "back_to_top_scheme": "scheme-4"
   },
   "presets": {
     "MUURMA": {
@@ -251,6 +258,8 @@
       "texture": "none",
       "cart_type": "drawer",
       "card_style": "plain",
+      "card_media_bg": "#ffffff",
+      "product_media_bg": "#ffffff",
       "surface_style": "soft",
       "card_quick_view": true,
       "animations": true
