@@ -23,21 +23,20 @@
     "texture": "none",
     "surface_style": "soft",
     "cart_type": "drawer",
-    "back_to_top": true,
-    "back_to_top_phone": true,
-    "back_to_top_position": "right",
-    "back_to_top_progress": true,
-    "back_to_top_scheme": "scheme-4",
+    "cart_discount": true,
     "cookie_banner": true,
     "cookie_editor": false,
     "animations": true,
-    "card_style": "plain",
+    "card_style": "label",
     "card_media_bg": "#ffffff",
     "product_media_bg": "#ffffff",
     "card_quick_view": true,
+    "card_quick_buy_label": "Buy Now",
+    "card_sale_badge": "text",
+    "card_title_size": "large",
+    "card_rating": false,
     "social_instagram": "https://instagram.com/muurma.apparel",
     "social_facebook": "https://facebook.com/muurma.apparel",
-    "logo_light": "shopify://shop_images/Web_Logo_White_a79ac354-1c5c-43a8-b474-a868368da6c1.png",
     "sections": {
       "mu-cart-drawer": {
         "type": "mu-cart-drawer",
@@ -144,7 +143,12 @@
           "sale": "#2b2c2b"
         }
       }
-    }
+    },
+    "back_to_top": true,
+    "back_to_top_phone": true,
+    "back_to_top_position": "right",
+    "back_to_top_progress": true,
+    "back_to_top_scheme": "scheme-4"
   },
   "presets": {
     "MUURMA": {
