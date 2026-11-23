@@ -90,8 +90,8 @@
         "tag_label": "First to know",
         "tag_icon": "mail",
         "tag_pulse": true,
-        "tag_scroll": "fixed",
-        "tag_mobile": "same"
+        "tag_scroll": "page",
+        "tag_mobile": "hidden"
       }
     }
   },
