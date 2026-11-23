@@ -17,17 +17,17 @@
         "heading": "The Break",
         "heading_tag": "h1",
         "subheading": "A breaking wave, held in contour. Designed on the east coast.",
-      "button_label": "Shop Study 001",
-      "button_link": "/collections/study-001-the-break",
-        "header_text": "auto",
-      "button_style": "primary",
-      "button_label_2": "How we make it",
-      "button_link_2": "/pages/story",
-      "button_style_2": "ghost",
+        "button_label": "Shop Study 001",
+        "button_link": "/collections/study-001-the-break",
+        "button_style": "primary",
+        "button_label_2": "How we make it",
+        "button_link_2": "/pages/story",
+        "button_style_2": "ghost",
         "fine": "Small runs. Zero dead stock. Shipped worldwide.",
         "demo_image": "mu-hero-back.jpg",
         "overlay_color": "#2b2c2b",
         "overlay_opacity": 80,
+        "header_text": "auto",
         "show_grain": true,
         "grain_opacity": 42,
         "show_contour": true,
@@ -44,7 +44,7 @@
       "settings": {
         "color_scheme": "scheme-1",
         "heading": "Study 001",
-        "collection": "study-001-the-break",
+        "collection": "sketch-001-the-break",
         "show_link": true
       }
     },
@@ -52,8 +52,8 @@
       "type": "mu-image-text",
       "settings": {
         "color_scheme": "scheme-2",
-        "image_side": "right",
         "demo_image": "mu-hero-front.jpg",
+        "image_side": "right",
         "eyebrow": "How we make it",
         "heading": "Made for you. Not for a warehouse.",
         "text": "<p>Each Study is designed on the east coast and made in small runs — for you, not for a warehouse. No dead stock, and a new one every Thursday.</p>",
@@ -103,16 +103,16 @@
         "color_scheme": "scheme-4",
         "full_width": true,
         "layout": "split",
-        "eyebrow": "Next drop",
-      "heading": "Thursday, again.",
-      "end": "2026-11-26T18:00:00+11:00",
-      "button_label": "Shop the studies",
-        "link": "/collections/studies",
-        "date_label": "Drops",
+        "end": "2026-11-26T18:00:00+11:00",
         "show_seconds": false,
+        "date_label": "Drops",
         "after_end": "message",
         "end_title": "It's live",
-        "end_message": "This week's study is up."
+        "end_message": "This week's study is up.",
+        "eyebrow": "Next drop",
+        "heading": "Thursday, again.",
+        "button_label": "Shop the studies",
+        "link": "/collections/studies"
       }
     },
     "gallery": {
@@ -139,9 +139,9 @@
       ],
       "settings": {
         "color_scheme": "scheme-1",
+        "caption_style": "overlay",
         "eyebrow": "In contour",
-        "heading": "The break",
-        "caption_style": "overlay"
+        "heading": "The break"
       }
     },
     "note": {
