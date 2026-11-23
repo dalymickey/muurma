@@ -187,7 +187,7 @@
         "round_bl": true,
         "round_br": true,
         "heading": "Sketches",
-        "layout_desktop": "grid",
+        "layout_desktop": "slider",
         "per_row": 3,
         "show_link": true,
         "link": "shopify://collections",
