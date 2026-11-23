@@ -105,8 +105,8 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
-        "demo_image": "mu-hero-front.jpg",
         "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
+        "demo_image": "mu-hero-front.jpg",
         "image_side": "right",
         "overlay_position": "bottom",
         "overlay_opacity": 45,
@@ -143,20 +143,20 @@
             "fill_scheme": ""
           }
         },
-        "tees": {
-          "type": "collection",
-          "settings": {
-            "collection": "tees",
-            "label": "Tees",
-            "fill": "band",
-            "fill_scheme": ""
-          }
-        },
         "crews": {
           "type": "collection",
           "settings": {
             "collection": "crews",
             "label": "Crews",
+            "fill": "band",
+            "fill_scheme": ""
+          }
+        },
+        "tees": {
+          "type": "collection",
+          "settings": {
+            "collection": "tees",
+            "label": "Tees",
             "fill": "band",
             "fill_scheme": ""
           }
