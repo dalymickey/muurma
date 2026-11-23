@@ -254,8 +254,9 @@
         "back": {
           "type": "tile",
           "settings": {
+            "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
             "demo_image": "mu-hero-back.jpg",
-            "caption": "Sketch 001, back",
+            "caption": "Sketch 001, front",
             "link": "",
             "products": []
           }
@@ -263,8 +264,9 @@
         "front": {
           "type": "tile",
           "settings": {
+            "image": "shopify://shop_images/1795430604972-ic9cuqbklw8.png",
             "demo_image": "mu-hero-front.jpg",
-            "caption": "Sketch 001, front",
+            "caption": "Sketch 001, back",
             "link": "",
             "products": []
           }
