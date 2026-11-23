@@ -23,7 +23,7 @@
         "demo_image": "mu-hero-front.jpg",
         "eyebrow": "East coast",
         "heading": "Held in contour.",
-        "text": "<p>The drawings come from the coastline we live on. Each Study is designed here, made in small runs, and shipped to wherever you are.</p>"
+        "text": "<p>The drawings come from the coastline we live on. Each Sketch is designed here, made in small runs, and shipped to wherever you are.</p>"
       }
     },
     "rich": {
@@ -31,7 +31,7 @@
       "settings": {
         "color_scheme": "scheme-1",
         "heading": "Zero dead stock.",
-        "text": "<p>Nothing sits waiting in a warehouse. A new Study goes up every Thursday, in a small run, and ships worldwide.</p>"
+        "text": "<p>Nothing sits waiting in a warehouse. A new Sketch drops when it's ready, in a small run, and ships worldwide.</p>"
       }
     }
   },

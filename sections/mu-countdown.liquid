@@ -69,7 +69,7 @@
     assign end_say = end_msg
   endif
   assign card = false
-  if s.after_end == 'message' or request.design_mode
+  if request.design_mode and s.after_end == 'message'
     if end_title != blank or end_msg != blank or end_btn
       assign card = true
     endif
@@ -77,10 +77,8 @@
   assign show = false
   if request.design_mode
     assign show = true
-  elsif end_s > 0
-    if ended == false or s.after_end == 'message'
-      assign show = true
-    endif
+  elsif end_s > 0 and ended == false
+    assign show = true
   endif
   assign link = s.link | default: routes.all_products_collection_url
   assign end_link = link

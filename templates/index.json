@@ -12,22 +12,22 @@
     "hero": {
       "type": "mu-banner",
       "settings": {
-        "eyebrow": "New drop every Thursday",
-        "study": "Study 001",
+        "eyebrow": "Drops when it's ready",
+        "study": "Sketch 001",
         "heading": "The Break",
         "heading_tag": "h1",
         "subheading": "A breaking wave, held in contour. Designed on the east coast.",
-        "button_label": "Shop Study 001",
-        "button_link": "/collections/study-001-the-break",
-        "button_style": "primary",
-        "button_label_2": "How we make it",
-        "button_link_2": "/pages/story",
-        "button_style_2": "ghost",
+      "button_label": "Shop Sketch 001",
+      "button_link": "/collections/sketch-001-the-break",
+        "header_text": "auto",
+      "button_style": "primary",
+      "button_label_2": "How we make it",
+      "button_link_2": "/pages/story",
+      "button_style_2": "ghost",
         "fine": "Small runs. Zero dead stock. Shipped worldwide.",
         "demo_image": "mu-hero-back.jpg",
         "overlay_color": "#2b2c2b",
         "overlay_opacity": 80,
-        "header_text": "auto",
         "show_grain": true,
         "grain_opacity": 42,
         "show_contour": true,
@@ -43,7 +43,7 @@
       "type": "mu-featured-collection",
       "settings": {
         "color_scheme": "scheme-1",
-        "heading": "Study 001",
+        "heading": "Sketch 001",
         "collection": "sketch-001-the-break",
         "show_link": true
       }
@@ -52,11 +52,11 @@
       "type": "mu-image-text",
       "settings": {
         "color_scheme": "scheme-2",
-        "demo_image": "mu-hero-front.jpg",
         "image_side": "right",
+        "demo_image": "mu-hero-front.jpg",
         "eyebrow": "How we make it",
         "heading": "Made for you. Not for a warehouse.",
-        "text": "<p>Each Study is designed on the east coast and made in small runs — for you, not for a warehouse. No dead stock, and a new one every Thursday.</p>",
+        "text": "<p>Each Sketch is designed on the east coast and made in small runs — for you, not for a warehouse. No dead stock. A new one drops when it's ready.</p>",
         "cta_label": "The story",
         "cta_link": "/pages/story"
       }
@@ -93,7 +93,7 @@
       ],
       "settings": {
         "color_scheme": "scheme-1",
-        "heading": "Studies",
+        "heading": "Sketches",
         "per_row": 3
       }
     },
@@ -103,16 +103,16 @@
         "color_scheme": "scheme-4",
         "full_width": true,
         "layout": "split",
-        "end": "2026-11-26T18:00:00+11:00",
-        "show_seconds": false,
-        "date_label": "Drops",
-        "after_end": "message",
-        "end_title": "It's live",
-        "end_message": "This week's study is up.",
         "eyebrow": "Next drop",
-        "heading": "Thursday, again.",
-        "button_label": "Shop the studies",
-        "link": "/collections/studies"
+      "heading": "Next Sketch.",
+      "end": "2026-11-26T18:00:00+11:00",
+      "button_label": "Shop the sketches",
+        "link": "/collections/sketches",
+        "date_label": "Drops",
+        "show_seconds": false,
+        "after_end": "hide",
+        "end_title": "It's live",
+        "end_message": "This Sketch is up."
       }
     },
     "gallery": {
@@ -122,14 +122,14 @@
           "type": "tile",
           "settings": {
             "demo_image": "mu-hero-back.jpg",
-            "caption": "Study 001, back"
+            "caption": "Sketch 001, back"
           }
         },
         "front": {
           "type": "tile",
           "settings": {
             "demo_image": "mu-hero-front.jpg",
-            "caption": "Study 001, front"
+            "caption": "Sketch 001, front"
           }
         }
       },
@@ -139,9 +139,9 @@
       ],
       "settings": {
         "color_scheme": "scheme-1",
-        "caption_style": "overlay",
         "eyebrow": "In contour",
-        "heading": "The break"
+        "heading": "The break",
+        "caption_style": "overlay"
       }
     },
     "note": {
@@ -149,7 +149,7 @@
       "settings": {
         "color_scheme": "scheme-5",
         "heading": "Small runs. Shipped worldwide.",
-        "text": "<p>MUURMA is an independent surf label from Australia's east coast. Small runs, zero dead stock, a new Study every Thursday.</p>"
+        "text": "<p>MUURMA is an independent surf label from Australia's east coast. No schedule. A new Sketch drops when it's ready, and each one is made once in a small run.</p>"
       }
     }
   },
