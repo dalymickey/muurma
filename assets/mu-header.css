@@ -7,7 +7,7 @@
 :root:has(.mu-header--ann) { --mu-ann-h: 36px; }
 @media (max-width: 749px) { :root:has(.mu-header--ann-d) { --mu-ann-h: 0px; } }
 @media (min-width: 990px) { :root { --mu-bar-h: 72px; } }
-:root { --mu-top-est: calc(var(--mu-ann-h) + var(--mu-bar-h)); }
+:root { --mu-top-est: calc(var(--mu-ann-h) + var(--mu-bar-h)); --mu-announcement-height: var(--mu-ann-h); --mu-header-height: var(--mu-bar-h); --mu-head-h: var(--mu-top-est); }
 .mu-header-section { position: relative; z-index: 40; }
 .mu-header { --hb: 60px; --hx: var(--gutter); display: block; position: relative; }
 .mu-pagew .mu-header { --hx: max(var(--gutter), (100% - var(--mu-page-width)) / 2); }
