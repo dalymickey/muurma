@@ -109,7 +109,7 @@
         "image_side": "right",
         "overlay_position": "bottom",
         "overlay_opacity": 45,
-        "max_height": "640",
+        "max_height": "none",
         "max_height_mobile": "none",
         "eyebrow": "How we make it",
         "heading": "Made for you. Not for a warehouse.",
