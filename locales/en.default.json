@@ -8,6 +8,7 @@
  * ------------------------------------------------------------
  */
 {
+  "also_in": "Also in",
   "accessibility": {
     "skip": "Skip to content",
     "back_to_top": "Back to top"

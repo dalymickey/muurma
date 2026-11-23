@@ -22,8 +22,11 @@
     endfor
   endif
   assign colour_now = product.metafields.custom.colour_name.value
-  assign heading = block.settings.heading | default: 'products.also_in' | t | default: 'Also in'
-  if heading == blank or heading == 'products.also_in'
+  assign heading = block.settings.heading | default: ''
+  if heading == blank or heading == 'also_in' or heading == 'products.also_in'
+    assign heading = 'products.also_in' | t
+  endif
+  if heading == blank or heading contains 'translation missing'
     assign heading = 'Also in'
   endif
 -%}
