@@ -26,11 +26,11 @@
         "fine": "Small runs. Zero dead stock. Shipped worldwide.",
         "demo_image": "mu-hero-back.jpg",
         "overlay_color": "#2b2c2b",
-        "overlay_opacity": 90,
+        "overlay_opacity": 80,
         "header_text": "auto",
         "show_grain": true,
-        "grain_opacity": 24,
-        "show_contour": false,
+        "grain_opacity": 42,
+        "show_contour": true,
         "contour_opacity": 14,
         "height": "screen",
         "height_mobile": "screen",
@@ -105,12 +105,11 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
-        "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
         "demo_image": "mu-hero-front.jpg",
         "image_side": "right",
         "overlay_position": "bottom",
         "overlay_opacity": 45,
-        "max_height": "none",
+        "max_height": "560",
         "max_height_mobile": "none",
         "eyebrow": "How we make it",
         "heading": "Made for you. Not for a warehouse.",
@@ -143,20 +142,20 @@
             "fill_scheme": ""
           }
         },
-        "crews": {
-          "type": "collection",
-          "settings": {
-            "collection": "crews",
-            "label": "Crews",
-            "fill": "band",
-            "fill_scheme": ""
-          }
-        },
         "tees": {
           "type": "collection",
           "settings": {
             "collection": "tees",
             "label": "Tees",
+            "fill": "band",
+            "fill_scheme": ""
+          }
+        },
+        "crews": {
+          "type": "collection",
+          "settings": {
+            "collection": "crews",
+            "label": "Crews",
             "fill": "band",
             "fill_scheme": ""
           }
@@ -214,10 +213,10 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
-        "layout": "center",
+        "layout": "split",
         "end": "2026-11-26T18:00:00+11:00",
         "product": "",
-        "show_seconds": true,
+        "show_seconds": false,
         "date_label": "Drops",
         "timezone": "Australia/Sydney",
         "after_end": "hide",
@@ -263,7 +262,6 @@
         "front": {
           "type": "tile",
           "settings": {
-            "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
             "demo_image": "mu-hero-front.jpg",
             "caption": "Sketch 001, front",
             "link": "",
@@ -351,6 +349,21 @@
         "edge_mobile": true,
         "demo_bg_image": ""
       }
+    },
+    "journal": {
+      "type": "mu-blog-posts",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "layout": "grid",
+        "heading": "From the journal",
+        "blog": "journal",
+        "limit": 3,
+        "show_link": true,
+        "show_date": true,
+        "show_tag": true,
+        "show_excerpt": false,
+        "animate": true
+      }
     }
   },
   "order": [
@@ -360,6 +373,7 @@
     "collections",
     "countdown",
     "gallery",
-    "note"
+    "note",
+    "journal"
   ]
 }
