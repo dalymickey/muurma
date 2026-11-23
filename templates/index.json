@@ -160,12 +160,22 @@
             "fill": "scheme",
             "fill_scheme": "scheme-5"
           }
+        },
+        "collection_zEhXyp": {
+          "type": "collection",
+          "settings": {
+            "collection": "mens-pants",
+            "label": "Sweatpants",
+            "fill": "scheme",
+            "fill_scheme": "scheme-5"
+          }
         }
       },
       "block_order": [
         "hoodies",
         "crews",
-        "tees"
+        "tees",
+        "collection_zEhXyp"
       ],
       "settings": {
         "color_scheme": "scheme-1",
