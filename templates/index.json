@@ -105,6 +105,7 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
+        "image": "shopify://shop_images/1795407193720-m54678pc8f9.png",
         "demo_image": "mu-hero-front.jpg",
         "image_side": "right",
         "overlay_position": "bottom",
