@@ -30,6 +30,7 @@
     "card_quick_view": true,
     "social_instagram": "https://instagram.com/muurma.apparel",
     "social_facebook": "https://facebook.com/muurma.apparel",
+    "logo_light": "shopify://shop_images/Web.png",
     "sections": {
       "mu-cart-drawer": {
         "type": "mu-cart-drawer",
