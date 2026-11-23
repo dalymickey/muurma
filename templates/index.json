@@ -142,20 +142,20 @@
             "fill_scheme": ""
           }
         },
-        "tees": {
-          "type": "collection",
-          "settings": {
-            "collection": "tees",
-            "label": "Tees",
-            "fill": "band",
-            "fill_scheme": ""
-          }
-        },
         "crews": {
           "type": "collection",
           "settings": {
             "collection": "crews",
             "label": "Crews",
+            "fill": "band",
+            "fill_scheme": ""
+          }
+        },
+        "tees": {
+          "type": "collection",
+          "settings": {
+            "collection": "tees",
+            "label": "Tees",
             "fill": "band",
             "fill_scheme": ""
           }
@@ -213,10 +213,10 @@
         "round_tr": true,
         "round_bl": true,
         "round_br": true,
-        "layout": "split",
+        "layout": "center",
         "end": "2026-11-26T18:00:00+11:00",
         "product": "",
-        "show_seconds": false,
+        "show_seconds": true,
         "date_label": "Drops",
         "timezone": "Australia/Sydney",
         "after_end": "hide",
@@ -354,7 +354,17 @@
       "type": "mu-blog-posts",
       "settings": {
         "color_scheme": "scheme-1",
+        "full_width": false,
+        "custom_radius": false,
+        "radius": 24,
+        "round_tl": true,
+        "round_tr": true,
+        "round_bl": true,
+        "round_br": true,
         "layout": "grid",
+        "numbered": true,
+        "feature_overlay": true,
+        "feature_scheme": "",
         "heading": "From the journal",
         "blog": "journal",
         "limit": 3,
