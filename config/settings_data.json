@@ -23,6 +23,7 @@
     "texture": "none",
     "surface_style": "soft",
     "cart_type": "drawer",
+    "cookie_banner": true,
     "animations": true,
     "card_style": "plain",
     "card_quick_view": true,
