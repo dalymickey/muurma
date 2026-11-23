@@ -134,6 +134,10 @@
     },
     "cards": {
       "name": "Product cards",
+      "media_bg": "Product card image background",
+      "media_bg_info": "Fills the card image area behind product photos. Use white to match pack shots.",
+      "product_media_bg": "Product page image background",
+      "product_media_bg_info": "Fills the main product gallery behind the photos.",
       "hover_image": "Show second media on hover",
       "hover_image_info": "Mouse only. Shows the second image or video.",
       "badge_prefix": "Badge tag prefix",

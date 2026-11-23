@@ -55,6 +55,8 @@
     --mu-page-width: {{ settings.page_width }}px;
     {%- endif %}
     --mu-card-m: {% if settings.card_mobile_size == 'compact' %}44%{% else %}62%{% endif %};
+    --mu-card-media-bg: {{ settings.card_media_bg | default: '#ffffff' }};
+    --mu-pp-media-bg: {{ settings.product_media_bg | default: '#ffffff' }};
     {%- comment -%} New / Sale badge colours (Cards > Badge colours). Unset = the scheme's colours. With no text colour, white or near-black, whichever contrasts more. {%- endcomment -%}
     {%- assign badge_kinds = 'new,sale' | split: ',' -%}
     {%- for k in badge_kinds -%}

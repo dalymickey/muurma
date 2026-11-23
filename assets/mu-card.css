@@ -6,15 +6,10 @@
   border-radius: var(--cr); isolation: isolate;
 }
 .mu-card__media { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 5; }
-/* The link holds the inset (it was the image's padding) and centres the image; with --ar the image box is the photo
-   itself, so its rounded corners land on the picture, not on empty letterbox. --mu-media-r follows Theme settings > Shape. */
-.mu-card__img-link { position: relative; z-index: 1; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; width: 100%; height: 100%; padding: 10% 14% 2%; container-type: size; }
+/* The link fills the media area; product photos use object-fit contain on the card image background. --mu-media-r follows Theme settings > Shape. */
+.mu-card__img-link { position: relative; z-index: 1; display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; width: 100%; height: 100%; padding: 0; container-type: size; }
 .mu-card__img { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: contain; border-radius: var(--mu-media-r); transition: translate .45s cubic-bezier(.2, .8, .2, 1), rotate .45s cubic-bezier(.2, .8, .2, 1), opacity .35s ease; }
 .mu-card__img--alt { opacity: 0; }
-/* With the image's ratio (--ar, set on the tag) the box shrinks to the photo: as wide as fits, never taller than the tile. */
-@supports (width: 1cqh) {
-  .mu-card__img[style*="--ar"]:not(.mu-card__vid) { width: min(100cqw, 100cqh * var(--ar)); height: auto; aspect-ratio: var(--ar); }
-}
 .mu-card__vid { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 0; }
 .mu-card .mu-placeholder { width: 60%; height: auto; }
 .mu-card__body { position: relative; display: flex; flex-direction: column; gap: 6px; flex: 1; padding: 4px 14px 14px; }
@@ -48,7 +43,8 @@
    scroller, so a panel loses its shadow until the row repaints. In rails the shadowed images get their
    own layer, which is sized to hold the shadow. Scoped to scrollers to keep layer memory down. */
 .mu-rail :is(.mu-card--level, .mu-card--label) .mu-card__img:not(.mu-card__img--fill, .mu-card__vid) { transform: translateZ(0); }
-.mu-card--level.mu-card--unrated, .mu-card--plain .mu-card__media { background: var(--band); }
+.mu-card--level.mu-card--unrated { background: var(--band); }
+.mu-card--plain .mu-card__media { background: var(--mu-card-media-bg, #ffffff); }
 .mu-card--plain .mu-card__media { border-radius: var(--cr); }
 .mu-card--plain .mu-card__body { padding-inline: 2px; }
 .mu-card--plain .mu-card__chip { padding: 0; background: none; }
@@ -90,9 +86,9 @@
 /* Label style: the cut-out stands on a flat square panel, a printed strip under it carries the level, and the text
    sits plainly below. Corners follow Theme settings > Shape. */
 .mu-card--label { --cr: var(--mu-radius, 0px); }
-.mu-card--label .mu-card__media { aspect-ratio: 1; overflow: hidden; border-radius: var(--cr) var(--cr) 0 0; background: var(--band); }
+.mu-card--label .mu-card__media { aspect-ratio: 1; overflow: hidden; border-radius: var(--cr) var(--cr) 0 0; background: var(--mu-card-media-bg, #ffffff); }
 .mu-card--label.mu-card--unrated .mu-card__media { border-radius: var(--cr); }
-.mu-card--label .mu-card__img-link { padding: 8% 10% 6%; }
+.mu-card--label .mu-card__img-link { padding: 0; }
 .mu-card--label .mu-card__img { border-radius: 0; filter: drop-shadow(0 14px 12px rgb(0 0 0 / .35)); }
 /* grid-area: auto: an absolute child placed in a grid area takes that area (inside the link's padding) as its box; auto makes it the link's full padding box, so the photo fills the panel edge to edge. */
 .mu-card--label .mu-card__img--fill { grid-area: auto; position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: none; }

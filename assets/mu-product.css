@@ -7,7 +7,7 @@
    rather than cropping. A soft level glow sits under the product at the level's colour. */
 .mu-pp__stage {
   --contour-o: .2; position: relative; isolation: isolate; min-width: 0; min-height: 280px; margin-inline: var(--gutter);
-  aspect-ratio: var(--mu-ar, 1); border-radius: var(--pp-r); background: var(--bg); color: var(--fg);
+  aspect-ratio: var(--mu-ar, 1); border-radius: var(--pp-r); background: var(--mu-pp-media-bg, #ffffff); color: var(--fg);
 }
 .mu-pp__stage::before {
   content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit; pointer-events: none;
