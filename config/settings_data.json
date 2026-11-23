@@ -25,11 +25,8 @@
     "cart_type": "drawer",
     "cookie_banner": true,
     "cookie_editor": false,
-    "sticker_style": "tilted",
-    "sticker_rotation": -4,
-    "sticker_shadow": true,
     "animations": true,
-    "card_style": "label",
+    "card_style": "plain",
     "card_media_bg": "#ffffff",
     "product_media_bg": "#ffffff",
     "card_quick_view": true,
@@ -141,7 +138,12 @@
           "sale": "#2b2c2b"
         }
       }
-    }
+    },
+    "back_to_top": true,
+    "back_to_top_phone": true,
+    "back_to_top_position": "right",
+    "back_to_top_progress": true,
+    "back_to_top_scheme": "scheme-4"
   },
   "presets": {
     "MUURMA": {
