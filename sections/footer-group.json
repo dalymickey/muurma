@@ -87,7 +87,7 @@
         "show_tag": true,
         "tag_visibility": "always",
         "tag_position": "middle_right",
-        "tag_label": "",
+        "tag_label": "First to know",
         "tag_icon": "mail",
         "tag_pulse": true,
         "tag_scroll": "fixed",
