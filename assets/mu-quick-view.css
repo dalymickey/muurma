@@ -46,10 +46,10 @@
 .mu-qv__play:hover { scale: 1.06; }
 .mu-qv__step { display: none; }
 /* Phones: the thumbnails become short segments along the bottom edge; the current one stretches in the ramp. */
-.mu-qv__thumbs { position: absolute; inset: auto 50% 8px auto; display: flex; justify-content: center; gap: 4px; width: max-content; max-width: calc(100% - 24px); padding: 6px 8px; border-radius: 999px; background: color-mix(in srgb, #d8d5cf 86%, transparent); translate: -50% 0; }
+.mu-qv__thumbs { position: absolute; inset: auto 12px 6px; display: flex; justify-content: center; gap: 4px; }
 .mu-qv__thumb { display: grid; place-items: center; block-size: 32px; }
-.mu-qv__thumb::before { content: ""; inline-size: 14px; block-size: 5px; border-radius: 3px; background: #626a65; transition: inline-size .25s var(--mu-glide); }
-.mu-qv__thumb[aria-current="true"]::before { inline-size: 32px; background: #2b2c2b; }
+.mu-qv__thumb::before { content: ""; inline-size: 14px; block-size: 5px; border-radius: 3px; background: color-mix(in srgb, var(--fg) 30%, transparent); transition: inline-size .25s var(--mu-glide); }
+.mu-qv__thumb[aria-current="true"]::before { inline-size: 32px; background: #000; }
 .mu-qv__thumb img, .mu-qv__badge { display: none; }
 .mu-qv__thumb:focus-visible { border-radius: 6px; }
 

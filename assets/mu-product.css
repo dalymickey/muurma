@@ -87,12 +87,12 @@
 
 /* Gallery position: thin segments along the bottom of the frame; the current one stretches and fills with the ramp.
    Video and 3D segments are hollow until chosen. Each button keeps a 44px tap height. */
-.mu-pp__dots { position: absolute; z-index: 2; inset: auto 50% 8px auto; display: flex; justify-content: center; width: max-content; max-width: calc(100% - 24px); padding: 6px 8px; border-radius: 999px; background: color-mix(in srgb, #d8d5cf 86%, transparent); translate: -50% 0; }
+.mu-pp__dots { position: absolute; z-index: 2; inset: auto 0 4px; display: flex; justify-content: center; padding-inline: 16px; }
 .mu-pp__dot { display: grid; place-items: center; inline-size: 28px; block-size: 44px; color: inherit; }
-.mu-pp__dot i { display: block; inline-size: 16px; block-size: 4px; border-radius: 4px; background: #626a65; transition: inline-size .3s var(--mu-spring); }
-:is(.mu-pp__dot--video, .mu-pp__dot--external-video, .mu-pp__dot--model) i { background: none; box-shadow: inset 0 0 0 1.5px #626a65; block-size: 6px; }
+.mu-pp__dot i { display: block; inline-size: 16px; block-size: 4px; border-radius: 4px; background: color-mix(in srgb, var(--fg) 30%, transparent); transition: inline-size .3s var(--mu-spring); }
+:is(.mu-pp__dot--video, .mu-pp__dot--external-video, .mu-pp__dot--model) i { background: none; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--fg) 45%, transparent); block-size: 6px; }
 .mu-pp__dot[aria-current="true"] { inline-size: 48px; }
-.mu-pp__dot[aria-current="true"] i { inline-size: 40px; block-size: 4px; background: #2b2c2b; box-shadow: none; }
+.mu-pp__dot[aria-current="true"] i { inline-size: 40px; block-size: 4px; background: #000; box-shadow: none; }
 .mu-pp__stage > .mu-pp__thumbs, .mu-pp__count { display: none; }
 
 /* ================= Buy panel ================= */
