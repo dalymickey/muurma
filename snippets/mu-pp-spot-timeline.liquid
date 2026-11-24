@@ -1,0 +1,42 @@
+{%- comment -%}
+  Made-to-order timeline for the product.custom-spot template. Step copy lives in the block settings so it can be
+  edited in the theme editor without a code change.
+  @param block {Block}
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign steps = ''
+  if b.step_1 != blank
+    assign steps = steps | append: b.step_1 | append: '|||'
+  endif
+  if b.step_2 != blank
+    assign steps = steps | append: b.step_2 | append: '|||'
+  endif
+  if b.step_3 != blank
+    assign steps = steps | append: b.step_3 | append: '|||'
+  endif
+  if b.step_4 != blank
+    assign steps = steps | append: b.step_4 | append: '|||'
+  endif
+  if b.step_5 != blank
+    assign steps = steps | append: b.step_5 | append: '|||'
+  endif
+  assign list = steps | split: '|||'
+-%}
+{%- if list.size > 0 or b.heading != blank -%}
+  <div class="mu-spot-tl" {{ block.shopify_attributes }}>
+    {%- if b.heading != blank -%}
+      <h2 class="mu-pp__legend">{{ b.heading | escape }}</h2>
+    {%- endif -%}
+    <ol class="mu-spot-tl__list">
+      {%- for step in list -%}
+        {%- if step != blank -%}
+          <li class="mu-spot-tl__item">
+            <span class="mu-spot-tl__n" aria-hidden="true">{{ forloop.index }}</span>
+            <p class="mu-spot-tl__text">{{ step | escape }}</p>
+          </li>
+        {%- endif -%}
+      {%- endfor -%}
+    </ol>
+  </div>
+{%- endif -%}

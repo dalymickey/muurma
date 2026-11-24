@@ -1,0 +1,102 @@
+/* Custom surf-spot field, greyscale map, timeline and info on product.custom-spot.
+   Inputs reuse .mu-input; legends reuse .mu-pp__legend. The map is a keyless Google embed,
+   coloured toward Charcoal, Slate and Whitewash with a filter and a multiply veil. */
+
+.mu-spot,
+.mu-spot-tl,
+.mu-spot-info { margin-top: 22px; }
+
+.mu-spot { display: grid; gap: 16px; }
+.mu-spot__field { display: grid; gap: 8px; }
+.mu-spot__req { text-decoration: none; color: var(--mu); }
+.mu-spot__note { min-height: 6.25rem; padding: 12px 16px; line-height: 1.45; resize: vertical; }
+.mu-spot__err { margin: 0; font-size: .8125rem; color: var(--sale, var(--fg)); }
+.mu-spot__err:empty,
+.mu-spot__err[hidden] { display: none; }
+
+.mu-spot__mapwrap { display: grid; gap: 8px; }
+.mu-spot__map {
+  position: relative;
+  overflow: hidden;
+  min-height: 220px;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--mu-field-r);
+  background: #2b2c2b;
+}
+.mu-spot__map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  filter: grayscale(1) contrast(1.18) brightness(0.88) sepia(0.22) hue-rotate(45deg);
+  pointer-events: auto;
+}
+/* A soft charcoal–olive veil so the greyscale map sits in the brand palette. Clicks pass through. */
+.mu-spot__map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, #424a40 22%, transparent);
+  mix-blend-mode: multiply;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #2b2c2b 35%, transparent), inset 0 0 48px color-mix(in srgb, #2b2c2b 28%, transparent);
+}
+
+.mu-spot-info { display: grid; gap: 10px; }
+.mu-spot-info__heading {
+  margin: 0;
+  font-family: var(--mu-font-heading);
+  font-weight: var(--mu-font-heading-weight);
+  font-size: calc(1.25rem * var(--mu-heading-scale, 1));
+  line-height: 1.2;
+}
+.mu-spot-info__body { font-size: .9375rem; }
+.mu-spot-info__body > :first-child { margin-top: 0; }
+.mu-spot-info__body > :last-child { margin-bottom: 0; }
+
+.mu-spot-tl { display: grid; gap: 12px; }
+.mu-spot-tl__list {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.mu-spot-tl__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 0 0 16px;
+}
+.mu-spot-tl__item:last-child { padding-bottom: 0; }
+.mu-spot-tl__item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 13px;
+  top: 22px;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, #626a65 55%, transparent);
+}
+.mu-spot-tl__n {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #2b2c2b;
+  color: #d8d5cf;
+  font-size: .6875rem;
+  font-weight: var(--mu-font-body-bold);
+  letter-spacing: .06em;
+  line-height: 1;
+}
+.mu-spot-tl__text {
+  margin: 0;
+  padding-top: 4px;
+  font-size: .875rem;
+  line-height: 1.45;
+  color: var(--fg);
+}

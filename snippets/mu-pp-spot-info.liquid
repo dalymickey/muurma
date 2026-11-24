@@ -1,0 +1,16 @@
+{%- comment -%}
+  Short made-to-order copy for the product.custom-spot template. Heading and body are block settings so they can be
+  edited in the theme editor. Keep "Designed on the east coast", never "made" in that sense, and never mention
+  print-on-demand.
+  @param block {Block}
+{%- endcomment -%}
+{%- if block.settings.heading != blank or block.settings.text != blank -%}
+  <div class="mu-spot-info" {{ block.shopify_attributes }}>
+    {%- if block.settings.heading != blank -%}
+      <h2 class="mu-spot-info__heading">{{ block.settings.heading | escape }}</h2>
+    {%- endif -%}
+    {%- if block.settings.text != blank -%}
+      <div class="mu-rte mu-spot-info__body">{{ block.settings.text }}</div>
+    {%- endif -%}
+  </div>
+{%- endif -%}
