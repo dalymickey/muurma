@@ -398,6 +398,43 @@
         "show_excerpt": false,
         "animate": true
       }
+    },
+    "your_spot": {
+      "type": "mu-image-text",
+      "settings": {
+        "color_scheme": "scheme-2",
+        "full_width": true,
+        "custom_radius": false,
+        "radius": 24,
+        "round_tl": true,
+        "round_tr": true,
+        "round_bl": true,
+        "round_br": true,
+        "image": "shopify://shop_images/store-1795482397126-5115157516.png",
+        "demo_image": "mu-hero-back.jpg",
+        "image_side": "left",
+        "overlay_position": "bottom",
+        "overlay_opacity": 45,
+        "max_height": "560",
+        "max_height_mobile": "none",
+        "eyebrow": "Your Spot",
+        "heading": "Your break, designed by our team.",
+        "text": "<p>Enter your spot and we'll design your contour map and email it to you for approval. Designed on the east coast and made in a small run.</p>",
+        "cta_label": "Design your spot",
+        "cta_link": "/products/custom-spot-hoodie-north-narrabeen",
+        "animate": true,
+        "margin_top": 0,
+        "bottom_spacing": 0,
+        "margin_mobile": 67,
+        "custom_padding": false,
+        "padding_top": 64,
+        "padding_bottom": 64,
+        "padding_left": 24,
+        "padding_right": 24,
+        "padding_top_mobile": 40,
+        "padding_bottom_mobile": 40,
+        "padding_x_mobile": 16
+      }
     }
   },
   "order": [
@@ -407,6 +444,7 @@
     "collections",
     "countdown",
     "gallery",
+    "your_spot",
     "note",
     "journal"
   ]
