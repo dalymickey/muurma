@@ -43,6 +43,7 @@
     "social_instagram": "https://instagram.com/muurma.apparel",
     "social_facebook": "https://facebook.com/muurma.apparel",
     "logo_light": "shopify://shop_images/Web_Logo_White_a79ac354-1c5c-43a8-b474-a868368da6c1.png",
+    "favicon": "shopify://shop_images/mark-512-on-charcoal.png",
     "sections": {
       "mu-cart-drawer": {
         "type": "mu-cart-drawer",
