@@ -1,0 +1,77 @@
+{%- comment -%}
+  Custom surf-spot field and greyscale map for the product.custom-spot template. The required "Surf spot" input and
+  optional "Local knowledge" note join the product form through form="", since the form itself starts at the buy
+  buttons (snippets/mu-pp-block). assets/mu-spot.js updates the map as they type, and blocks add to cart when the
+  spot is empty. Tag the product custom:spot so custom orders can be recognised.
+  @param block {Block}
+  @param form_id {String}
+  @param uid {String}
+  @param ph {Boolean} optional: preview placeholder, fields still render
+{%- endcomment -%}
+{%- liquid
+  assign b = block.settings
+  assign spot_id = 'MuSpot-' | append: uid
+  assign note_id = 'MuSpotNote-' | append: uid
+  assign err_id = 'MuSpotErr-' | append: uid
+  assign map_id = 'MuSpotMap-' | append: uid
+  assign default_q = b.map_default | default: 'North Narrabeen, Sydney' | strip
+  if default_q == blank
+    assign default_q = 'North Narrabeen, Sydney'
+  endif
+  assign zoom = b.map_zoom | default: 14
+  assign missing = b.missing_message | default: 'Enter your surf spot to add this to your bag.'
+-%}
+{{ 'mu-spot.css' | asset_url | stylesheet_tag }}
+<script src="{{ 'mu-spot.js' | asset_url }}" defer></script>
+<div class="mu-spot" data-spot data-spot-default="{{ default_q | escape }}" data-spot-zoom="{{ zoom }}" {{ block.shopify_attributes }}>
+  <div class="mu-spot__field">
+    <label class="mu-pp__legend" for="{{ spot_id }}">{{ b.spot_label | default: 'Your surf spot' | escape }} <abbr class="mu-spot__req" title="Required">*</abbr></label>
+    <input
+      class="mu-input"
+      type="text"
+      id="{{ spot_id }}"
+      name="properties[Surf spot]"
+      form="{{ form_id }}"
+      maxlength="255"
+      autocomplete="off"
+      autocapitalize="words"
+      placeholder="{{ b.spot_placeholder | escape }}"
+      aria-describedby="{{ err_id }}"
+      data-spot-input
+      data-spot-required
+      data-spot-missing="{{ missing | escape }}"
+    >
+    <p class="mu-spot__err" id="{{ err_id }}" data-spot-err role="alert" hidden></p>
+  </div>
+
+  <div class="mu-spot__mapwrap">
+    {%- if b.map_heading != blank -%}
+      <p class="mu-pp__legend" id="{{ map_id }}-label">{{ b.map_heading | escape }}</p>
+    {%- endif -%}
+    <div class="mu-spot__map">
+      <iframe
+        data-spot-map
+        id="{{ map_id }}"
+        title="{{ 'Map of ' | append: default_q | escape }}"
+        src="https://maps.google.com/maps?q={{ default_q | url_encode }}&amp;z={{ zoom }}&amp;output=embed"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        {% if b.map_heading != blank %}aria-labelledby="{{ map_id }}-label"{% endif %}
+      ></iframe>
+    </div>
+  </div>
+
+  <div class="mu-spot__field">
+    <label class="mu-pp__legend" for="{{ note_id }}">{{ b.note_label | default: 'Local knowledge (optional)' | escape }}</label>
+    <textarea
+      class="mu-input mu-spot__note"
+      id="{{ note_id }}"
+      name="properties[Local knowledge]"
+      form="{{ form_id }}"
+      rows="3"
+      maxlength="500"
+      placeholder="{{ b.note_placeholder | escape }}"
+      data-spot-note
+    ></textarea>
+  </div>
+</div>

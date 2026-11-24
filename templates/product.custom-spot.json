@@ -1,0 +1,174 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-product",
+      "blocks": {
+        "title": {
+          "type": "title",
+          "settings": {
+            "show_rating": false
+          }
+        },
+        "price": {
+          "type": "price",
+          "settings": {
+            "show_tax": true,
+            "show_installments": true
+          }
+        },
+        "variant_picker": {
+          "type": "variant_picker",
+          "settings": {
+            "size_label": "Size chart",
+            "size_style": "popup",
+            "size_option": "Size"
+          }
+        },
+        "spot_info": {
+          "type": "spot_info",
+          "settings": {
+            "heading": "Your break, drawn by us",
+            "text": "<p>Name the beach, the break or the address. We’ll draw it by hand in the same ink as the rest of the range, designed on the east coast. The more a local would know — the swell, the wind, the paddle-out — the more it will feel like yours.</p><p>We work in small runs, with less waste, and every piece is drawn for the person who orders it.</p><p>We’ll email your design for approval within 48 hours. One round of changes is included. Custom pieces can’t be returned or exchanged, so check the <a href=\"/pages/size-guides\" title=\"Size guides\">size guide</a> before you order.</p>"
+          }
+        },
+        "spot_field": {
+          "type": "spot_field",
+          "settings": {
+            "spot_label": "Your surf spot",
+            "spot_placeholder": "Beach, break or address",
+            "missing_message": "Enter your surf spot to add this to your bag.",
+            "note_label": "Local knowledge (optional)",
+            "note_placeholder": "Swell, wind, the paddle-out — anything a local would know",
+            "map_heading": "The coastline",
+            "map_default": "North Narrabeen, Sydney",
+            "map_zoom": 14
+          }
+        },
+        "spot_timeline": {
+          "type": "spot_timeline",
+          "settings": {
+            "heading": "How it works",
+            "step_1": "Order today",
+            "step_2": "Hand-drawn design proof emailed within 48 hours",
+            "step_3": "You approve (one round of changes included)",
+            "step_4": "Made and dispatched in 2–3 business days",
+            "step_5": "Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere"
+          }
+        },
+        "quantity": {
+          "type": "quantity",
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "buy_buttons",
+          "settings": {
+            "show_dynamic_checkout": false,
+            "show_pickup": false,
+            "show_gift_card_recipient": false
+          }
+        },
+        "trust": {
+          "type": "trust",
+          "settings": {
+            "label_1": "Small runs",
+            "icon_1": "box",
+            "label_2": "Shipped worldwide",
+            "icon_2": "truck",
+            "label_3": "Zero dead stock",
+            "icon_3": "check"
+          }
+        },
+        "details": {
+          "type": "collapsible",
+          "settings": {
+            "source": "description",
+            "heading": "Details"
+          }
+        },
+        "materials": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Materials",
+            "source": "metafield",
+            "metafield_key": "custom.materials"
+          }
+        },
+        "care": {
+          "type": "collapsible",
+          "settings": {
+            "heading": "Care",
+            "source": "metafield",
+            "metafield_key": "custom.care"
+          }
+        },
+        "delivery": {
+          "type": "shipping",
+          "settings": {
+            "heading": "Shipping and delivery",
+            "text": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
+            "show_policy": true,
+            "open": false
+          }
+        },
+        "share": {
+          "type": "share",
+          "settings": {
+            "share_facebook": true,
+            "share_x": true,
+            "share_pinterest": true,
+            "share_native": true
+          }
+        }
+      },
+      "block_order": [
+        "title",
+        "price",
+        "variant_picker",
+        "spot_info",
+        "spot_field",
+        "spot_timeline",
+        "quantity",
+        "buy_buttons",
+        "trust",
+        "details",
+        "materials",
+        "care",
+        "delivery",
+        "share"
+      ],
+      "settings": {
+        "media_scheme": "scheme-3",
+        "media_style": "fill",
+        "media_ratio": "portrait",
+        "image_zoom": true,
+        "panel_scheme": "scheme-1",
+        "low_stock": 5,
+        "price_in_button": true,
+        "rows_layout": "accordion",
+        "notify": true,
+        "sticky_bar": true,
+        "bar_scheme": "scheme-4"
+      }
+    },
+    "related": {
+      "type": "mu-related-products",
+      "settings": {
+        "color_scheme": "scheme-1",
+        "heading": "The core range"
+      }
+    }
+  },
+  "order": [
+    "main",
+    "related"
+  ]
+}

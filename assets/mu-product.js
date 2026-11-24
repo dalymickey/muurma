@@ -749,6 +749,8 @@
       // Busy flag rather than disabled, so keyboard focus stays on the button while the request runs.
       if (add.disabled || add.getAttribute('aria-busy') === 'true') return;
       if (rBox && rBox.checked && !form.reportValidity()) return;
+      // Custom surf-spot template: required line-item property, wired in assets/mu-spot.js.
+      if (window.MuSpot && !MuSpot.ok(form, msg)) return;
       add.setAttribute('aria-busy', 'true');
       try {
         await added(await post(form));

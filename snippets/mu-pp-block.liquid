@@ -357,6 +357,13 @@
   {%- when 'also_in' -%}
     {%- render 'mu-pp-also', block: block, product: product -%}
 
+  {%- when 'spot_field' -%}
+    {%- render 'mu-pp-spot', block: block, form_id: form_id, uid: uid, ph: ph -%}
+  {%- when 'spot_timeline' -%}
+    {%- render 'mu-pp-spot-timeline', block: block -%}
+  {%- when 'spot_info' -%}
+    {%- render 'mu-pp-spot-info', block: block -%}
+
   {%- else -%}
     {%- render 'mu-pp-info', block: block -%}
 {%- endcase -%}

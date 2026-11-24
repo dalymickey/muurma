@@ -586,6 +586,139 @@
       ]
     },
     {
+      "type": "spot_info",
+      "name": "Custom spot info",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "For the custom surf-spot product template. Tag that product custom:spot so new orders can be recognised. Keep “Designed on the east coast”, and never mention print-on-demand."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Your break, drawn by us"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Name the beach, the break or the address. We’ll draw it by hand in the same ink as the rest of the range, designed on the east coast. The more a local would know — the swell, the wind, the paddle-out — the more it will feel like yours.</p><p>We work in small runs, with less waste, and every piece is drawn for the person who orders it.</p><p>We’ll email your design for approval within 48 hours. One round of changes is included. Custom pieces can’t be returned or exchanged, so check the <a href=\"/pages/size-guides\" title=\"Size guides\">size guide</a> before you order.</p>"
+        }
+      ]
+    },
+    {
+      "type": "spot_field",
+      "name": "Surf spot",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Required “Your surf spot” and optional “Local knowledge” fields, submitted as line-item properties. The map follows what they type and defaults to North Narrabeen, Sydney. Dynamic checkout should be turned off on the Buy buttons block so it cannot skip the field."
+        },
+        {
+          "type": "text",
+          "id": "spot_label",
+          "label": "Spot label",
+          "default": "Your surf spot"
+        },
+        {
+          "type": "text",
+          "id": "spot_placeholder",
+          "label": "Spot placeholder",
+          "default": "Beach, break or address"
+        },
+        {
+          "type": "text",
+          "id": "missing_message",
+          "label": "Message if the spot is empty",
+          "default": "Enter your surf spot to add this to your bag."
+        },
+        {
+          "type": "text",
+          "id": "note_label",
+          "label": "Local knowledge label",
+          "default": "Local knowledge (optional)"
+        },
+        {
+          "type": "text",
+          "id": "note_placeholder",
+          "label": "Local knowledge placeholder",
+          "default": "Swell, wind, the paddle-out — anything a local would know"
+        },
+        {
+          "type": "header",
+          "content": "Map"
+        },
+        {
+          "type": "text",
+          "id": "map_heading",
+          "label": "Map heading",
+          "default": "The coastline"
+        },
+        {
+          "type": "text",
+          "id": "map_default",
+          "label": "Default location",
+          "default": "North Narrabeen, Sydney",
+          "info": "Shown until they type a surf spot."
+        },
+        {
+          "type": "range",
+          "id": "map_zoom",
+          "min": 8,
+          "max": 16,
+          "step": 1,
+          "label": "Map zoom",
+          "default": 14
+        }
+      ]
+    },
+    {
+      "type": "spot_timeline",
+      "name": "Spot timeline",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "How it works"
+        },
+        {
+          "type": "text",
+          "id": "step_1",
+          "label": "Step 1",
+          "default": "Order today"
+        },
+        {
+          "type": "text",
+          "id": "step_2",
+          "label": "Step 2",
+          "default": "Hand-drawn design proof emailed within 48 hours"
+        },
+        {
+          "type": "text",
+          "id": "step_3",
+          "label": "Step 3",
+          "default": "You approve (one round of changes included)"
+        },
+        {
+          "type": "text",
+          "id": "step_4",
+          "label": "Step 4",
+          "default": "Made and dispatched in 2–3 business days"
+        },
+        {
+          "type": "text",
+          "id": "step_5",
+          "label": "Step 5",
+          "default": "Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere"
+        }
+      ]
+    },
+    {
       "type": "quantity",
       "name": "t:sections.product_blocks.quantity",
       "limit": 1,
