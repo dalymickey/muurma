@@ -24,6 +24,7 @@
         "button_link_2": "/pages/story",
         "button_style_2": "ghost",
         "fine": "Small runs. Zero dead stock. Shipped worldwide.",
+        "image": "shopify://shop_images/1795578135410-nzkv2da7vhp.png",
         "demo_image": "mu-hero-back.jpg",
         "overlay_color": "#2b2c2b",
         "overlay_opacity": 80,
@@ -47,8 +48,7 @@
         "padding_right": 24,
         "padding_top_mobile": 40,
         "padding_bottom_mobile": 40,
-        "padding_x_mobile": 16,
-        "image": "shopify://shop_images/store-1795560464109-7079832313.png"
+        "padding_x_mobile": 16
       }
     },
     "featured": {
