@@ -12,13 +12,13 @@
     "hero": {
       "type": "mu-banner",
       "settings": {
-        "eyebrow": "Drops when it's ready",
-        "study": "Sketch 001",
-        "heading": "The Break",
+        "eyebrow": "Out now",
+        "study": "Sketch 002",
+        "heading": "Twin Keel Fish",
         "heading_tag": "h1",
-        "subheading": "A breaking wave, held in contour. Designed on the east coast.",
-        "button_label": "Shop Sketch 001",
-        "button_link": "/collections/sketch-001-the-break",
+        "subheading": "A fish, held in the lines of a board drawing. Designed on the east coast.",
+        "button_label": "Shop Sketch 002",
+        "button_link": "/collections/sketch-002",
         "button_style": "primary",
         "button_label_2": "The story",
         "button_link_2": "/pages/story",
@@ -47,7 +47,8 @@
         "padding_right": 24,
         "padding_top_mobile": 40,
         "padding_bottom_mobile": 40,
-        "padding_x_mobile": 16
+        "padding_x_mobile": 16,
+        "image": "shopify://shop_images/store-1795560464109-7079832313.png"
       }
     },
     "featured": {
