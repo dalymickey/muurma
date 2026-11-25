@@ -1,0 +1,25 @@
+{%- comment -%}
+  Sale badge for the product page, using Theme settings > Product cards > Sale badge
+  (percentage off, or the Sale label). Hidden when the selected variant has no compare-at
+  discount. JS in mu-product.js updates the label when the variant changes.
+  @param product {Product}
+  @param v {Variant}
+  @param attrs {String} optional shopify_attributes for a Badge block
+{%- endcomment -%}
+{%- liquid
+  assign label = blank
+  if v.compare_at_price > v.price
+    if settings.card_sale_badge == 'percent'
+      capture label
+        render 'mu-sale-pct', product: product, variant: v
+      endcapture
+      assign label = label | strip
+    endif
+    if label == blank
+      assign label = 'products.sale' | t
+    endif
+  endif
+-%}
+<span class="mu-pp__tags" data-sale-badge {% if attrs != blank %}{{ attrs }}{% endif %}{% if label == blank %} hidden{% endif %}>
+  <span class="mu-card__tag mu-card__tag--sale" data-sale-badge-label>{{ label | escape }}</span>
+</span>

@@ -109,6 +109,8 @@
 .mu-pp .mu-price--sale .mu-price__now { color: var(--sale); }
 .mu-pp__sub { margin-top: 10px; font-size: .9375rem; line-height: 1.5; }
 .mu-pp__pricebox { margin-top: 16px; }
+.mu-pp__tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 10px; }
+.mu-pp__tags[hidden] { display: none; }
 .mu-pp__unit, .mu-pp__tax { margin-top: 6px; font-size: .8125rem; color: var(--mu); }
 .mu-pp__unit[hidden], .mu-pp__pre[hidden] { display: none; }
 .mu-pp__pre { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; font-size: .8125rem; }

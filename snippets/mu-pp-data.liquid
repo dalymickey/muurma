@@ -42,7 +42,7 @@
         assign backorder = true
       endif
     -%}
-    {"id":{{ variant.id }},"options":{{ variant.options | json }},"available":{{ variant.available | json }},"price":{%- capture mu_m -%}{%- render 'mu-money', m: variant.price -%}{%- endcapture -%}{{ mu_m | json }},"cents":{{ variant.price }},"compare":{% if variant.compare_at_price > variant.price %}{%- capture mu_m -%}{%- render 'mu-money', m: variant.compare_at_price -%}{%- endcapture -%}{{ mu_m | json }}{% else %}null{% endif %},"qty":{{ q | json }},"media":{{ variant.featured_media.id | json }},"img":{% if variant.featured_media %}{{ img | json }}{% else %}null{% endif %},"imgpos":{% if variant.featured_media %}{{ variant.featured_media.preview_image.presentation.focal_point | append: '' | json }}{% else %}null{% endif %},"sku":{{ variant.sku | json }},"unit":{{ unit | json }},"stk":{% if stock_cap > 0 and variant.inventory_management == 'shopify' and variant.inventory_quantity > 0 %}{{ variant.inventory_quantity | at_most: stock_cap }}{% else %}null{% endif %},"qmin":{{ variant.quantity_rule.min | default: 1 }},"qmax":{{ variant.quantity_rule.max | json }},"qstep":{{ variant.quantity_rule.increment | default: 1 }},"breaks":[{%- for qb in variant.quantity_price_breaks -%}[{{ qb.minimum_quantity }},{{ qb.price }},{%- capture mu_m -%}{%- render 'mu-money', m: qb.price -%}{%- endcapture -%}{{ mu_m | json }}]{% unless forloop.last %},{% endunless %}{%- endfor -%}],"pre":{{ backorder | json }},"lv":{% if settings.scale_mode == 'colors' %}0{% else %}{{ variant.metafields.custom.scale.value | plus: 0 }}{% endif %},"plans":{
+    {"id":{{ variant.id }},"options":{{ variant.options | json }},"available":{{ variant.available | json }},"price":{%- capture mu_m -%}{%- render 'mu-money', m: variant.price -%}{%- endcapture -%}{{ mu_m | json }},"cents":{{ variant.price }},"compare":{% if variant.compare_at_price > variant.price %}{%- capture mu_m -%}{%- render 'mu-money', m: variant.compare_at_price -%}{%- endcapture -%}{{ mu_m | json }}{% else %}null{% endif %},"compareCents":{% if variant.compare_at_price > variant.price %}{{ variant.compare_at_price }}{% else %}null{% endif %},"qty":{{ q | json }},"media":{{ variant.featured_media.id | json }},"img":{% if variant.featured_media %}{{ img | json }}{% else %}null{% endif %},"imgpos":{% if variant.featured_media %}{{ variant.featured_media.preview_image.presentation.focal_point | append: '' | json }}{% else %}null{% endif %},"sku":{{ variant.sku | json }},"unit":{{ unit | json }},"stk":{% if stock_cap > 0 and variant.inventory_management == 'shopify' and variant.inventory_quantity > 0 %}{{ variant.inventory_quantity | at_most: stock_cap }}{% else %}null{% endif %},"qmin":{{ variant.quantity_rule.min | default: 1 }},"qmax":{{ variant.quantity_rule.max | json }},"qstep":{{ variant.quantity_rule.increment | default: 1 }},"breaks":[{%- for qb in variant.quantity_price_breaks -%}[{{ qb.minimum_quantity }},{{ qb.price }},{%- capture mu_m -%}{%- render 'mu-money', m: qb.price -%}{%- endcapture -%}{{ mu_m | json }}]{% unless forloop.last %},{% endunless %}{%- endfor -%}],"pre":{{ backorder | json }},"lv":{% if settings.scale_mode == 'colors' %}0{% else %}{{ variant.metafields.custom.scale.value | plus: 0 }}{% endif %},"plans":{
       {%- for a in variant.selling_plan_allocations -%}
         {%- liquid
           assign pre = false
@@ -86,6 +86,8 @@
     "lowStock": {{ 'products.low_stock' | t: count: '__N__' | json }},
     "salePrice": {{ 'products.sale_price' | t | json }},
     "regularPrice": {{ 'products.regular_price' | t | json }},
+    "sale": {{ 'products.sale' | t | json }},
+    "salePercent": {{ 'products.sale_percent' | t: amount: '__N__' | json }},
     "copied": {{ 'products.share_copied' | t | json }},
     "copyLink": {{ 'products.copy_link' | t | json }},
     "qtyIncrement": {{ 'products.qty_increment' | t: step: '__N__' | json }},
@@ -93,4 +95,4 @@
     "qtyMax": {{ 'products.qty_max' | t: max: '__N__' | json }}
   }
 </script>
-<script type="application/json" data-config>{"low":{{ low }},"priceInButton":{{ s.price_in_button | json }},"colour":{{ colour_index }},"last":{{ last_index }},"notify":{{ s.notify | json }},"fmt":{%- capture mu_m -%}{%- render 'mu-money', m: 1234567 -%}{%- endcapture -%}{{ mu_m | json }}}</script>
+<script type="application/json" data-config>{"low":{{ low }},"priceInButton":{{ s.price_in_button | json }},"colour":{{ colour_index }},"last":{{ last_index }},"notify":{{ s.notify | json }},"saleBadge":{{ settings.card_sale_badge | json }},"fmt":{%- capture mu_m -%}{%- render 'mu-money', m: 1234567 -%}{%- endcapture -%}{{ mu_m | json }}}</script>

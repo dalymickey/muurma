@@ -127,11 +127,16 @@
             "share_pinterest": true,
             "share_native": true
           }
+        },
+        "badge": {
+          "type": "badge",
+          "settings": {}
         }
       },
       "block_order": [
         "title",
         "price",
+        "badge",
         "variant_picker",
         "spot_info",
         "spot_field",
