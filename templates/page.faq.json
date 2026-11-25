@@ -22,7 +22,7 @@
           "type": "question",
           "settings": {
             "question": "How long from order to delivery?",
-            "answer": "<p>Finished and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>"
+            "answer": "<p>Dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>"
           }
         },
         "small_runs": {
