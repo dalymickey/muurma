@@ -26,6 +26,12 @@
   if product == blank
     assign ph = true
   endif
+  assign has_badge_block = false
+  for blk in section.blocks
+    if blk.type == 'badge'
+      assign has_badge_block = true
+    endif
+  endfor
 -%}
 {%- case block.type -%}
   {%- when 'title' -%}
@@ -53,6 +59,7 @@
     {%- render 'mu-rating', product: product, show: b.show_rating, class: 'mu-pp__rating' -%}
     {%- if with_price and ph == false -%}
       {%- render 'mu-pp-price-extras', product: product, v: v, pb: pb, uid: uid -%}
+      {%- unless has_badge_block -%}{%- render 'mu-pp-sale-badge', product: product, v: v -%}{%- endunless -%}
     {%- endif -%}
     {%- if b.subtitle != blank -%}<p class="mu-pp__sub mu-muted">{{ b.subtitle | escape }}</p>{%- endif -%}
 
@@ -62,9 +69,18 @@
         <p class="mu-pp__price" data-price-wrap>{%- if ph -%}{% render 'mu-money', m: 1999 %}{%- else -%}{% render 'mu-price', product: product, variant: v %}{%- endif -%}</p>
         {%- unless ph -%}{%- render 'mu-pp-price-extras', product: product, v: v, pb: b, uid: uid -%}{%- endunless -%}
       </div>
+      {%- if ph == false and has_badge_block == false -%}
+        {%- render 'mu-pp-sale-badge', product: product, v: v -%}
+      {%- endif -%}
+    {%- endunless -%}
+
+  {%- when 'badge' -%}
+    {%- unless ph -%}
+      {%- render 'mu-pp-sale-badge', product: product, v: v, attrs: block.shopify_attributes -%}
     {%- endunless -%}
 
   {%- when 'variant_picker' -%}
+
     {%- unless ph or product.has_only_default_variant -%}
       {%- liquid
         assign last_index = product.options.size | minus: 1

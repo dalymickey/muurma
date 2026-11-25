@@ -1001,6 +1001,8 @@
       "title": "Title",
       "price": "Price",
       "price_info": "Placed right after the title, the price sits beside it.",
+      "badge": "Badge",
+      "badge_info": "Shows a sale badge when the selected variant is discounted. Wording follows Theme settings > Product cards > Sale badge.",
       "show_tax": "Show taxes included",
       "show_tax_info": "Shows when your prices include tax.",
       "show_installments": "Show Shop Pay installments",

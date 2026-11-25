@@ -19,6 +19,8 @@
     const addLabel = $('[data-add-label]');
     const msg = $('[data-msg]');
     const priceWrap = $('[data-price-wrap]');
+    const saleBadge = $('[data-sale-badge]');
+    const saleBadgeLabel = $('[data-sale-badge-label]');
     const stock = $('[data-stock]');
     const notify = $('[data-notify]');
     const notifyTags = $('[data-notify-tags]');
@@ -324,6 +326,26 @@
         ? `<span class="mu-price mu-price--sale" data-price><span class="visually-hidden">${esc(t.salePrice)}</span><span class="mu-price__now">${esc(now)}</span><span class="visually-hidden">${esc(t.regularPrice)}</span><s class="mu-price__was">${esc(was)}</s></span>`
         : `<span class="mu-price" data-price>${esc(now)}</span>`;
     };
+    const saleLabelOf = (v) => {
+      const [now, was] = priceOf(v);
+      if (!v || !was) return '';
+      if (cfg.saleBadge === 'percent') {
+        const plan = planId() && v.plans && v.plans[planId()];
+        const nowC = plan ? plan[2] : v.cents;
+        const wasC = v.compareCents;
+        if (wasC && nowC && wasC > nowC) {
+          const pctOff = Math.round((wasC - nowC) * 100 / wasC);
+          if (pctOff > 0) return String(t.salePercent || '{{ amount }}% off').replace('__N__', String(pctOff)).replace('{{ amount }}', String(pctOff));
+        }
+      }
+      return t.sale || 'Sale';
+    };
+    const refreshSaleBadge = (v) => {
+      if (!saleBadge) return;
+      const label = saleLabelOf(v);
+      if (saleBadgeLabel && label) saleBadgeLabel.textContent = label;
+      saleBadge.hidden = !label;
+    };
 
     const shown = (r) => r.value;
     const barText = (v) => { barSum.textContent = v.options.join(' · '); };
@@ -416,6 +438,7 @@
       if (v) {
         if (idInput) idInput.value = v.id;
         if (priceWrap) priceWrap.innerHTML = priceHtml(v);
+        refreshSaleBadge(v);
         if (notifyTags) notifyTags.value = notifyTags.value.replace(/notify-variant-\d+/, `notify-variant-${v.id}`);
         if (unit) { unit.innerHTML = v.unit || ''; unit.hidden = !v.unit; }
         if (sku) { sku.textContent = v.sku || ''; skuWrap.hidden = !v.sku; }
