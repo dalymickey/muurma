@@ -75,7 +75,7 @@
         "timing": {
           "type": "text",
           "settings": {
-            "text": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
+            "text": "<p>Dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
             "style": "small"
           }
         },
@@ -131,7 +131,7 @@
           "type": "shipping",
           "settings": {
             "heading": "Shipping and delivery",
-            "text": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
+            "text": "<p>Dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>",
             "source": "",
             "estimate": "",
             "show_policy": true,

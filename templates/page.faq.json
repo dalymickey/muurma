@@ -21,15 +21,15 @@
         "delivery": {
           "type": "question",
           "settings": {
-            "question": "How long does making and delivery take?",
-            "answer": "<p>Made and dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>"
+            "question": "How long from order to delivery?",
+            "answer": "<p>Dispatched in 2–3 business days. Delivered in 7–12 business days to Australia, the US, the UK and Europe, and up to 30 elsewhere.</p>"
           }
         },
         "small_runs": {
           "type": "question",
           "settings": {
-            "question": "How are MUURMA pieces made?",
-            "answer": "<p>Each Sketch is designed on Australia's east coast and made in small runs, so less is left over and there is zero dead stock. A new Sketch drops when it is ready.</p>"
+            "question": "How are MUURMA pieces designed?",
+            "answer": "<p>Each Sketch is designed on Australia's east coast, in a small run, so less is left over and there is zero dead stock. A new Sketch drops when it is ready.</p>"
           }
         },
         "sizing": {
@@ -81,7 +81,7 @@
         "color_scheme": "scheme-5",
         "eyebrow": "Help",
         "heading": "Questions, answered",
-        "text": "<p>Making, sizing, care and delivery for MUURMA Sketches.</p>",
+        "text": "<p>Design, sizing, care and delivery for MUURMA Sketches.</p>",
         "open_first": true,
         "one_open": true
       }
