@@ -72,7 +72,7 @@
         "round_bl": true,
         "round_br": true,
         "heading": "LATEST SKETCHES",
-        "collection": "hoodies",
+        "collection": "frontpage",
         "limit": 8,
         "show_link": true,
         "animate": true,
